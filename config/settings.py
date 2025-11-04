@@ -85,7 +85,7 @@ DATABASES = {
     }
 }
 
-database_url = os.environ.get('DATABASES_URL')
+database_url = os.environ.get('DATABASE_URL')
 DATABASES['default'] = dj_database_url.parse(database_url)
 
 
