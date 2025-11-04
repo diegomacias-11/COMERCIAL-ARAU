@@ -1,0 +1,34 @@
+{% extends "form.html" %}
+
+{% block title %}Nueva Cita{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  {% for field in form %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.errors %}
+      <div class="error">{{ field.errors }}</div>
+    {% endif %}
+  {% endfor %}
+  <input type="hidden" name="next" value="{{ back_url }}" />
+{% endblock %}
+
+{% block extra_actions %}
+  {% if form.instance.pk %}
+    <input type="hidden" name="next" value="{{ back_url }}" />
+    <button type="submit"
+            class="btn-submit"
+            style="background-color:#c73b3b; margin-top:.5rem;"
+            formmethod="post"
+            formnovalidate
+            formaction="{% url 'eliminar_cita' form.instance.pk %}">
+      Eliminar
+    </button>
+  {% endif %}
+{% endblock %}

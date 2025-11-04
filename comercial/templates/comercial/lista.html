@@ -1,0 +1,68 @@
+﻿{% extends "lista.html" %}
+
+{% block title %}Citas{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .table-container { overflow-x: auto !important; }
+    .table { min-width: 1400px; }
+    /* sticky desactivado */
+  </style>
+{% endblock %}
+
+{% block filtros %}
+  <form method="get">
+    <label for="fecha_desde">Fecha desde</label>
+    <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}" />
+    <label for="fecha_hasta">Fecha hasta</label>
+    <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
+    <button type="submit" class="btn-filter">Filtrar</button>
+    <a href="{% url 'citas_lista' %}" class="btn-filter">Limpiar</a>
+  </form>
+  <a href="{% url 'agregar_cita' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary">Nueva cita</a>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th >Prospecto</th>
+        <th>Medio</th>
+    <th>Servicio</th>
+    <th>Vendedor</th>
+    <th>Estatus cita</th>
+    <th>Fecha cita</th>
+    <th>Número cita</th>
+    <th>Estatus seguimiento</th>
+    <th>Lugar</th>
+    <th>Acciones</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for c in citas %}
+    <tr>
+      <td >{{ c.prospecto }}</td>
+      <td>{{ c.medio }}</td>
+      <td>{{ c.servicio }}</td>
+      <td>{{ c.vendedor }}</td>
+      <td>{{ c.estatus_cita }}</td>
+      <td>{{ c.fecha_cita|date:"l d/M/y" }}</td>
+      <td>{{ c.numero_cita }}</td>
+      <td>{{ c.estatus_seguimiento }}</td>
+      <td>{{ c.lugar }}</td>
+      <td>
+        <a href="{% url 'editar_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="100%">Sin citas registradas</td>
+    </tr>
+  {% endfor %}
+{% endblock %}
+
+
+
+
+
+
+

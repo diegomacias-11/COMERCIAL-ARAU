@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Formulario{% endblock %}
+
+{% block content %}
+  <main>
+  {% block back_link %}{% endblock %}
+
+  <div class="form-container">
+    <form method="post">
+      {% csrf_token %}
+      {% block form_fields %}
+        <!-- Aquí van los campos específicos del formulario hijo -->
+        {% endblock %}
+        <button type="submit" class="btn-submit">Guardar</button>
+        {% block extra_actions %}{% endblock %}
+      </form>
+  </div>
+  </main>
+{% endblock %}

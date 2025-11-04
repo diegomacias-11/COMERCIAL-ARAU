@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
+    'comercial',
 ]
 
 MIDDLEWARE = [
@@ -50,11 +52,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,6 +107,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-mx'
 
+# Zona horaria global: Guadalajara, MX (mismo huso que CDMX)
 TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
@@ -115,8 +119,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # 👈 aquí buscará los archivos en desarrollo
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Google Sheets integration
+GOOGLE_SHEETS = {
+    "SPREADSHEET_ID": "1_CIW_ixiNdPkktGdPCek6NSpJWv_AljFqQgWGlbPAmg",
+    "CREDENTIALS_FILE": str(BASE_DIR / "credentials" / "key.json"),
+    "SHEET_NAME": "Historial Comercial",
+}
