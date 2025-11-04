@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -142,4 +143,15 @@ GOOGLE_SHEETS = {
     "SPREADSHEET_ID": "1_CIW_ixiNdPkktGdPCek6NSpJWv_AljFqQgWGlbPAmg",
     "CREDENTIALS_FILE": str(BASE_DIR / "credentials" / "key.json"),
     "SHEET_NAME": "Historial Comercial",
+}
+
+# Archivos estáticos (CSS, JS, imágenes)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise: sirve archivos estáticos comprimidos en producción
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
 }
