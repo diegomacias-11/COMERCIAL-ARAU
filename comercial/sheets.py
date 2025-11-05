@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 from django.conf import settings
+import os
+import json
 
 
 def _get_service():
@@ -11,10 +13,24 @@ def _get_service():
     except Exception as exc:  # pragma: no cover
         raise RuntimeError("Google API client not installed. Install google-api-python-client.") from exc
 
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-    ]
-    creds = Credentials.from_service_account_file(settings.GOOGLE_SHEETS["CREDENTIALS_FILE"], scopes=scopes)
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+
+    # Preferir credenciales desde variable de entorno con contenido JSON completo
+    raw = (
+        os.getenv("GOOGLE_CREDENTIALS")
+        or os.getenv("GOOGLE_CREDENTIALS_JSON")
+        or os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        or ""
+    ).strip()
+
+    if raw:
+        creds_info = json.loads(raw)
+        creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
+    else:
+        # Fallback: archivo en disco (entorno local)
+        creds = Credentials.from_service_account_file(
+            settings.GOOGLE_SHEETS["CREDENTIALS_FILE"], scopes=scopes
+        )
     service = build("sheets", "v4", credentials=creds, cache_discovery=False)
     return service
 
