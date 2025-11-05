@@ -123,3 +123,21 @@ def eliminar_cita(request, id: int):
     # Si se elimina, opcionalmente podríamos borrar del sheet; por ahora solo BD
     cita.delete()
     return redirect(back_url)
+
+from django.http import JsonResponse
+from django.conf import settings
+from . import sheets
+
+def test_sheets(request):
+    try:
+        service = sheets._get_service()
+        info = service.spreadsheets().get(
+            spreadsheetId=settings.GOOGLE_SHEETS["SPREADSHEET_ID"]
+        ).execute()
+
+        return JsonResponse({
+            "status": "ok",
+            "title": info.get("properties", {}).get("title", "Desconocido")
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "error": str(e)})
