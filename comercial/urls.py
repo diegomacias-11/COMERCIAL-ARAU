@@ -6,5 +6,5 @@ urlpatterns = [
     path("citas/agregar/", views.agregar_cita, name="agregar_cita"),
     path("citas/<int:id>/", views.editar_cita, name="editar_cita"),
     path("citas/<int:id>/eliminar/", views.eliminar_cita, name="eliminar_cita"),
-    path("test-sheets/", views.test_sheets),
+    path("debug-sheets/", views.debug_sheets, name="debug_sheets"),
 ]

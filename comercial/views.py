@@ -125,19 +125,14 @@ def eliminar_cita(request, id: int):
     return redirect(back_url)
 
 from django.http import JsonResponse
-from django.conf import settings
-from . import sheets
+from .sheets import _get_service
 
-def test_sheets(request):
+def debug_sheets(request):
     try:
-        service = sheets._get_service()
-        info = service.spreadsheets().get(
-            spreadsheetId=settings.GOOGLE_SHEETS["SPREADSHEET_ID"]
-        ).execute()
-
-        return JsonResponse({
-            "status": "ok",
-            "title": info.get("properties", {}).get("title", "Desconocido")
-        })
+        service = _get_service()
+        # Hacer una llamada muy ligera solo para confirmar conexión
+        result = service.spreadsheets().get(spreadsheetId="TU_SPREADSHEET_ID").execute()
+        title = result.get("properties", {}).get("title", "sin título")
+        return JsonResponse({"status": "ok", "sheet_title": title})
     except Exception as e:
         return JsonResponse({"status": "error", "error": str(e)})
