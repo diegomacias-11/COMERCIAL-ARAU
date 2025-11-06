@@ -84,12 +84,9 @@ def agregar_cita(request):
         form = CitaForm(request.POST)
         if form.is_valid():
             cita = form.save()
-            print(f"🟢 Cita guardada localmente con ID {cita.id}")
-            # Sincronizar a Google Sheets
             try:
                 from .sheets import append_cita_to_sheet
                 row = append_cita_to_sheet(cita)
-                print(f"✅ Cita enviada a Google Sheets (fila: {row})")
             except Exception as e:
                 import traceback
                 print(f"❌ Error al enviar a Google Sheets: {e}")
