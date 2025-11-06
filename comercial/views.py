@@ -35,14 +35,14 @@ class CitaForm(forms.ModelForm):
             "telefono",
             "conexion",
             "medio",
-            "vendedor",
-            "monto_factura",
             "estatus_cita",
             "fecha_cita",
             "numero_cita",
             "lugar",
             "estatus_seguimiento",
             "comentarios",
+            "vendedor",
+            "monto_factura",
         ]
         widgets = {
             # El widget lo definimos arriba con formato explÃ­cito
