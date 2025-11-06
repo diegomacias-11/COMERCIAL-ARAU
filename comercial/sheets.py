@@ -170,3 +170,41 @@ def update_cita_in_sheet(cita) -> None:
         valueInputOption="RAW",
         body={"values": row_values},
     ).execute()
+
+
+def _get_sheet_id_by_title(service, spreadsheet_id: str, sheet_title: str) -> Optional[int]:
+    meta = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    for sh in meta.get("sheets", []):
+        props = sh.get("properties", {})
+        if props.get("title") == sheet_title:
+            return props.get("sheetId")
+    return None
+
+
+def delete_cita_from_sheet(cita_id: int) -> None:
+    cfg = settings.GOOGLE_SHEETS
+    service = _get_service()
+    # Buscar fila por ID en columna A
+    row_index = _find_row_by_id(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"], cita_id)
+    if not row_index:
+        return  # nada que borrar
+    # Necesitamos sheetId (gid) para batchUpdate deleteDimension
+    sheet_id = _get_sheet_id_by_title(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"])
+    if sheet_id is None:
+        return
+    # DeleteDimensionRequest usa índices base 0 y endIndex exclusivo
+    body = {
+        "requests": [
+            {
+                "deleteDimension": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "dimension": "ROWS",
+                        "startIndex": row_index - 1,
+                        "endIndex": row_index,
+                    }
+                }
+            }
+        ]
+    }
+    service.spreadsheets().batchUpdate(spreadsheetId=cfg["SPREADSHEET_ID"], body=body).execute()

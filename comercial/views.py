@@ -1,10 +1,10 @@
-from django import forms
+﻿from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime, time
 from .models import Cita
-from .sheets import append_cita_to_sheet, update_cita_in_sheet
+from .sheets import append_cita_to_sheet, update_cita_in_sheet, delete_cita_from_sheet
 
 
 class CitaForm(forms.ModelForm):
@@ -44,7 +44,7 @@ class CitaForm(forms.ModelForm):
             "lugar",
         ]
         widgets = {
-            # El widget lo definimos arriba con formato explícito
+            # El widget lo definimos arriba con formato explÃ­cito
         }
 
 
@@ -70,7 +70,7 @@ def citas_lista(request):
             pass
     context = {
         "citas": citas,
-        # Contexto mínimo; dejamos valores para el filtro de fechas
+        # Contexto mÃ­nimo; dejamos valores para el filtro de fechas
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
     }
@@ -83,11 +83,11 @@ def agregar_cita(request):
         form = CitaForm(request.POST)
         if form.is_valid():
             cita = form.save()
-            # Sincronizar a Google Sheets (append). Identificación por ID en columna A.
+            # Sincronizar a Google Sheets (append). IdentificaciÃ³n por ID en columna A.
             try:
                 append_cita_to_sheet(cita)
             except Exception:
-                # Evitar romper flujo si falla la sincronización
+                # Evitar romper flujo si falla la sincronizaciÃ³n
                 pass
             return redirect(request.POST.get("next") or back_url)
     else:
@@ -120,19 +120,11 @@ def editar_cita(request, id: int):
 def eliminar_cita(request, id: int):
     back_url = request.POST.get("next") or request.GET.get("next") or reverse("citas_lista")
     cita = get_object_or_404(Cita, pk=id)
-    # Si se elimina, opcionalmente podríamos borrar del sheet; por ahora solo BD
+    # Borrar también del Google Sheet por ID
+    try:
+        delete_cita_from_sheet(cita.id)
+    except Exception:
+        pass
     cita.delete()
     return redirect(back_url)
 
-from django.http import JsonResponse
-from .sheets import _get_service
-
-def debug_sheets(request):
-    try:
-        service = _get_service()
-        # Hacer una llamada muy ligera solo para confirmar conexión
-        result = service.spreadsheets().get(spreadsheetId="TU_SPREADSHEET_ID").execute()
-        title = result.get("properties", {}).get("title", "sin título")
-        return JsonResponse({"status": "ok", "sheet_title": title})
-    except Exception as e:
-        return JsonResponse({"status": "error", "error": str(e)})
