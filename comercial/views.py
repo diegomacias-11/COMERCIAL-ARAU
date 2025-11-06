@@ -37,6 +37,7 @@ class CitaForm(forms.ModelForm):
             "conexion",
             "vendedor",
             "estatus_cita",
+            "monto_factura",
             "fecha_cita",
             "numero_cita",
             "estatus_seguimiento",

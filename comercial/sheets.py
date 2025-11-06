@@ -61,6 +61,7 @@ HEADERS = [
     "Fecha cita",
     "Número cita",
     "Estatus seguimiento",
+    "Monto factura",
     "Comentarios",
     "Lugar",
     "Fecha registro",

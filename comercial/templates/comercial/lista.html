@@ -24,8 +24,8 @@
 
 {% block tabla_head %}
   <tr>
-    <th >Prospecto</th>
-        <th>Medio</th>
+    <th>Prospecto</th>
+    <th>Medio</th>
     <th>Servicio</th>
     <th>Vendedor</th>
     <th>Estatus cita</th>
@@ -40,15 +40,15 @@
 {% block tabla_body %}
   {% for c in citas %}
     <tr>
-      <td >{{ c.prospecto }}</td>
-      <td>{{ c.medio }}</td>
-      <td>{{ c.servicio }}</td>
-      <td>{{ c.vendedor }}</td>
-      <td>{{ c.estatus_cita }}</td>
-      <td>{{ c.fecha_cita|date:"l d/M/y" }}</td>
-      <td>{{ c.numero_cita }}</td>
-      <td>{{ c.estatus_seguimiento }}</td>
-      <td>{{ c.lugar }}</td>
+      <td >{{ c.prospecto|default_if_none:"" }}</td>
+      <td>{{ c.medio|default_if_none:"" }}</td>
+      <td>{{ c.servicio|default_if_none:"" }}</td>
+      <td>{{ c.vendedor|default_if_none:"" }}</td>
+      <td>{{ c.estatus_cita|default_if_none:"" }}</td>
+      <td>{{ c.fecha_cita|date:"l d/M/y H:i"|default_if_none:"" }}</td>
+      <td>{{ c.numero_cita|default_if_none:"" }}</td>
+      <td>{{ c.estatus_seguimiento|default_if_none:"" }}</td>
+      <td>{{ c.lugar|default_if_none:"" }}</td>
       <td>
         <a href="{% url 'editar_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
       </td>
