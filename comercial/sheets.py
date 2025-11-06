@@ -1,21 +1,40 @@
 from __future__ import annotations
-
 from typing import List, Optional
-from django.conf import settings
 import os
 import json
+from django.conf import settings
 
+
+# ============================================================
+# CONFIGURACIÓN FLEXIBLE: PRODUCCIÓN (Render) o LOCAL
+# ============================================================
+
+# Variables de entorno (Render u otro servidor)
+SPREADSHEET_ID = os.getenv("GOOGLE_SPREADSHEET_ID")
+SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME")
+
+# Si no existen, usar valores locales de prueba
+if not SPREADSHEET_ID or not SHEET_NAME:
+    SPREADSHEET_ID = getattr(settings, "LOCAL_SPREADSHEET_ID", None) or "TU_ID_DE_HOJA_LOCAL"
+    SHEET_NAME = getattr(settings, "LOCAL_SHEET_NAME", None) or "Historial Comercial (TEST)"
+
+print(f"📄 Conectando con hoja '{SHEET_NAME}' (ID: {SPREADSHEET_ID})")
+
+
+# ============================================================
+# FUNCIÓN BASE DE CONEXIÓN
+# ============================================================
 
 def _get_service():
     try:
         from google.oauth2.service_account import Credentials
         from googleapiclient.discovery import build
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:
         raise RuntimeError("Google API client not installed. Install google-api-python-client.") from exc
 
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 
-    # Preferir credenciales desde variable de entorno con contenido JSON completo
+    # Credenciales desde variable de entorno o archivo local
     raw = (
         os.getenv("GOOGLE_CREDENTIALS")
         or os.getenv("GOOGLE_CREDENTIALS_JSON")
@@ -27,13 +46,17 @@ def _get_service():
         creds_info = json.loads(raw)
         creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
     else:
-        # Fallback: archivo en disco (entorno local)
         creds = Credentials.from_service_account_file(
-            settings.GOOGLE_SHEETS["CREDENTIALS_FILE"], scopes=scopes
+            settings.GOOGLE_SHEETS.get("CREDENTIALS_FILE"), scopes=scopes
         )
+
     service = build("sheets", "v4", credentials=creds, cache_discovery=False)
     return service
 
+
+# ============================================================
+# UTILIDADES
+# ============================================================
 
 def _sheet_range_all_columns(sheet_name: str) -> str:
     return f"'{sheet_name}'!A:Z"
@@ -43,33 +66,20 @@ def _row_range(sheet_name: str, row: int, last_col: str = "Z") -> str:
     return f"'{sheet_name}'!A{row}:{last_col}{row}"
 
 
-# Encabezados esperados en la hoja (A..S)
 HEADERS = [
-    "id",
-    "Prospecto",
-    "Giro",
-    "Tipo",
-    "Medio",
-    "Servicio",
-    "Servicio 2",
-    "Servicio 3",
-    "Contacto",
-    "Teléfono",
-    "Conexión",
-    "Vendedor",
-    "Estatus cita",
-    "Fecha cita",
-    "Número cita",
-    "Estatus seguimiento",
-    "Monto factura",
-    "Comentarios",
-    "Lugar",
-    "Fecha registro",
+    "id", "Prospecto", "Giro", "Tipo", "Medio",
+    "Servicio", "Servicio 2", "Servicio 3", "Contacto",
+    "Teléfono", "Conexión", "Vendedor", "Estatus cita",
+    "Fecha cita", "Número cita", "Estatus seguimiento",
+    "Monto factura", "Comentarios", "Lugar", "Fecha registro",
 ]
 
 
+# ============================================================
+# FUNCIONES DE ESCRITURA / ACTUALIZACIÓN / BORRADO
+# ============================================================
+
 def _ensure_headers(service, spreadsheet_id: str, sheet_name: str) -> None:
-    # Solo escribe encabezados si la hoja está vacía (sin fila 1)
     resp = (
         service.spreadsheets()
         .values()
@@ -104,6 +114,7 @@ def cita_to_row(cita) -> List:
         cita.fecha_cita.strftime("%Y-%m-%dT%H:%M") if cita.fecha_cita else "",
         cita.numero_cita or "",
         cita.estatus_seguimiento or "",
+        getattr(cita, "monto_factura", "") or "",
         cita.comentarios or "",
         cita.lugar or "",
         cita.fecha_registro.strftime("%Y-%m-%dT%H:%M") if cita.fecha_registro else "",
@@ -111,27 +122,25 @@ def cita_to_row(cita) -> List:
 
 
 def append_cita_to_sheet(cita) -> Optional[int]:
-    cfg = settings.GOOGLE_SHEETS
     service = _get_service()
-    _ensure_headers(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"])  # crea encabezados si faltan
+    _ensure_headers(service, SPREADSHEET_ID, SHEET_NAME)
     values = [cita_to_row(cita)]
     body = {"values": values}
     result = (
         service.spreadsheets()
         .values()
         .append(
-            spreadsheetId=cfg["SPREADSHEET_ID"],
-            range=_sheet_range_all_columns(cfg["SHEET_NAME"]),
+            spreadsheetId=SPREADSHEET_ID,
+            range=_sheet_range_all_columns(SHEET_NAME),
             valueInputOption="RAW",
             insertDataOption="INSERT_ROWS",
             body=body,
         )
         .execute()
     )
-    # Parse updatedRange like "Historial Comercial!A123:S123"
     updated_range = result.get("updates", {}).get("updatedRange", "")
     try:
-        row_part = updated_range.split("!")[-1].split(":")[0]  # A123
+        row_part = updated_range.split("!")[-1].split(":")[0]
         row_num = int("".join(ch for ch in row_part if ch.isdigit()))
         return row_num
     except Exception:
@@ -146,7 +155,6 @@ def _find_row_by_id(service, spreadsheet_id: str, sheet_name: str, cita_id: int)
         .execute()
     )
     values = resp.get("values", [])
-    # values is a list of rows; each row is a list of cells
     for idx, row in enumerate(values, start=1):
         if not row:
             continue
@@ -156,18 +164,16 @@ def _find_row_by_id(service, spreadsheet_id: str, sheet_name: str, cita_id: int)
 
 
 def update_cita_in_sheet(cita) -> None:
-    cfg = settings.GOOGLE_SHEETS
     service = _get_service()
-    _ensure_headers(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"])  # por seguridad
-    row_index = _find_row_by_id(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"], cita.id)
+    _ensure_headers(service, SPREADSHEET_ID, SHEET_NAME)
+    row_index = _find_row_by_id(service, SPREADSHEET_ID, SHEET_NAME, cita.id)
     if not row_index:
-        # If not found, append as new entry
         append_cita_to_sheet(cita)
         return
     row_values = [cita_to_row(cita)]
     service.spreadsheets().values().update(
-        spreadsheetId=cfg["SPREADSHEET_ID"],
-        range=_row_range(cfg["SHEET_NAME"], row_index, last_col="S"),
+        spreadsheetId=SPREADSHEET_ID,
+        range=_row_range(SHEET_NAME, row_index, last_col="S"),
         valueInputOption="RAW",
         body={"values": row_values},
     ).execute()
@@ -183,17 +189,13 @@ def _get_sheet_id_by_title(service, spreadsheet_id: str, sheet_title: str) -> Op
 
 
 def delete_cita_from_sheet(cita_id: int) -> None:
-    cfg = settings.GOOGLE_SHEETS
     service = _get_service()
-    # Buscar fila por ID en columna A
-    row_index = _find_row_by_id(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"], cita_id)
+    row_index = _find_row_by_id(service, SPREADSHEET_ID, SHEET_NAME, cita_id)
     if not row_index:
-        return  # nada que borrar
-    # Necesitamos sheetId (gid) para batchUpdate deleteDimension
-    sheet_id = _get_sheet_id_by_title(service, cfg["SPREADSHEET_ID"], cfg["SHEET_NAME"])
+        return
+    sheet_id = _get_sheet_id_by_title(service, SPREADSHEET_ID, SHEET_NAME)
     if sheet_id is None:
         return
-    # DeleteDimensionRequest usa índices base 0 y endIndex exclusivo
     body = {
         "requests": [
             {
@@ -208,4 +210,4 @@ def delete_cita_from_sheet(cita_id: int) -> None:
             }
         ]
     }
-    service.spreadsheets().batchUpdate(spreadsheetId=cfg["SPREADSHEET_ID"], body=body).execute()
+    service.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body).execute()
