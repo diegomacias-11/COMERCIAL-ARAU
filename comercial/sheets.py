@@ -3,17 +3,15 @@ from typing import List, Optional
 import os
 import json
 from django.conf import settings
-
+from django.apps import apps
 
 # ============================================================
 # CONFIGURACIÓN FLEXIBLE: PRODUCCIÓN (Render) o LOCAL
 # ============================================================
 
-# Variables de entorno (Render u otro servidor)
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 SHEET_NAME = os.getenv("SHEET_NAME")
 
-# Si no existen, usar valores locales de prueba
 if not SPREADSHEET_ID or not SHEET_NAME:
     SPREADSHEET_ID = getattr(settings, "LOCAL_SPREADSHEET_ID", None) or "TU_ID_DE_HOJA_LOCAL"
     SHEET_NAME = getattr(settings, "LOCAL_SHEET_NAME", None) or "Historial Comercial (TEST)"
@@ -34,7 +32,6 @@ def _get_service():
 
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 
-    # Credenciales desde variable de entorno o archivo local
     raw = (
         os.getenv("GOOGLE_CREDENTIALS")
         or os.getenv("GOOGLE_CREDENTIALS_JSON")
@@ -55,24 +52,38 @@ def _get_service():
 
 
 # ============================================================
-# UTILIDADES
+# ENCABEZADOS AUTOMÁTICOS DESDE MODELO
+# ============================================================
+
+def _get_headers_from_model() -> List[str]:
+    """Genera encabezados automáticamente desde el modelo Cita."""
+    Cita = apps.get_model("comercial", "Cita")
+    headers = [field.name.replace("_", " ").capitalize() for field in Cita._meta.fields]
+    return headers
+
+
+HEADERS = _get_headers_from_model()
+
+
+def _get_last_col_letter(n_cols: int) -> str:
+    """Convierte número de columnas a letra (1->A, 26->Z, 27->AA, etc.)."""
+    result = ""
+    while n_cols > 0:
+        n_cols, remainder = divmod(n_cols - 1, 26)
+        result = chr(65 + remainder) + result
+    return result
+
+
+# ============================================================
+# UTILIDADES DE RANGO
 # ============================================================
 
 def _sheet_range_all_columns(sheet_name: str) -> str:
     return f"'{sheet_name}'!A:Z"
 
 
-def _row_range(sheet_name: str, row: int, last_col: str = "Z") -> str:
+def _row_range(sheet_name: str, row: int, last_col: str) -> str:
     return f"'{sheet_name}'!A{row}:{last_col}{row}"
-
-
-HEADERS = [
-    "id", "Prospecto", "Giro", "Tipo", "Medio",
-    "Servicio", "Servicio 2", "Servicio 3", "Contacto",
-    "Teléfono", "Conexión", "Vendedor", "Estatus cita",
-    "Fecha cita", "Número cita", "Estatus seguimiento",
-    "Monto factura", "Comentarios", "Lugar", "Fecha registro",
-]
 
 
 # ============================================================
@@ -80,45 +91,37 @@ HEADERS = [
 # ============================================================
 
 def _ensure_headers(service, spreadsheet_id: str, sheet_name: str) -> None:
+    """Crea encabezados dinámicamente según el modelo, si la hoja está vacía."""
+    last_col = _get_last_col_letter(len(HEADERS))
+    header_range = f"'{sheet_name}'!A1:{last_col}1"
+
     resp = (
         service.spreadsheets()
         .values()
-        .get(spreadsheetId=spreadsheet_id, range=f"'{sheet_name}'!A1:S1")
+        .get(spreadsheetId=spreadsheet_id, range=header_range)
         .execute()
     )
     values = resp.get("values", [])
     if not values:
         service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            range=f"'{sheet_name}'!A1:S1",
+            range=header_range,
             valueInputOption="RAW",
             body={"values": [HEADERS]},
         ).execute()
 
 
 def cita_to_row(cita) -> List:
-    return [
-        str(cita.id or ""),
-        cita.prospecto or "",
-        cita.giro or "",
-        cita.tipo or "",
-        cita.medio or "",
-        cita.servicio or "",
-        getattr(cita, "servicio2", "") or "",
-        getattr(cita, "servicio3", "") or "",
-        cita.contacto or "",
-        cita.telefono or "",
-        cita.conexion or "",
-        cita.vendedor or "",
-        cita.estatus_cita or "",
-        cita.fecha_cita.strftime("%Y-%m-%dT%H:%M") if cita.fecha_cita else "",
-        cita.numero_cita or "",
-        cita.estatus_seguimiento or "",
-        getattr(cita, "monto_factura", "") or "",
-        cita.comentarios or "",
-        cita.lugar or "",
-        cita.fecha_registro.strftime("%Y-%m-%dT%H:%M") if cita.fecha_registro else "",
-    ]
+    """Convierte una instancia de Cita en una fila para Google Sheets."""
+    data = []
+    for field in cita._meta.fields:
+        value = getattr(cita, field.name, "")
+        if hasattr(value, "strftime"):
+            value = value.strftime("%Y-%m-%dT%H:%M")
+        elif value is None:
+            value = ""
+        data.append(str(value))
+    return data
 
 
 def append_cita_to_sheet(cita) -> Optional[int]:
@@ -126,6 +129,7 @@ def append_cita_to_sheet(cita) -> Optional[int]:
     _ensure_headers(service, SPREADSHEET_ID, SHEET_NAME)
     values = [cita_to_row(cita)]
     body = {"values": values}
+
     result = (
         service.spreadsheets()
         .values()
@@ -138,6 +142,7 @@ def append_cita_to_sheet(cita) -> Optional[int]:
         )
         .execute()
     )
+
     updated_range = result.get("updates", {}).get("updatedRange", "")
     try:
         row_part = updated_range.split("!")[-1].split(":")[0]
@@ -167,13 +172,14 @@ def update_cita_in_sheet(cita) -> None:
     service = _get_service()
     _ensure_headers(service, SPREADSHEET_ID, SHEET_NAME)
     row_index = _find_row_by_id(service, SPREADSHEET_ID, SHEET_NAME, cita.id)
+    last_col = _get_last_col_letter(len(HEADERS))
     if not row_index:
         append_cita_to_sheet(cita)
         return
     row_values = [cita_to_row(cita)]
     service.spreadsheets().values().update(
         spreadsheetId=SPREADSHEET_ID,
-        range=_row_range(SHEET_NAME, row_index, last_col="S"),
+        range=_row_range(SHEET_NAME, row_index, last_col),
         valueInputOption="RAW",
         body={"values": row_values},
     ).execute()
