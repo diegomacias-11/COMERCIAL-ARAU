@@ -10,8 +10,8 @@ from django.conf import settings
 # ============================================================
 
 # Variables de entorno (Render u otro servidor)
-SPREADSHEET_ID = os.getenv("GOOGLE_SPREADSHEET_ID")
-SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+SHEET_NAME = os.getenv("SHEET_NAME")
 
 # Si no existen, usar valores locales de prueba
 if not SPREADSHEET_ID or not SHEET_NAME:
