@@ -20,27 +20,13 @@ MEDIO_CHOICES = [
 
 SERVICIO_CHOICES = [
     ("Auditoría Contable", "Auditoría Contable"),
-    ("Auditoría Fiscal", "Auditoría Fiscal"),
-    ("Auto Ahorro", "Auto Ahorro"),
-    ("CheckUp", "CheckUp"),
     ("Contabilidad", "Contabilidad"),
     ("Corridas", "Corridas"),
     ("E-Commerce", "E-Commerce"),
-    ("Fiscal", "Fiscal"),
-    ("Hidrocarburos", "Hidrocarburos"),
     ("Laboral", "Laboral"),
     ("Maquila de Nómina", "Maquila de Nómina"),
     ("Marketing", "Marketing"),
-    ("Monederos", "Monederos"),
-    ("PRAIDS", "PRAIDS"),
-    ("PROCOM", "PROCOM"),
     ("Reclutamiento", "Reclutamiento"),
-    ("TPV", "TPV"),
-    ("Valuación de Activos Intangibles", "Valuación de Activos Intangibles"),
-    ("Venta de empresa", "Venta de empresa"),
-    ("VP360°", "VP360°"),
-    ("Préstamo", "Préstamo"),
-    ("Reembolso", "Reembolso"),
 ]
 
 VENDEDOR_CHOICES = [
