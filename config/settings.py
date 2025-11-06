@@ -146,3 +146,8 @@ GOOGLE_SHEETS = {
 # CLAVE PRIMARIA POR DEFECTO
 # ======================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# VARIABLES LOCALES DE SHEETS
+LOCAL_SPREADSHEET_ID = "1_CIW_ixiNdPkktGdPCek6NSpJWv_AljFqQgWGlbPAmg"
+LOCAL_SHEET_NAME = "Historial Comercial"

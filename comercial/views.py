@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import datetime, time
 from .models import Cita
 from .sheets import append_cita_to_sheet, update_cita_in_sheet, delete_cita_from_sheet
+from django.http import HttpResponse
 
 
 class CitaForm(forms.ModelForm):
@@ -129,4 +130,8 @@ def eliminar_cita(request, id: int):
         pass
     cita.delete()
     return redirect(back_url)
+
+
+def reportes_dashboard(request):
+    return render(request, "comercial/reportes.html")
 

@@ -6,7 +6,7 @@
   <nav class="main-nav">
     <a href="{% url 'citas_lista' %}"
        class="{% if 'citas' in request.path %}active{% endif %}">Comercial</a>
-    <a href="#"
+    <a href="{% url 'reportes_dashboard' %}"
        class="{% if 'reportes' in request.path %}active{% endif %}">Reportes</a>
   </nav>
   <div class="user-card">

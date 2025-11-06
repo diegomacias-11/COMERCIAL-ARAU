@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+  <main style="margin:0; padding:0;">
+    <!-- Contenedor a sangrado completo para ocupar todo el ancho de la ventana -->
+    <div style="margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);">
+      <iframe
+        src="https://lookerstudio.google.com/embed/reporting/2d02df74-5920-4285-b62c-b68794e288b5/page/p_uv7fhcpvxd"
+        style="display:block; border:0; width:100vw; height:100vh;"
+        frameborder="0"
+        allowfullscreen
+        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+      </iframe>
+    </div>
+  </main>
+{% endblock %}
