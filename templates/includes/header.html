@@ -4,7 +4,8 @@
     <img src="{% static 'img/logo_header.png' %}" alt="ARAU" class="logo" />
   </div>
   <nav class="main-nav">
-    <a href="{% url 'citas_lista' %}">Comercial</a>
+    <a href="{% url 'citas_lista' %}"
+       class="{% if 'citas' in request.path %}active{% endif %}">Comercial</a>
     <a href="#"
        class="{% if 'reportes' in request.path %}active{% endif %}">Reportes</a>
   </nav>
