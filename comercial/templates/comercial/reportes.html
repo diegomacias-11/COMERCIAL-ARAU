@@ -1,17 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Reportes{% endblock %}
 
+{% block extra_head %}
+  <style>
+    html, body { height: 100%; }
+    /* Evita scroll vertical solo en esta vista */
+    body.reportes-no-scroll { overflow: hidden; }
+    /* Contenedor a sangrado completo */
+    .full-bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+    #ls-iframe { display:block; border:0; width:100vw; height:100vh; }
+  </style>
+{% endblock %}
+
 {% block content %}
   <main style="margin:0; padding:0;">
-    <!-- Contenedor a sangrado completo para ocupar todo el ancho de la ventana -->
-    <div style="margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);">
-      <iframe
+    <div class="full-bleed">
+      <iframe id="ls-iframe"
         src="https://lookerstudio.google.com/embed/reporting/2d02df74-5920-4285-b62c-b68794e288b5/page/p_uv7fhcpvxd"
-        style="display:block; border:0; width:100vw; height:100vh;"
         frameborder="0"
         allowfullscreen
         sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
       </iframe>
     </div>
   </main>
+  <script>
+    (function(){
+      function fit() {
+        var header = document.querySelector('.main-header');
+        var iframe = document.getElementById('ls-iframe');
+        if (!iframe) return;
+        var h = window.innerHeight - (header ? header.offsetHeight : 0);
+        if (h > 0) iframe.style.height = h + 'px';
+      }
+      document.body.classList.add('reportes-no-scroll');
+      window.addEventListener('resize', fit);
+      window.addEventListener('load', fit);
+      fit();
+    })();
+  </script>
 {% endblock %}
