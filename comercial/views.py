@@ -22,6 +22,9 @@ class CitaForm(forms.ModelForm):
         if getattr(self, "instance", None) and getattr(self.instance, "pk", None) and self.instance.fecha_cita:
             local_dt = timezone.localtime(self.instance.fecha_cita)
             self.initial["fecha_cita"] = local_dt.strftime("%Y-%m-%dT%H:%M")
+        # Pasar fecha_registro para display
+        if getattr(self, "instance", None) and getattr(self.instance, "pk", None) and self.instance.fecha_registro:
+            self.fecha_registro_display = timezone.localtime(self.instance.fecha_registro)
     class Meta:
         model = Cita
         fields = [
@@ -135,4 +138,6 @@ def eliminar_cita(request, id: int):
 
 def reportes_dashboard(request):
     return render(request, "comercial/reportes.html")
+
+
 

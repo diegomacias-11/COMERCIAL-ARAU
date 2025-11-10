@@ -9,6 +9,7 @@ TIPO_CHOICES = [
 ]
 
 MEDIO_CHOICES = [
+    ("Apollo", "Apollo"),
     ("Remarketing", "Remarketing"),
     ("Alianzas", "Alianzas"),
     ("Lead", "Lead"),
@@ -19,6 +20,7 @@ MEDIO_CHOICES = [
 ]
 
 SERVICIO_CHOICES = [
+    ("Pendiente", "Pendiente"),
     ("Auditoría Contable", "Auditoría Contable"),
     ("Contabilidad", "Contabilidad"),
     ("Corridas", "Corridas"),
