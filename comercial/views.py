@@ -52,16 +52,17 @@ class CitaForm(forms.ModelForm):
         cleaned_data = super().clean()
         prospecto = cleaned_data.get("prospecto")
         numero_cita = cleaned_data.get("numero_cita")
-        # Validar duplicado por (prospecto upper, numero_cita)
-        if prospecto and numero_cita:
+        servicio = cleaned_data.get("servicio")
+        # Validar duplicado por (prospecto upper, numero_cita, servicio)
+        if prospecto is not None and numero_cita is not None and servicio is not None:
             candidato = prospecto.upper()
-            qs = Cita.objects.filter(prospecto=candidato, numero_cita=numero_cita)
+            qs = Cita.objects.filter(prospecto=candidato, numero_cita=numero_cita, servicio=servicio)
             if getattr(self.instance, "pk", None):
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
                 self.add_error(
                     "prospecto",
-                    f"El prospecto '{candidato}' ya existe con numero de cita {numero_cita}.",
+                    f"El prospecto '{candidato}' ya existe con el mismo servicio y numero de cita {numero_cita}.",
                 )
         return cleaned_data
 
