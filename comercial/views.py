@@ -48,6 +48,22 @@ class CitaForm(forms.ModelForm):
             # El widget lo definimos arriba con formato explÃ­cito
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        prospecto = cleaned_data.get("prospecto")
+        numero_cita = cleaned_data.get("numero_cita")
+        # Validar duplicado por (prospecto upper, numero_cita)
+        if prospecto and numero_cita:
+            candidato = prospecto.upper()
+            qs = Cita.objects.filter(prospecto=candidato, numero_cita=numero_cita)
+            if getattr(self.instance, "pk", None):
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error(
+                    "prospecto",
+                    f"El prospecto '{candidato}' ya existe con numero de cita {numero_cita}.",
+                )
+        return cleaned_data
 
 def citas_lista(request):
     citas = Cita.objects.all().order_by("-fecha_cita")
@@ -81,6 +97,7 @@ def citas_lista(request):
 def agregar_cita(request):
     back_url = request.GET.get("next") or reverse("citas_lista")
     if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
         form = CitaForm(request.POST)
         if form.is_valid():
             cita = form.save()
@@ -96,6 +113,7 @@ def editar_cita(request, id: int):
     back_url = request.GET.get("next") or reverse("citas_lista")
     cita = get_object_or_404(Cita, pk=id)
     if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
         form = CitaForm(request.POST, instance=cita)
         if form.is_valid():
             cita = form.save()
