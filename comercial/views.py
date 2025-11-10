@@ -4,7 +4,6 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime, time
 from .models import Cita
-from .sheets import append_cita_to_sheet, update_cita_in_sheet, delete_cita_from_sheet
 from django.http import HttpResponse
 
 
@@ -85,13 +84,6 @@ def agregar_cita(request):
         form = CitaForm(request.POST)
         if form.is_valid():
             cita = form.save()
-            try:
-                from .sheets import append_cita_to_sheet
-                row = append_cita_to_sheet(cita)
-            except Exception as e:
-                import traceback
-                print(f"❌ Error al enviar a Google Sheets: {e}")
-                traceback.print_exc()
             return redirect(request.POST.get("next") or back_url)
     else:
         form = CitaForm()
@@ -107,11 +99,6 @@ def editar_cita(request, id: int):
         form = CitaForm(request.POST, instance=cita)
         if form.is_valid():
             cita = form.save()
-            # Sincronizar cambio en Google Sheets (update)
-            try:
-                update_cita_in_sheet(cita)
-            except Exception:
-                pass
             return redirect(request.POST.get("next") or back_url)
     else:
         form = CitaForm(instance=cita)
@@ -123,11 +110,6 @@ def editar_cita(request, id: int):
 def eliminar_cita(request, id: int):
     back_url = request.POST.get("next") or request.GET.get("next") or reverse("citas_lista")
     cita = get_object_or_404(Cita, pk=id)
-    # Borrar también del Google Sheet por ID
-    try:
-        delete_cita_from_sheet(cita.id)
-    except Exception:
-        pass
     cita.delete()
     return redirect(back_url)
 

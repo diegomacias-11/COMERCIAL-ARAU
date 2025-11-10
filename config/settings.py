@@ -133,21 +133,6 @@ STORAGES = {
 
 
 # ======================
-# GOOGLE SHEETS
-# ======================
-GOOGLE_SHEETS = {
-    "SPREADSHEET_ID": "1_CIW_ixiNdPkktGdPCek6NSpJWv_AljFqQgWGlbPAmg",
-    "CREDENTIALS_FILE": str(BASE_DIR / "credentials" / "key.json"),
-    "SHEET_NAME": "Historial Comercial",
-}
-
-
-# ======================
 # CLAVE PRIMARIA POR DEFECTO
 # ======================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# VARIABLES LOCALES DE SHEETS
-LOCAL_SPREADSHEET_ID = "1_CIW_ixiNdPkktGdPCek6NSpJWv_AljFqQgWGlbPAmg"
-LOCAL_SHEET_NAME = "Historial Comercial"
