@@ -9,13 +9,103 @@
 {% endblock %}
 
 {% block form_fields %}
-  {% for field in form %}
-    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-    {{ field }}
-    {% if field.errors %}
-      <div class="error">{{ field.errors }}</div>
-    {% endif %}
-  {% endfor %}
+  {% if form.instance.pk %}
+    <div class="form-meta">
+      <strong>Fecha de registro:</strong>
+      {% if form.fecha_registro_display %}
+        {{ form.fecha_registro_display|date:"d/m/Y H:i" }}
+      {% elif form.instance.fecha_registro %}
+        {{ form.instance.fecha_registro|date:"d/m/Y H:i" }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="form-grid">
+    <!-- Grupo 1 -->
+    <div class="form-col">
+      <label for="{{ form.prospecto.id_for_label }}">{{ form.prospecto.label }}</label>
+      {{ form.prospecto }}
+      {% if form.prospecto.errors %}<div class="error">{{ form.prospecto.errors }}</div>{% endif %}
+
+      <label for="{{ form.giro.id_for_label }}">{{ form.giro.label }}</label>
+      {{ form.giro }}
+      {% if form.giro.errors %}<div class="error">{{ form.giro.errors }}</div>{% endif %}
+
+      <label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}</label>
+      {{ form.tipo }}
+      {% if form.tipo.errors %}<div class="error">{{ form.tipo.errors }}</div>{% endif %}
+
+      <label for="{{ form.servicio.id_for_label }}">{{ form.servicio.label }}</label>
+      {{ form.servicio }}
+      {% if form.servicio.errors %}<div class="error">{{ form.servicio.errors }}</div>{% endif %}
+
+      <label for="{{ form.servicio2.id_for_label }}">{{ form.servicio2.label }}</label>
+      {{ form.servicio2 }}
+      {% if form.servicio2.errors %}<div class="error">{{ form.servicio2.errors }}</div>{% endif %}
+
+      <label for="{{ form.servicio3.id_for_label }}">{{ form.servicio3.label }}</label>
+      {{ form.servicio3 }}
+      {% if form.servicio3.errors %}<div class="error">{{ form.servicio3.errors }}</div>{% endif %}
+    </div>
+
+    <!-- Grupo 2 -->
+    <div class="form-col">
+      <label for="{{ form.contacto.id_for_label }}">{{ form.contacto.label }}</label>
+      {{ form.contacto }}
+      {% if form.contacto.errors %}<div class="error">{{ form.contacto.errors }}</div>{% endif %}
+
+      <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+      {{ form.telefono }}
+      {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
+
+      <label for="{{ form.conexion.id_for_label }}">{{ form.conexion.label }}</label>
+      {{ form.conexion }}
+      {% if form.conexion.errors %}<div class="error">{{ form.conexion.errors }}</div>{% endif %}
+    </div>
+
+    <!-- Grupo 3 -->
+    <div class="form-col">
+      <label for="{{ form.medio.id_for_label }}">{{ form.medio.label }}</label>
+      {{ form.medio }}
+      {% if form.medio.errors %}<div class="error">{{ form.medio.errors }}</div>{% endif %}
+
+      <label for="{{ form.estatus_cita.id_for_label }}">{{ form.estatus_cita.label }}</label>
+      {{ form.estatus_cita }}
+      {% if form.estatus_cita.errors %}<div class="error">{{ form.estatus_cita.errors }}</div>{% endif %}
+
+      <label for="{{ form.fecha_cita.id_for_label }}">{{ form.fecha_cita.label }}</label>
+      {{ form.fecha_cita }}
+      {% if form.fecha_cita.errors %}<div class="error">{{ form.fecha_cita.errors }}</div>{% endif %}
+
+      <label for="{{ form.numero_cita.id_for_label }}">{{ form.numero_cita.label }}</label>
+      {{ form.numero_cita }}
+      {% if form.numero_cita.errors %}<div class="error">{{ form.numero_cita.errors }}</div>{% endif %}
+
+      <label for="{{ form.lugar.id_for_label }}">{{ form.lugar.label }}</label>
+      {{ form.lugar }}
+      {% if form.lugar.errors %}<div class="error">{{ form.lugar.errors }}</div>{% endif %}
+    </div>
+
+    <!-- Grupo 4 -->
+    <div class="form-col">
+      <label for="{{ form.estatus_seguimiento.id_for_label }}">{{ form.estatus_seguimiento.label }}</label>
+      {{ form.estatus_seguimiento }}
+      {% if form.estatus_seguimiento.errors %}<div class="error">{{ form.estatus_seguimiento.errors }}</div>{% endif %}
+
+      <label for="{{ form.comentarios.id_for_label }}">{{ form.comentarios.label }}</label>
+      {{ form.comentarios }}
+      {% if form.comentarios.errors %}<div class="error">{{ form.comentarios.errors }}</div>{% endif %}
+
+      <label for="{{ form.vendedor.id_for_label }}">{{ form.vendedor.label }}</label>
+      {{ form.vendedor }}
+      {% if form.vendedor.errors %}<div class="error">{{ form.vendedor.errors }}</div>{% endif %}
+
+      <label for="{{ form.monto_factura.id_for_label }}">{{ form.monto_factura.label }}</label>
+      {{ form.monto_factura }}
+      {% if form.monto_factura.errors %}<div class="error">{{ form.monto_factura.errors }}</div>{% endif %}
+    </div>
+  </div>
+
   <input type="hidden" name="next" value="{{ back_url }}" />
 {% endblock %}
 
@@ -23,8 +113,7 @@
   {% if form.instance.pk %}
     <input type="hidden" name="next" value="{{ back_url }}" />
     <button type="submit"
-            class="btn-submit"
-            style="background-color:#c73b3b; margin-top:.5rem;"
+            class="btn-delete"
             formmethod="post"
             formnovalidate
             formaction="{% url 'eliminar_cita' form.instance.pk %}">

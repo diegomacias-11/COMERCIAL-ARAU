@@ -1,4 +1,55 @@
-﻿.filter-container .btn-filter,
+﻿/* Layout de dos columnas para formularios de Citas */
+.form-meta {
+  width: 100%;
+  text-align: center;
+  margin-bottom: .5rem;
+  color: #666;
+  font-size: .9rem;
+}
+.form-grid {
+  --col-gap: 2rem;                 /* ancho del espacio entre columnas */
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  row-gap: 1rem;
+  column-gap: var(--col-gap);
+  width: 100%;
+  align-items: stretch;            /* todas las columnas a la misma altura */
+  justify-items: center;
+  position: relative;              /* referencia para los divisores */
+}
+.form-col {
+  width: 100%;
+  max-width: 400px;
+  padding: 0 1rem;
+  position: relative; /* necesario para posicionar el divisor por columna */
+}
+.form-col:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: .5rem;                      /* pequeño margen superior para que no toque el borde */
+  bottom: .5rem;                   /* pequeño margen inferior */
+  left: 100%;
+  transform: translateX(calc(var(--col-gap) / 2));  /* centrada entre columnas */
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #aebed2 12%,
+    #aebed2 88%,
+    transparent 100%
+  ); /* línea sutil con desvanecido */
+}
+.form-col label {
+  display: block;
+  text-align: center; /* asegurar labels centrados */
+}
+.form-sep {
+  width: 100%;
+  border: 0;
+  border-top: 1px dashed #aebed2;
+  margin: .75rem 0;
+}
+.filter-container .btn-filter,
 .filter-container .btn-filter:link,
 .btn-filter {
   display: inline-flex;
@@ -178,6 +229,13 @@ main {
   flex: 1;
 }
 
+/* Reportes (Looker Studio) */
+html, body { height: 100%; }
+body.reportes-no-scroll { overflow: hidden; }
+.full-bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+.ls-container { position: relative; }
+#ls-iframe { display:block; border:0; width:100vw; height:100vh; position: relative; z-index: 1; }
+
 .filter-container {
   width: 100%;
   background-color: #59b9c7;
@@ -285,7 +343,7 @@ main {
   justify-content: flex-start;
   /* centra verticalmente el contenedor */
   width: 100%;
-  max-width: 600px;
+  max-width: 1200px;
   margin: 2rem auto;
   border: 1px solid #aebed2;
   border-radius: 6px;
@@ -409,6 +467,31 @@ main {
   color: #d2dee3;              /* mantiene color del estado base */
   background-color: #232833;   /* ligeramente más oscuro que #2b313f */
   border-color: #aebed2;       /* borde visible en hover */
+}
+
+/* Botón eliminar: mismo estilo base, en rojo */
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #c73b3b;
+  border: 1px solid transparent;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-top: .5rem;
+}
+
+.btn-delete:hover {
+  color: #ffffff;
+  background-color: #a62f2f;  /* más oscuro que #c73b3b */
+  border-color: #2b313f;      /* borde visible en hover */
 }
 
 /* Ensure primary button is pinned right without descentrar filtros */
