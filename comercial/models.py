@@ -53,6 +53,7 @@ ESTATUS_SEGUIMIENTO_CHOICES = [
     ("Stand by", "Stand by"),
     ("Pendiente de cierre", "Pendiente de cierre"),
     ("En activación", "En activación"),
+    ("Reclutando", "Reclutando"),
     ("Cerrado", "Cerrado"),
     ("No está interesado en este servicio", "No está interesado en este servicio"),
     ("Fuera de su presupuesto", "Fuera de su presupuesto"),
@@ -85,7 +86,6 @@ class Cita(models.Model):
     estatus_cita = models.CharField(max_length=50, choices=ESTATUS_CITA_CHOICES, blank=True, null=True)
     numero_cita = models.CharField(max_length=10, choices=[(str(i), str(i)) for i in range(1, 6)], blank=True, null=True)
     estatus_seguimiento = models.CharField(max_length=100, choices=ESTATUS_SEGUIMIENTO_CHOICES, blank=True, null=True)
-    monto_factura = models.FloatField(null=True, blank=True) 
     comentarios = models.TextField(blank=True, null=True)
     lugar = models.CharField(max_length=50, choices=LUGAR_CHOICES, blank=True, null=True)
     fecha_cita = models.DateTimeField()

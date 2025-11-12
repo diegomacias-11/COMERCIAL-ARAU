@@ -25,6 +25,7 @@ class CitaForm(forms.ModelForm):
         # Pasar fecha_registro para display
         if getattr(self, "instance", None) and getattr(self.instance, "pk", None) and self.instance.fecha_registro:
             self.fecha_registro_display = timezone.localtime(self.instance.fecha_registro)
+
     class Meta:
         model = Cita
         fields = [
@@ -45,32 +46,11 @@ class CitaForm(forms.ModelForm):
             "estatus_seguimiento",
             "comentarios",
             "vendedor",
-            "monto_factura",
         ]
-        widgets = {
-            # El widget lo definimos arriba con formato explÃ­cito
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        prospecto = cleaned_data.get("prospecto")
-        numero_cita = cleaned_data.get("numero_cita")
-        servicio = cleaned_data.get("servicio")
-        # Validar duplicado por (prospecto upper, numero_cita, servicio)
-        if prospecto is not None and numero_cita is not None and servicio is not None:
-            candidato = prospecto.upper()
-            qs = Cita.objects.filter(prospecto=candidato, numero_cita=numero_cita, servicio=servicio)
-            if getattr(self.instance, "pk", None):
-                qs = qs.exclude(pk=self.instance.pk)
-            if qs.exists():
-                self.add_error(
-                    "prospecto",
-                    f"El prospecto '{candidato}' ya existe con el mismo servicio y numero de cita {numero_cita}.",
-                )
-        return cleaned_data
+        widgets = {}
 
 def citas_lista(request):
-    citas = Cita.objects.all().order_by("-fecha_cita")
+    citas = Cita.objects.all().order_by("-fecha_registro")
     fecha_desde = request.GET.get("fecha_desde") or ""
     fecha_hasta = request.GET.get("fecha_hasta") or ""
 
@@ -138,6 +118,7 @@ def eliminar_cita(request, id: int):
 
 def reportes_dashboard(request):
     return render(request, "comercial/reportes.html")
+
 
 
 
