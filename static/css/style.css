@@ -319,8 +319,8 @@ body.reportes-no-scroll { overflow: hidden; }
   }
   /* Flatten children of form into grid to colocate con .btn-primary */
   .filter-container form { display: contents; }
-  /* Ocultar labels para ahorrar espacio vertical */
-  .filter-container label { display: none; }
+  /* Mantener labels visibles (se puede ajustar tipografía si es necesario) */
+  .filter-container label { display: inline-block; }
   /* Inputs de fecha ocupan media fila cada uno (2 de 4 columnas) */
   .filter-container input[type="date"] {
     grid-column: span 2;
@@ -340,6 +340,49 @@ body.reportes-no-scroll { overflow: hidden; }
     width: 100%;
     margin: 0;
   }
+}
+
+/* Ajuste móvil: 2 filas, botones juntos en misma fila (incluye Nueva cita) */
+@media (max-width: 900px) {
+  /* Usar grid en contenedor y hacer que los hijos del form participen de la grilla */
+  .filter-container { display: grid !important; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: .5rem; row-gap: .35rem; align-items: end; }
+  .filter-container form { display: contents !important; }
+  /* Etiquetas encima del input y sin estilo de botón */
+  .filter-container label { display: block !important; white-space: nowrap; font-size: .85rem; margin: 0 0 .15rem 0; text-align: left; background: transparent !important; padding: 0 !important; border-radius: 0 !important; }
+  /* Zonas de fecha: dos columnas de 6 fracciones cada una */
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 6; grid-row: 1; }
+  #fecha_desde { grid-column: 1 / span 6; grid-row: 2; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 7 / span 6; grid-row: 1; }
+  #fecha_hasta { grid-column: 7 / span 6; grid-row: 2; }
+  /* Centrar texto de labels e inputs dentro de su columna */
+  .filter-container label { text-align: center !important; }
+  .filter-container #fecha_desde,
+  .filter-container #fecha_hasta { justify-self: center; width: 100%; max-width: 16rem; }
+  /* Botones compactos en la misma fila 3 */
+  .filter-container .btn-filter, .filter-container .btn-primary { font-size: 0.85rem; padding: 0.3rem 0.6rem; width: auto; min-width: max-content; }
+  /* Más espacio para botones: 3 columnas cada uno */
+  .filter-container button.btn-filter { grid-column: 2 / span 3; grid-row: 3; justify-self: center; margin: 0; }
+  .filter-container a.btn-filter { grid-column: 7 / span 3; grid-row: 3; justify-self: center; margin: 0; }
+  .filter-container .btn-primary { grid-column: 10 / span 3; grid-row: 3; position: static !important; transform: none !important; right: auto !important; top: auto !important; justify-self: end; }
+}
+
+/* Breakpoint extra: compactar aún más en pantallas medianas */
+@media (max-width: 720px) {
+  .filter-container #fecha_desde,
+  .filter-container #fecha_hasta { max-width: 14rem; }
+  .filter-container .btn-filter, .filter-container .btn-primary { font-size: 0.8rem; padding: 0.28rem 0.5rem; }
+  .filter-container button.btn-filter { grid-column: 1 / span 4; }
+  .filter-container a.btn-filter { grid-column: 5 / span 4; }
+  .filter-container .btn-primary { grid-column: 9 / span 4; }
+}
+
+/* Breakpoint chico: evitar encimado; mover Nueva cita a fila siguiente si no cabe */
+@media (max-width: 560px) {
+  .filter-container #fecha_desde,
+  .filter-container #fecha_hasta { max-width: 13rem; }
+  .filter-container button.btn-filter { grid-column: 1 / span 6; grid-row: 3; }
+  .filter-container a.btn-filter { grid-column: 7 / span 6; grid-row: 3; }
+  .filter-container .btn-primary { grid-column: 7 / span 6; grid-row: 4; justify-self: end; }
 }
 
 .table-container {
@@ -780,3 +823,294 @@ body.reportes-no-scroll { overflow: hidden; }
   width: 14px;
   height: 14px;
 }
+
+/* Final, mobile-first filter bar layout to match desktop aesthetics */
+@media (max-width: 900px) {
+  /* Grid of 5 columns: 2 for dates, 2 for filter buttons, 1 for primary */
+  .filter-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr auto auto auto !important;
+    column-gap: .5rem !important;
+    row-gap: .35rem !important;
+    align-items: end !important;
+    overflow: visible !important; /* evita cortar el botón primario */
+  }
+  .filter-container form { display: contents !important; }
+  /* Labels above inputs, centered */
+  .filter-container label {
+    display: block !important;
+    font-size: .85rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 0 .15rem 0 !important;
+  }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 2 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 2 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  /* Buttons */
+  .filter-container .btn-filter,
+  .filter-container .btn-primary {
+    font-size: .85rem !important;
+    padding: .3rem .6rem !important;
+    width: auto !important;
+    min-width: max-content !important;
+  }
+  /* Filtrar y Limpiar centrados debajo de cada mitad */
+  .filter-container button.btn-filter { grid-column: 3 !important; grid-row: 2 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 4 !important; grid-row: 2 !important; justify-self: center !important; }
+  /* Nueva cita a la derecha en la misma fila cuando hay espacio */
+  .filter-container .btn-primary { grid-column: 5 !important; grid-row: 2 !important; justify-self: end !important; position: static !important; right: auto !important; top: auto !important; transform: none !important; }
+}
+
+/* Medium phones: compact inputs and allow primary to wrap if needed */
+@media (max-width: 720px) {
+  #fecha_desde, #fecha_hasta { max-width: 14rem !important; }
+  .filter-container .btn-filter, .filter-container .btn-primary { font-size: .8rem !important; padding: .28rem .5rem !important; }
+  /* si hay poco espacio, deja que el primario baje a la fila siguiente */
+  .filter-container .btn-primary { grid-row: 3 !important; }
+}
+
+/* Small phones: keep everything readable, never overlap */
+@media (max-width: 560px) {
+  #fecha_desde, #fecha_hasta { max-width: 13rem !important; }
+}
+
+/* === Final robust filter bar layout (works at any width) === */
+/* Desktop-ish and tablets landscape */
+@media (min-width: 901px) {
+  .filter-container { display: grid !important; grid-template-columns: repeat(12, minmax(0,1fr)) !important; column-gap: .6rem !important; row-gap: .45rem !important; align-items: end !important; position: relative !important; overflow: visible !important; }
+  .filter-container form { display: contents !important; }
+  .filter-container label { display: block !important; text-align: center !important; font-weight: 600 !important; margin: 0 0 .15rem 0 !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 6 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 / span 6 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 22rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 7 / span 6 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 7 / span 6 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 22rem !important; }
+  .filter-container button.btn-filter { grid-column: 3 / span 3 !important; grid-row: 3 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 7 / span 3 !important; grid-row: 3 !important; justify-self: center !important; }
+  .filter-container > .btn-primary { grid-column: 11 / span 2 !important; grid-row: 3 !important; justify-self: end !important; position: static !important; right: auto !important; top: auto !important; transform: none !important; }
+}
+
+/* Tablets portrait and medium phones */
+@media (max-width: 900px) and (min-width: 601px) {
+  .filter-container { display: grid !important; grid-template-columns: repeat(12, minmax(0,1fr)) !important; column-gap: .6rem !important; row-gap: .5rem !important; align-items: end !important; overflow: visible !important; }
+  .filter-container form { display: contents !important; }
+  .filter-container label { display: block !important; text-align: center !important; font-weight: 600 !important; margin: 0 0 .15rem 0 !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 6 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 / span 6 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 18rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 7 / span 6 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 7 / span 6 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 18rem !important; }
+  .filter-container button.btn-filter { grid-column: 2 / span 4 !important; grid-row: 3 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 7 / span 4 !important; grid-row: 3 !important; justify-self: center !important; }
+  .filter-container > .btn-primary { grid-column: 11 / span 2 !important; grid-row: 3 !important; justify-self: end !important; position: static !important; transform: none !important; }
+}
+
+/* Small phones: stack cleanly */
+@media (max-width: 600px) {
+  .filter-container { display: grid !important; grid-template-columns: repeat(6, minmax(0,1fr)) !important; column-gap: .5rem !important; row-gap: .5rem !important; align-items: end !important; }
+  .filter-container form { display: contents !important; }
+  .filter-container label { display: block !important; text-align: center !important; font-weight: 600 !important; margin: 0 0 .1rem 0 !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 6 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 / span 6 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 1 / span 6 !important; grid-row: 3 !important; }
+  #fecha_hasta { grid-column: 1 / span 6 !important; grid-row: 4 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  .filter-container button.btn-filter { grid-column: 1 / span 3 !important; grid-row: 5 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 4 / span 3 !important; grid-row: 5 !important; justify-self: center !important; }
+  .filter-container > .btn-primary { grid-column: 4 / span 3 !important; grid-row: 6 !important; justify-self: end !important; position: static !important; transform: none !important; }
+}
+
+/* Authoritative final layout: simple flex + grid inside form */
+@media (min-width: 0px) {
+  .filter-container { display: flex !important; flex-wrap: wrap !important; align-items: flex-end !important; justify-content: center !important; gap: .5rem 1rem !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow: visible !important; position: relative !important; }
+  .filter-container form { display: grid !important; grid-template-columns: minmax(180px,1fr) minmax(180px,1fr) auto auto !important; column-gap: .6rem !important; row-gap: .4rem !important; align-items: end !important; flex: 1 1 auto !important; min-width: 0 !important; }
+  .filter-container label { display: block !important; text-align: center !important; font-weight: 600 !important; margin: 0 0 .15rem 0 !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 20rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 2 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 2 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 20rem !important; }
+  .filter-container button.btn-filter { grid-column: 3 !important; grid-row: 2 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 4 !important; grid-row: 2 !important; justify-self: center !important; }
+  /* Primary action sits to the right, never absolute */
+  .filter-container > .btn-primary { position: static !important; right: auto !important; top: auto !important; transform: none !important; margin-left: auto !important; align-self: end !important; flex: 0 0 auto !important; }
+}
+
+/* Medium screens: allow tighter inputs and keep one row where possible */
+@media (max-width: 800px) {
+  .filter-container form { grid-template-columns: minmax(160px,1fr) minmax(160px,1fr) auto auto !important; column-gap: .5rem !important; }
+  #fecha_desde, #fecha_hasta { max-width: 16rem !important; }
+}
+
+/* Small screens: stack dates and split buttons; primary drops below aligned right */
+@media (max-width: 540px) {
+  .filter-container form { grid-template-columns: 1fr 1fr !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 2 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 / span 2 !important; grid-row: 2 !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 1 / span 2 !important; grid-row: 3 !important; }
+  #fecha_hasta { grid-column: 1 / span 2 !important; grid-row: 4 !important; }
+  .filter-container button.btn-filter { grid-column: 1 !important; grid-row: 5 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 2 !important; grid-row: 5 !important; justify-self: center !important; }
+  .filter-container > .btn-primary { flex: 1 0 100% !important; align-self: end !important; text-align: right !important; }
+}
+
+/* Consistent compact layout up to 1200px wide: mimic desktop, no overflow */
+@media (max-width: 1200px) {
+  /* Reset to a clean, predictable layout under 1200px */
+  .filter-container {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: .5rem 1rem !important;
+    overflow: visible !important;
+    position: relative !important;
+  }
+  /* Form becomes a compact grid; primary button is a sibling aligned right */
+  .filter-container form {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr auto auto !important;
+    column-gap: .5rem !important;
+    row-gap: .35rem !important;
+    align-items: end !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  .filter-container label {
+    display: block !important;
+    text-align: center !important;
+    font-size: .85rem !important;
+    font-weight: 600 !important;
+    margin: 0 0 .15rem 0 !important;
+  }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 1 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 / span 1 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 2 / span 1 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 2 / span 1 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  /* Buttons inside the form grid */
+  .filter-container button.btn-filter { grid-column: 3 / span 1 !important; grid-row: 2 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 4 / span 1 !important; grid-row: 2 !important; justify-self: center !important; }
+  /* Primary stays to the right as a flex sibling */
+  .filter-container > .btn-primary {
+    position: static !important;
+    margin-left: auto !important;
+    align-self: end !important;
+    transform: none !important;
+  }
+}
+
+/* Final responsive overrides to match desktop aesthetics on smaller screens */
+@media (max-width: 900px) {
+  .filter-container { display: grid !important; grid-template-columns: minmax(260px,1fr) minmax(260px,1fr) auto auto 1fr auto !important; column-gap: .75rem !important; row-gap: .5rem !important; align-items: end !important; }
+  .filter-container form { display: contents !important; }
+  /* Labels above inputs, centered */
+  .filter-container label { display: block !important; font-size: .85rem; font-weight: 600; text-align: center !important; background: transparent !important; padding: 0 !important; margin: 0 0 .2rem 0 !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 !important; grid-row: 1 !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 2 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  #fecha_hasta { grid-column: 2 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 16rem !important; }
+  /* Buttons: centered for Filtrar/Limpiar; Nueva cita right aligned */
+  .filter-container .btn-filter, .filter-container .btn-primary { font-size: .85rem !important; padding: .3rem .6rem !important; width: auto !important; min-width: max-content !important; }
+  .filter-container button.btn-filter { grid-column: 3 !important; grid-row: 2 !important; justify-self: center !important; margin: 0 !important; }
+  .filter-container a.btn-filter { grid-column: 4 !important; grid-row: 2 !important; justify-self: center !important; margin: 0 !important; }
+  .filter-container .btn-primary { grid-column: 6 !important; grid-row: 2 !important; justify-self: end !important; position: static !important; right: auto !important; top: auto !important; transform: none !important; }
+}
+
+@media (max-width: 720px) {
+  .filter-container { grid-template-columns: minmax(220px,1fr) minmax(220px,1fr) auto auto 1fr auto !important; }
+  #fecha_desde, #fecha_hasta { max-width: 14rem !important; }
+  .filter-container .btn-filter, .filter-container .btn-primary { font-size: .8rem !important; padding: .28rem .5rem !important; }
+  /* Drop primary to next line if tight */
+  .filter-container .btn-primary { grid-row: 3 !important; justify-self: end !important; }
+}
+
+@media (max-width: 560px) {
+  .filter-container { grid-template-columns: minmax(200px,1fr) minmax(200px,1fr) auto auto 1fr auto !important; }
+  #fecha_desde, #fecha_hasta { max-width: 13rem !important; }
+}
+/* Authoritative final layout: simple flex + grid inside form */
+@media (min-width: 0px) {
+  .filter-container { display: flex !important; flex-wrap: wrap !important; align-items: flex-end !important; justify-content: center !important; gap: .5rem 1rem !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow: visible !important; position: relative !important; }
+  .filter-container form { display: grid !important; grid-template-columns: minmax(180px,1fr) minmax(180px,1fr) auto auto !important; column-gap: .6rem !important; row-gap: .4rem !important; align-items: end !important; flex: 1 1 auto !important; min-width: 0 !important; }
+  .filter-container label { display: block !important; text-align: center !important; font-weight: 600 !important; margin: 0 0 .15rem 0 !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 20rem !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 2 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 2 !important; grid-row: 2 !important; justify-self: center !important; width: 100% !important; max-width: 20rem !important; }
+  .filter-container button.btn-filter { grid-column: 3 !important; grid-row: 2 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 4 !important; grid-row: 2 !important; justify-self: center !important; }
+  /* Primary action sits to the right, never absolute */
+  .filter-container > .btn-primary { position: static !important; right: auto !important; top: auto !important; transform: none !important; margin-left: auto !important; align-self: end !important; flex: 0 0 auto !important; }
+}
+
+/* Medium screens: allow tighter inputs and keep one row where possible */
+@media (max-width: 800px) {
+  .filter-container form { grid-template-columns: minmax(160px,1fr) minmax(160px,1fr) auto auto !important; column-gap: .5rem !important; }
+  #fecha_desde, #fecha_hasta { max-width: 16rem !important; }
+}
+
+/* Small screens: stack dates; buttons on one row; primary full-width below */
+@media (max-width: 540px) {
+  .filter-container form { grid-template-columns: 1fr 1fr !important; }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 / span 2 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 / span 2 !important; grid-row: 2 !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 1 / span 2 !important; grid-row: 3 !important; }
+  #fecha_hasta { grid-column: 1 / span 2 !important; grid-row: 4 !important; }
+  .filter-container button.btn-filter { grid-column: 1 !important; grid-row: 5 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 2 !important; grid-row: 5 !important; justify-self: center !important; }
+  .filter-container > .btn-primary {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    justify-self: end !important;
+    align-self: flex-end !important;
+    text-align: right !important;
+    margin-top: .25rem !important;
+  }
+}
+
+/* Mobile overrides (solo pantallas ≤ 900px). Escritorio intacto. */
+@media (max-width: 900px) {
+  .filter-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: .5rem !important;
+    overflow: visible !important; /* evita cortes */
+  }
+  .filter-container form {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* Desde | Hasta */
+    column-gap: .5rem !important;
+    row-gap: .25rem !important;
+    align-items: end !important;
+    width: 100% !important;
+  }
+  /* Labels arriba y centrados */
+  .filter-container label {
+    display: block !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    margin: 0 0 .15rem 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .filter-container label[for="fecha_desde"] { grid-column: 1 !important; grid-row: 1 !important; }
+  #fecha_desde { grid-column: 1 !important; grid-row: 2 !important; width: 100% !important; }
+  .filter-container label[for="fecha_hasta"] { grid-column: 2 !important; grid-row: 1 !important; }
+  #fecha_hasta { grid-column: 2 !important; grid-row: 2 !important; width: 100% !important; }
+  /* Botones centrados abajo */
+  .filter-container button.btn-filter { grid-column: 1 !important; grid-row: 3 !important; justify-self: center !important; }
+  .filter-container a.btn-filter { grid-column: 2 !important; grid-row: 3 !important; justify-self: center !important; }
+  /* “Nueva cita” dentro de la barra, a la derecha; sin absoluto */
+  .filter-container .btn-primary {
+    position: static !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    align-self: flex-end !important;
+    margin-top: .25rem !important;
+    width: auto !important;
+  }
+}
+
