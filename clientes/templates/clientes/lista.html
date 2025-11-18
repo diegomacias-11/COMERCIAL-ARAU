@@ -1,0 +1,57 @@
+{% extends "lista.html" %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .table-container { overflow-x: auto !important; }
+    .table { min-width: 1100px; }
+  </style>
+{% endblock %}
+
+{% block filtros %}
+  <form method="get">
+    <label for="fecha_desde">Fecha desde</label>
+    <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}" />
+    <label for="fecha_hasta">Fecha hasta</label>
+    <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
+    <button type="submit" class="btn-filter">Filtrar</button>
+    <a href="{% url 'clientes_lista' %}" class="btn-filter">Limpiar</a>
+  </form>
+  <a href="{% url 'agregar_cliente' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary">Nuevo cliente</a>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th>Cliente</th>
+    <th>Giro</th>
+    <th>Tipo</th>
+    <th>Contacto</th>
+    <th>Teléfono</th>
+    <th>Conexión</th>
+    <th>Fecha registro</th>
+    <th>Acciones</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for c in clientes %}
+    <tr>
+      <td>{{ c.cliente|default_if_none:"" }}</td>
+      <td>{{ c.giro|default_if_none:"" }}</td>
+      <td>{{ c.tipo|default_if_none:"" }}</td>
+      <td>{{ c.contacto|default_if_none:"" }}</td>
+      <td>{{ c.telefono|default_if_none:"" }}</td>
+      <td>{{ c.conexion|default_if_none:"" }}</td>
+      <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>
+      <td>
+        <a href="{% url 'editar_cliente' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="100%">Sin clientes registrados</td>
+    </tr>
+  {% endfor %}
+{% endblock %}
+

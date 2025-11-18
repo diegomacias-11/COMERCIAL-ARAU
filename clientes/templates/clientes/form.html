@@ -1,0 +1,69 @@
+{% extends "form.html" %}
+
+{% block title %}Nuevo Cliente{% endblock %}
+
+{% block form_container_classes %}clientes-form{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  {% if form.instance.pk %}
+    <div class="form-meta">
+      <strong>Fecha de registro:</strong>
+      {% if form.fecha_registro_display %}
+        {{ form.fecha_registro_display|date:"d/m/Y H:i" }}
+      {% elif form.instance.fecha_registro %}
+        {{ form.instance.fecha_registro|date:"d/m/Y H:i" }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
+      {{ form.cliente }}
+      {% if form.cliente.errors %}<div class="error">{{ form.cliente.errors }}</div>{% endif %}
+
+      <label for="{{ form.giro.id_for_label }}">{{ form.giro.label }}</label>
+      {{ form.giro }}
+      {% if form.giro.errors %}<div class="error">{{ form.giro.errors }}</div>{% endif %}
+
+      <label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}</label>
+      {{ form.tipo }}
+      {% if form.tipo.errors %}<div class="error">{{ form.tipo.errors }}</div>{% endif %}
+    </div>
+
+    <div class="form-col">
+      <label for="{{ form.contacto.id_for_label }}">{{ form.contacto.label }}</label>
+      {{ form.contacto }}
+      {% if form.contacto.errors %}<div class="error">{{ form.contacto.errors }}</div>{% endif %}
+
+      <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+      {{ form.telefono }}
+      {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
+
+      <label for="{{ form.conexion.id_for_label }}">{{ form.conexion.label }}</label>
+      {{ form.conexion }}
+      {% if form.conexion.errors %}<div class="error">{{ form.conexion.errors }}</div>{% endif %}
+    </div>
+  </div>
+
+  <input type="hidden" name="next" value="{{ back_url }}" />
+{% endblock %}
+
+{% block extra_actions %}
+  {% if form.instance.pk %}
+    <input type="hidden" name="next" value="{{ back_url }}" />
+    <button type="submit"
+            class="btn-delete"
+            formmethod="post"
+            formnovalidate
+            formaction="{% url 'eliminar_cliente' form.instance.pk %}">
+      Eliminar
+    </button>
+  {% endif %}
+{% endblock %}
