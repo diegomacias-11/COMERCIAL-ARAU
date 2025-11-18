@@ -309,6 +309,39 @@ body.reportes-no-scroll { overflow: hidden; }
   }
 }
 
+/* Alternativa: barra en 2 filas usando CSS Grid */
+@media (max-width: 900px) {
+  .filter-container {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    justify-items: stretch;
+  }
+  /* Flatten children of form into grid to colocate con .btn-primary */
+  .filter-container form { display: contents; }
+  /* Ocultar labels para ahorrar espacio vertical */
+  .filter-container label { display: none; }
+  /* Inputs de fecha ocupan media fila cada uno (2 de 4 columnas) */
+  .filter-container input[type="date"] {
+    grid-column: span 2;
+    min-width: 0;
+    width: 100%;
+  }
+  /* Ordenar: primero inputs, luego botones */
+  .filter-container input { order: 1; }
+  .filter-container select { order: 1; }
+  .filter-container .btn-filter,
+  .filter-container .btn-primary { order: 2; }
+  /* Botones de acción: Filtrar y Limpiar 1 columna; Nuevo 2 columnas */
+  .filter-container .btn-filter { grid-column: span 1; }
+  .filter-container .btn-primary {
+    grid-column: span 2;
+    position: static !important;
+    width: 100%;
+    margin: 0;
+  }
+}
+
 .table-container {
   flex: 1;
   width: 100%;
@@ -474,6 +507,7 @@ body.reportes-no-scroll { overflow: hidden; }
 .btn-filter {
   display: inline-flex;
   align-items: center;
+  justify-content: center; /* centrar texto en botones largos */
   gap: 0.25rem;
   background-color: #59b9c7;
   border: 1px solid transparent; /* evita salto cuando el hover muestra borde */
@@ -500,6 +534,7 @@ body.reportes-no-scroll { overflow: hidden; }
 .btn-primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center; /* centrar texto */
   gap: 0.25rem;
   background-color: #2b313f;
   color: #d2dee3;
