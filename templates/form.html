@@ -7,7 +7,7 @@
   <main>
   {% block back_link %}{% endblock %}
 
-  <div class="form-container">
+  <div class="form-container {% block form_container_classes %}{% endblock %}">
     <form method="post">
       {% csrf_token %}
       {% block form_fields %}
