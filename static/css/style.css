@@ -279,6 +279,36 @@ body.reportes-no-scroll { overflow: hidden; }
   color: #d2dee3;
 }
 
+/* Responsive: evitar encimado en móviles/tablets */
+@media (max-width: 900px) {
+  /* Pila vertical y ancho completo para evitar encimados */
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-right: .5rem;
+  }
+  .filter-container form {
+    width: 100%;
+    justify-content: center;
+    order: 1;
+  }
+  .filter-container input,
+  .filter-container select,
+  .filter-container .btn-filter {
+    width: 100%;
+  }
+  .filter-container .btn-primary {
+    order: 2;
+    position: static !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    width: 100%;
+    margin: .25rem 0 0 0;
+  }
+}
+
 .table-container {
   flex: 1;
   width: 100%;
@@ -288,10 +318,14 @@ body.reportes-no-scroll { overflow: hidden; }
   overflow: hidden;
   overflow-y: auto;
   box-sizing: border-box;
+  /* Firefox custom scrollbar (aplica a vertical y horizontal) */
+  scrollbar-width: thin;
+  scrollbar-color: #808b98 transparent;
 }
 
 .table-container::-webkit-scrollbar {
-  width: 10px;
+  width: 10px;   /* vertical */
+  height: 10px;  /* horizontal */
 }
 
 .table-container::-webkit-scrollbar-thumb {
@@ -301,6 +335,11 @@ body.reportes-no-scroll { overflow: hidden; }
 
 .table-container::-webkit-scrollbar-thumb:hover {
   background: #294369;
+}
+
+/* Evita bloque de esquina en scrollbars combinadas */
+.table-container::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .table {
