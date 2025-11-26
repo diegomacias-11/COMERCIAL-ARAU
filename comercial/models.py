@@ -44,6 +44,14 @@ ESTATUS_CITA_CHOICES = [
     ("Atendida", "Atendida"),
 ]
 
+NUM_CITA_CHOICES = [
+    ('Primera','Primera'),
+    ('Segunda','Segunda'),
+    ('Tercera','Tercera'),
+    ('Cuarta','Cuarta'),
+    ('Quinta','Quinta'),
+]
+
 ESTATUS_SEGUIMIENTO_CHOICES = [
     ("Esperando respuesta del cliente", "Esperando respuesta del cliente"),
     ("Agendar nueva cita", "Agendar nueva cita"),
@@ -85,7 +93,7 @@ class Cita(models.Model):
     conexion = models.CharField(max_length=150, blank=True, null=True)
     vendedor = models.CharField(max_length=50, choices=VENDEDOR_CHOICES)
     estatus_cita = models.CharField(max_length=50, choices=ESTATUS_CITA_CHOICES, blank=True, null=True)
-    numero_cita = models.CharField(max_length=10, choices=[(str(i), str(i)) for i in range(1, 6)], blank=True, null=True)
+    numero_cita = models.CharField(max_length=10, choices=NUM_CITA_CHOICES, blank=True, null=True)
     estatus_seguimiento = models.CharField(max_length=100, choices=ESTATUS_SEGUIMIENTO_CHOICES, blank=True, null=True)
     comentarios = models.TextField(blank=True, null=True)
     lugar = models.CharField(max_length=50, choices=LUGAR_CHOICES, blank=True, null=True)
