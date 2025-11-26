@@ -12,7 +12,6 @@ venv/
 # Django runtime artifacts
 /db.sqlite3
 /media/
-/static/
 /staticfiles/
 
 # Logs and temp files
