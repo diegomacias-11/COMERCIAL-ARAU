@@ -29,6 +29,7 @@ SERVICIO_CHOICES = [
     ("Maquila de Nómina", "Maquila de Nómina"),
     ("Marketing", "Marketing"),
     ("Reclutamiento", "Reclutamiento"),
+    ("REPSE", "REPSE"),
 ]
 
 VENDEDOR_CHOICES = [
