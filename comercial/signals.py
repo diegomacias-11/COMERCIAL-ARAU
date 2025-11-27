@@ -21,6 +21,7 @@ def crear_cliente_al_cerrar(sender, instance: Cita, created: bool, **kwargs):
         defaults = {
             "giro": instance.giro,
             "tipo": instance.tipo,
+            "medio": instance.medio,
             "contacto": instance.contacto,
             "telefono": instance.telefono,
             "conexion": instance.conexion,
@@ -30,4 +31,3 @@ def crear_cliente_al_cerrar(sender, instance: Cita, created: bool, **kwargs):
             cliente=instance.prospecto,
             defaults=defaults,
         )
-

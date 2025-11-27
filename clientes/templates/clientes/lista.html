@@ -25,7 +25,7 @@
   <tr>
     <th>Cliente</th>
     <th>Giro</th>
-    <th>Tipo</th>
+    <th>Medio</th>
     <th>Contacto</th>
     <th>Teléfono</th>
     <th>Correo</th>
@@ -40,7 +40,7 @@
     <tr>
       <td>{{ c.cliente|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
-      <td>{{ c.tipo|default_if_none:"" }}</td>
+      <td>{{ c.medio|default_if_none:c.tipo|default_if_none:"" }}</td>
       <td>{{ c.contacto|default_if_none:"" }}</td>
       <td>{{ c.telefono|default_if_none:"" }}</td>
       <td>{{ c.correo|default_if_none:"" }}</td>

@@ -14,6 +14,7 @@ class ClienteForm(forms.ModelForm):
             "cliente",
             "giro",
             "tipo",
+            "medio",
             "contacto",
             "telefono",
             "correo",
