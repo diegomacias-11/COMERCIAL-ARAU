@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.LoginRequiredMiddleware',
     'core.middleware.GroupPermissionMiddleware',
 ]
 
@@ -139,3 +140,8 @@ STORAGES = {
 # CLAVE PRIMARIA POR DEFECTO
 # ======================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/citas/'
+SESSION_COOKIE_AGE = 3600  # 1 hora
+SESSION_SAVE_EVERY_REQUEST = True  # renovar inactividad en cada request
