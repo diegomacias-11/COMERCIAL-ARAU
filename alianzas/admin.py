@@ -6,4 +6,9 @@ from .models import Alianza
 class AlianzaAdmin(admin.ModelAdmin):
     list_display = [field.name for field in Alianza._meta.fields]
     search_fields = [field.name for field in Alianza._meta.fields if field.get_internal_type() in ["CharField", "EmailField"]]
-    list_filter = ["telefono", "correo"]
+    list_filter = [
+        field.name
+        for field in Alianza._meta.fields
+        if field.get_internal_type() in ["CharField", "EmailField", "DateTimeField", "BooleanField"]
+    ]
+    ordering = ("nombre",)
