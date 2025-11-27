@@ -515,13 +515,13 @@ body.reportes-no-scroll { overflow: hidden; }
 
 /* Específicos de Clientes: 2 columnas y contenedor más estrecho */
 .form-container.clientes-form {
-  max-width: 900px; /* más estrecho que default (1200px) */
+  max-width: 1200px; /* espacio para 4 columnas con comisionistas */
   margin-left: auto;
   margin-right: auto;
 }
 
 .clientes-form .form-grid {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 /* En listas (e.g., encuesta con <ul><li>), no aplica gap del form; usa 1rem directo */

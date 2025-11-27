@@ -58,6 +58,22 @@
       {{ form.conexion }}
       {% if form.conexion.errors %}<div class="error">{{ form.conexion.errors }}</div>{% endif %}
     </div>
+
+    <div class="form-col">
+      {% for comisionista_field, comision_field in comisiones %}
+        <label for="{{ comisionista_field.id_for_label }}">{{ comisionista_field.label }}</label>
+        {{ comisionista_field }}
+        {% if comisionista_field.errors %}<div class="error">{{ comisionista_field.errors }}</div>{% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="form-col">
+      {% for comisionista_field, comision_field in comisiones %}
+        <label for="{{ comision_field.id_for_label }}">{{ comision_field.label }}</label>
+        {{ comision_field }}
+        {% if comision_field.errors %}<div class="error">{{ comision_field.errors }}</div>{% endif %}
+      {% endfor %}
+    </div>
   </div>
 
   <input type="hidden" name="next" value="{{ back_url }}" />

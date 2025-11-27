@@ -5,9 +5,13 @@ from django.utils import timezone
 from datetime import datetime, time
 
 from .models import Cliente
+from alianzas.models import Alianza
 
 
 class ClienteForm(forms.ModelForm):
+    comision_campos = [f"comision_{i}" for i in range(1, 11)]
+    comisionista_campos = [f"comisionista_{i}" for i in range(1, 11)]
+
     class Meta:
         model = Cliente
         fields = [
@@ -19,13 +23,54 @@ class ClienteForm(forms.ModelForm):
             "telefono",
             "correo",
             "conexion",
+            *[f"comisionista_{i}" for i in range(1, 11)],
+            *[f"comision_{i}" for i in range(1, 11)],
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields.update({
+            campo: self.fields[campo]
+            for campo in self.comisionista_campos + self.comision_campos
+            if campo in self.fields
+        })
+        # Ordenar alianzas por nombre (ya guardadas en uppercase/strip)
+        alianza_qs = Alianza.objects.all().order_by("nombre")
+        for campo in self.comisionista_campos:
+            self.fields[campo].queryset = alianza_qs
+            self.fields[campo].label = f"Comisionista {campo.split('_')[-1]}"
+        # Mostrar valores porcentuales como enteros
+        for campo in self.comision_campos:
+            self.fields[campo].widget = forms.NumberInput(attrs={"step": "0.01", "min": "0"})
+            self.fields[campo].label = f"Comisión {campo.split('_')[-1]} (%)"
+            if self.initial.get(campo) is not None:
+                try:
+                    self.initial[campo] = float(self.initial[campo]) * 100
+                except Exception:
+                    pass
+
         # Pasar fecha_registro para display en plantilla, igual que en comercial
         if getattr(self, "instance", None) and getattr(self.instance, "pk", None) and self.instance.fecha_registro:
             self.fecha_registro_display = timezone.localtime(self.instance.fecha_registro)
+
+    def clean(self):
+        cleaned = super().clean()
+        # Convertir porcentajes enteros a decimales (10 -> 0.10)
+        for campo in self.comision_campos:
+            val = cleaned.get(campo)
+            if val is not None:
+                cleaned[campo] = val / 100
+        return cleaned
+
+
+def _comision_pairs(form: ClienteForm):
+    pairs = []
+    for i in range(1, 11):
+        ci = f"comisionista_{i}"
+        cv = f"comision_{i}"
+        if ci in form.fields and cv in form.fields:
+            pairs.append((form[ci], form[cv]))
+    return pairs
 
 
 def clientes_lista(request):
@@ -67,7 +112,7 @@ def agregar_cliente(request):
     else:
         form = ClienteForm()
 
-    context = {"form": form, "back_url": back_url}
+    context = {"form": form, "back_url": back_url, "comisiones": _comision_pairs(form)}
     return render(request, "clientes/form.html", context)
 
 
@@ -83,7 +128,7 @@ def editar_cliente(request, id: int):
     else:
         form = ClienteForm(instance=cliente)
 
-    context = {"form": form, "back_url": back_url}
+    context = {"form": form, "back_url": back_url, "comisiones": _comision_pairs(form)}
     return render(request, "clientes/form.html", context)
 
 
