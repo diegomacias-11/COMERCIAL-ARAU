@@ -1,6 +1,7 @@
 from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 from .models import Alianza
 
@@ -9,6 +10,17 @@ class AlianzaForm(forms.ModelForm):
     class Meta:
         model = Alianza
         fields = ["nombre", "telefono", "correo"]
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get("nombre", "") or ""
+        nombre_norm = nombre.strip().upper()
+        # Validar unicidad manual para mostrar error amigable en el form
+        qs = Alianza.objects.filter(nombre=nombre_norm)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Ya existe una alianza con ese nombre.")
+        return nombre_norm
 
 
 def alianzas_lista(request):

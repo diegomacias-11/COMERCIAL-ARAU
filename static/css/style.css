@@ -642,9 +642,8 @@ body.reportes-no-scroll { overflow: hidden; }
 /* User card in header (matches primary button aesthetics) */
 .user-card {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.15rem;
+  align-items: center;
+  gap: 0.75rem;
   background-color: #d2dee3;
   /* match btn-primary */
   color: #2b313f;
@@ -652,6 +651,14 @@ body.reportes-no-scroll { overflow: hidden; }
   padding: 0.45rem 0.75rem;
   line-height: 1.1;
   min-width: 12rem;
+}
+
+.user-card .user-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  flex: 1 1 auto;
 }
 
 .user-card .user-name {
@@ -667,7 +674,7 @@ body.reportes-no-scroll { overflow: hidden; }
 }
 
 .user-card .user-group {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 0.75rem;
   opacity: 0.9;
 }
@@ -676,6 +683,17 @@ body.reportes-no-scroll { overflow: hidden; }
   margin-left: auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+}
+
+.user-card .user-logout button {
+  background: transparent;
+  border: none;
+  padding: 0.15rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .user-card .logout-icon {

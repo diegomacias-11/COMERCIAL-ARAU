@@ -11,6 +11,11 @@
 {% endblock %}
 
 {% block form_fields %}
+  {% if form.non_field_errors %}
+    <div class="error">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
   <div class="form-grid">
     <div class="form-col">
       <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
