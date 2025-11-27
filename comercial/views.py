@@ -3,7 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime, time
-from .models import Cita
+
+from .models import Cita, NUM_CITA_CHOICES
 from django.http import HttpResponse
 
 
@@ -37,6 +38,7 @@ class CitaForm(forms.ModelForm):
             "servicio3",
             "contacto",
             "telefono",
+            "correo",
             "conexion",
             "medio",
             "estatus_cita",
@@ -48,6 +50,45 @@ class CitaForm(forms.ModelForm):
             "vendedor",
         ]
         widgets = {}
+
+
+NUMERO_CITA_ORDER = [choice for choice, _ in NUM_CITA_CHOICES]
+
+
+def _siguiente_numero_cita(actual):
+    """
+    Devuelve el valor siguiente de numero_cita respetando el orden de NUM_CITA_CHOICES.
+    Si no hay siguiente o no coincide con la lista, se regresa el valor original.
+    """
+    if actual in NUMERO_CITA_ORDER:
+        idx = NUMERO_CITA_ORDER.index(actual)
+        if idx + 1 < len(NUMERO_CITA_ORDER):
+            return NUMERO_CITA_ORDER[idx + 1]
+    return actual
+
+
+def _initial_desde_cita(cita: Cita) -> dict:
+    """Construye los valores iniciales para registrar una nueva cita tomando otra como base."""
+    return {
+        "prospecto": cita.prospecto,
+        "giro": cita.giro,
+        "tipo": cita.tipo,
+        "servicio": cita.servicio,
+        "servicio2": cita.servicio2,
+        "servicio3": cita.servicio3,
+        "contacto": cita.contacto,
+        "telefono": cita.telefono,
+        "correo": cita.correo,
+        "conexion": cita.conexion,
+        "medio": cita.medio,
+        "estatus_cita": cita.estatus_cita,
+        "numero_cita": _siguiente_numero_cita(cita.numero_cita),
+        "lugar": cita.lugar,
+        "estatus_seguimiento": cita.estatus_seguimiento,
+        "comentarios": cita.comentarios,
+        "vendedor": cita.vendedor,
+        # fecha_cita se deja en blanco para obligar a definir la nueva
+    }
 
 def citas_lista(request):
     citas = Cita.objects.all().order_by("-fecha_registro")
@@ -80,6 +121,11 @@ def citas_lista(request):
 
 def agregar_cita(request):
     back_url = request.GET.get("next") or reverse("citas_lista")
+    copy_from = request.GET.get("copy_from")
+    initial_data = {}
+    if copy_from:
+        origen = get_object_or_404(Cita, pk=copy_from)
+        initial_data = _initial_desde_cita(origen)
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
         form = CitaForm(request.POST)
@@ -87,7 +133,7 @@ def agregar_cita(request):
             cita = form.save()
             return redirect(request.POST.get("next") or back_url)
     else:
-        form = CitaForm()
+        form = CitaForm(initial=initial_data)
 
     context = {"form": form, "back_url": back_url}
     return render(request, "comercial/form.html", context)

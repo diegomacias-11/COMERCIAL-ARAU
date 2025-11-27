@@ -16,6 +16,7 @@ class ClienteForm(forms.ModelForm):
             "tipo",
             "contacto",
             "telefono",
+            "correo",
             "conexion",
         ]
 

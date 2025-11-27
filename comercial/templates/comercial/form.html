@@ -1,5 +1,16 @@
 {% extends "form.html" %}
 
+{% block extra_head %}
+  <style>
+    .form-top-actions {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: .5rem;
+    }
+  </style>
+{% endblock %}
+
 {% block title %}Nueva Cita{% endblock %}
 
 {% block back_link %}
@@ -9,6 +20,15 @@
 {% endblock %}
 
 {% block form_fields %}
+  {% if form.instance.pk %}
+    <div class="form-top-actions">
+      <a class="btn-primary"
+         href="{% url 'agregar_cita' %}?copy_from={{ form.instance.pk }}&next={{ back_url|urlencode }}">
+        Registrar siguiente cita
+      </a>
+    </div>
+  {% endif %}
+
   {% if form.instance.pk %}
     <div class="form-meta">
       <strong>Fecha de registro:</strong>
@@ -57,6 +77,10 @@
       <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
       {{ form.telefono }}
       {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
+
+      <label for="{{ form.correo.id_for_label }}">{{ form.correo.label }}</label>
+      {{ form.correo }}
+      {% if form.correo.errors %}<div class="error">{{ form.correo.errors }}</div>{% endif %}
 
       <label for="{{ form.conexion.id_for_label }}">{{ form.conexion.label }}</label>
       {{ form.conexion }}

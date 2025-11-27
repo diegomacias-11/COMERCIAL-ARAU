@@ -46,6 +46,10 @@
       {{ form.telefono }}
       {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
 
+      <label for="{{ form.correo.id_for_label }}">{{ form.correo.label }}</label>
+      {{ form.correo }}
+      {% if form.correo.errors %}<div class="error">{{ form.correo.errors }}</div>{% endif %}
+
       <label for="{{ form.conexion.id_for_label }}">{{ form.conexion.label }}</label>
       {{ form.conexion }}
       {% if form.conexion.errors %}<div class="error">{{ form.conexion.errors }}</div>{% endif %}
