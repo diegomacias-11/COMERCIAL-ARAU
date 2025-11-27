@@ -1114,3 +1114,35 @@ body.reportes-no-scroll { overflow: hidden; }
   }
 }
 
+/* ==== Alianzas: filtros compactos en línea ==== */
+.filter-container .inline-filter {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 0.35rem !important;
+  margin: 0 !important;
+}
+.filter-container .inline-filter input[type="text"] {
+  width: 170px;
+  padding: 0.3rem 0.45rem;
+}
+.filter-container .btn-primary-inline {
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  margin-left: 0.35rem !important;
+}
+
+/* ==== Alianzas: centrar formulario ==== */
+.alianzas-form .form-grid {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+.alianzas-form .form-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+

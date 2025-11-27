@@ -1,0 +1,38 @@
+{% extends "lista.html" %}
+
+{% block title %}Alianzas{% endblock %}
+
+{% block filtros %}
+  <form method="get" class="inline-filter">
+    <input type="text" id="q" name="q" value="{{ q }}" placeholder="Buscar por nombre" />
+    <button type="submit" class="btn-filter">Filtrar</button>
+    <a href="{% url 'alianzas_lista' %}" class="btn-filter">Limpiar</a>
+  </form>
+  <a href="{% url 'agregar_alianzas' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva alianza</a>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th>Nombre</th>
+    <th>Teléfono</th>
+    <th>Correo</th>
+    <th>Acciones</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for a in alianzas %}
+    <tr>
+      <td>{{ a.nombre|default_if_none:"" }}</td>
+      <td>{{ a.telefono|default_if_none:"" }}</td>
+      <td>{{ a.correo|default_if_none:"" }}</td>
+      <td>
+        <a href="{% url 'editar_alianzas' a.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="100%">Sin alianzas registradas</td>
+    </tr>
+  {% endfor %}
+{% endblock %}

@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block filtros %}
-  <form method="get">
+  <form method="get" class="inline-filter">
     <label for="fecha_desde">Fecha desde</label>
     <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}" />
     <label for="fecha_hasta">Fecha hasta</label>
@@ -19,7 +19,7 @@
     <button type="submit" class="btn-filter">Filtrar</button>
     <a href="{% url 'citas_lista' %}" class="btn-filter">Limpiar</a>
   </form>
-  <a href="{% url 'agregar_cita' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary">Nueva cita</a>
+  <a href="{% url 'agregar_cita' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva cita</a>
 {% endblock %}
 
 {% block tabla_head %}

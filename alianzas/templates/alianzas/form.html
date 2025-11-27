@@ -1,0 +1,44 @@
+{% extends "form.html" %}
+
+{% block title %}Nueva Alianza{% endblock %}
+
+{% block form_container_classes %}alianzas-form{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+      {{ form.nombre }}
+      {% if form.nombre.errors %}<div class="error">{{ form.nombre.errors }}</div>{% endif %}
+
+      <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+      {{ form.telefono }}
+      {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
+
+      <label for="{{ form.correo.id_for_label }}">{{ form.correo.label }}</label>
+      {{ form.correo }}
+      {% if form.correo.errors %}<div class="error">{{ form.correo.errors }}</div>{% endif %}
+    </div>
+  </div>
+
+  <input type="hidden" name="next" value="{{ back_url }}" />
+{% endblock %}
+
+{% block extra_actions %}
+  {% if form.instance.pk %}
+    <input type="hidden" name="next" value="{{ back_url }}" />
+    <button type="submit"
+            class="btn-delete"
+            formmethod="post"
+            formnovalidate
+            formaction="{% url 'eliminar_alianzas' form.instance.pk %}">
+      Eliminar
+    </button>
+  {% endif %}
+{% endblock %}
