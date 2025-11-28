@@ -759,6 +759,73 @@ body.reportes-no-scroll { overflow: hidden; }
   /* más delgada que botones principales */
 }
 
+/* ==== Login page ==== */
+.login-page {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background: url("../img/login.png") center center / cover no-repeat fixed;
+}
+.login-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(255, 255, 255, 0.35);
+  margin: 0;
+  padding: 0;
+}
+.login-card {
+  background: #2b313f;
+  color: #d2dee3;
+  padding: 4rem 4rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: auto;
+  height: auto;
+  flex: 0 0 auto;
+  align-self: center;
+}
+.login-logo {
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+.login-logo img {
+  height: 34px;
+  width: auto;
+}
+.login-title {
+  margin: 0;
+  text-align: center;
+}
+.login-divider {
+  height: 4px;
+  background: #59b9c7;
+  width: 100%;
+  border-radius: 2px;
+  margin: 0.3rem 0 0.6rem 0;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  margin: 0;
+}
+.login-form input {
+  margin-bottom: 0.05rem;
+}
+.login-card input:focus {
+  border-color: #59b9c7;
+  box-shadow: 0 0 0 3px rgba(89, 185, 199, 0.55);
+}
+.login-submit {
+  width: 100%;
+  margin: 2rem 0 0;
+}
+
 .btn-filter:hover {
   background-color: #e0e9f1;
   color: #003b71;
