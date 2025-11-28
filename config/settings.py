@@ -143,5 +143,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/citas/'
+# Mensaje de error simplificado
+from django.contrib.messages import constants as messages  # noqa
+MESSAGE_TAGS = {
+    messages.ERROR: 'error',
+}
 SESSION_COOKIE_AGE = 3600  # 1 hora
 SESSION_SAVE_EVERY_REQUEST = True  # renovar inactividad en cada request

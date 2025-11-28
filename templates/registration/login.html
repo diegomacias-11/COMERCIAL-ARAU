@@ -18,7 +18,7 @@
         <h2 class="login-title">Iniciar sesión</h2>
         <div class="login-divider"></div>
         {% if form.non_field_errors %}
-          <div class="error">{{ form.non_field_errors }}</div>
+          <div class="error">El usuario o la contraseña son incorrectos</div>
         {% endif %}
         <label for="{{ form.username.id_for_label }}">Usuario</label>
         <input type="text"
