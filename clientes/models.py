@@ -6,12 +6,23 @@ TIPO_CHOICES = [
     ("Servicio", "Servicio"),
 ]
 
+MEDIO_CHOICES = [
+    ("Apollo", "Apollo"),
+    ("Remarketing", "Remarketing"),
+    ("Alianzas", "Alianzas"),
+    ("Lead", "Lead"),
+    ("Procompite", "Procompite"),
+    ("Ejecutivos", "Ejecutivos"),
+    ("Personales", "Personales"),
+    ("Expos / Eventos Deportivos", "Expos / Eventos Deportivos"),
+]
+
 
 class Cliente(models.Model):
     cliente = models.CharField(max_length=150)
     giro = models.CharField(max_length=150, blank=True, null=True)
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES, blank=True, null=True)
-    medio = models.CharField("Medio", max_length=100, blank=True, null=True)
+    medio = models.CharField("Medio", max_length=100, choices=MEDIO_CHOICES, blank=True, null=True)
     contacto = models.CharField(max_length=150, blank=True, null=True)
     telefono = models.CharField(
         max_length=10,
