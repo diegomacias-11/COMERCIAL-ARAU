@@ -25,9 +25,11 @@ def crear_cliente_al_cerrar(sender, instance: Cita, created: bool, **kwargs):
             "contacto": instance.contacto,
             "telefono": instance.telefono,
             "conexion": instance.conexion,
+            "servicio": instance.servicio,
         }
         # Usa update_or_create para evitar duplicados si la Cita se edita múltiples veces
         Cliente.objects.update_or_create(
             cliente=instance.prospecto,
+            servicio=instance.servicio,
             defaults=defaults,
         )

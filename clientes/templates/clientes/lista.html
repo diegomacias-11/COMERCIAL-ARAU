@@ -24,6 +24,7 @@
 {% block tabla_head %}
   <tr>
     <th>Cliente</th>
+    <th>Servicio</th>
     <th>Giro</th>
     <th>Medio</th>
     <th>Contacto</th>
@@ -39,6 +40,7 @@
   {% for c in clientes %}
     <tr>
       <td>{{ c.cliente|default_if_none:"" }}</td>
+      <td>{{ c.servicio|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
       <td>{{ c.medio|default_if_none:c.tipo|default_if_none:"" }}</td>
       <td>{{ c.contacto|default_if_none:"" }}</td>

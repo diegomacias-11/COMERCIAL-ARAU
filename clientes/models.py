@@ -1,25 +1,11 @@
 from django.db import models
 from django.core.validators import RegexValidator
-
-TIPO_CHOICES = [
-    ("Producto", "Producto"),
-    ("Servicio", "Servicio"),
-]
-
-MEDIO_CHOICES = [
-    ("Apollo", "Apollo"),
-    ("Remarketing", "Remarketing"),
-    ("Alianzas", "Alianzas"),
-    ("Lead", "Lead"),
-    ("Procompite", "Procompite"),
-    ("Ejecutivos", "Ejecutivos"),
-    ("Personales", "Personales"),
-    ("Expos / Eventos Deportivos", "Expos / Eventos Deportivos"),
-]
+from core.choices import TIPO_CHOICES, MEDIO_CHOICES, SERVICIO_CHOICES
 
 
 class Cliente(models.Model):
     cliente = models.CharField(max_length=150)
+    servicio = models.CharField(max_length=100, choices=SERVICIO_CHOICES, blank=True, null=True)
     giro = models.CharField(max_length=150, blank=True, null=True)
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES, blank=True, null=True)
     medio = models.CharField("Medio", max_length=100, choices=MEDIO_CHOICES, blank=True, null=True)
