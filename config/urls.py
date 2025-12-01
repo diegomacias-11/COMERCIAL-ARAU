@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.views.generic import RedirectView
+from core.views import root_redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(pattern_name='login', permanent=False)),
+    path('', root_redirect, name='root'),
     path('', include('core.urls')),
     path('', include('comercial.urls')),
     path('', include('clientes.urls')),
