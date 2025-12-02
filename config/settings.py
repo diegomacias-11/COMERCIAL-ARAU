@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'clientes',
     'comercial',
     'alianzas',
+    'ventas',
+    'comisiones',
 ]
 
 

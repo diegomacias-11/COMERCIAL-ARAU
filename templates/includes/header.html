@@ -10,6 +10,10 @@
        class="{% if 'citas' in request.path %}active{% endif %}">Citas</a>
     <a href="{% url 'clientes_lista' %}"
        class="{% if 'clientes' in request.path %}active{% endif %}">Clientes</a>
+    <a href="{% url 'ventas_lista' %}"
+       class="{% if 'ventas' in request.path %}active{% endif %}">Ventas</a>
+    <a href="{% url 'comisiones_lista' %}"
+       class="{% if 'comisiones' in request.path %}active{% endif %}">Comisiones</a>
     <a href="{% url 'reportes_dashboard' %}"
        class="{% if 'reportes' in request.path %}active{% endif %}">Reportes</a>
   </nav>

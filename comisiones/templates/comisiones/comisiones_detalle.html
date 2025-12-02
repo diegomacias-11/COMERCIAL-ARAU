@@ -1,0 +1,112 @@
+{% extends "lista.html" %}
+{% load comisiones_extras %}
+
+{% block title %}Detalle de comisiones{% endblock %}
+
+{% block filtros %}
+  <div class="filter-title">{{ comisionista|default_if_none:"" }} – {{ mes_nombre }} {{ anio }}</div>
+  <div class="filter-cut"><div class="line"></div><div></div><div></div></div>
+  <div class="metrics-row">
+    <div class="metric">
+      <div class="metric-label">Total periodo</div>
+      <div class="metric-value">{{ total_periodo|currency }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Liberado</div>
+      <div class="metric-value">{{ total_liberado|currency }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Pagos</div>
+      <div class="metric-value">{{ total_pagos|currency }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Pendiente</div>
+      <div class="metric-value">{{ total_pendiente|currency }}</div>
+    </div>
+  </div>
+  <div class="filter-row">
+    <div></div>
+    <form action="{% url 'comisiones_lista' %}" method="get" class="filter-form-simple comisiones-filter">
+      <input type="hidden" name="mes" value="{{ mes }}">
+      <input type="hidden" name="anio" value="{{ anio }}">
+      <a href="{% url 'comisiones_lista' %}?mes={{ mes }}&anio={{ anio }}" class="btn-filter btn-volver btn-volver-bottom">Volver</a>
+    </form>
+    <div class="actions actions-bottom">
+      {% if comisionista %}
+        <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_registrar_pago_by_id' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Registrar pago</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block tabla_head %}{% endblock %}
+{% block tabla_body %}
+  <tr class="embed-row">
+    <td class="embed">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Comisiones</div>
+          <div class="table-container">
+            <table class="table no-sticky">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Servicio</th>
+                  <th>Monto venta</th>
+                  <th>%</th>
+                  <th>Monto comisión</th>
+                  <th>Estatus pago cliente</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in items %}
+                  <tr>
+                    <td>{{ c.fecha_dispersion|date:"d/m/Y" }}</td>
+                    <td>{{ c.cliente.cliente }}</td>
+                    <td>{{ c.servicio }}</td>
+                    <td>{{ c.venta.monto_venta|currency }}</td>
+                    <td>{{ c.porcentaje|pct:2 }}</td>
+                    <td>{{ c.monto|currency }}</td>
+                    <td>{{ c.estatus_pago_dispersion }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="7">Sin registros.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="sub-title">Pagos</div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha pago</th>
+                  <th>Monto</th>
+                  <th>Comentario</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in pagos %}
+                <tr>
+                  <td>{{ p.fecha_pago|date:"d/m/Y" }}</td>
+                  <td>{{ p.monto|currency }}</td>
+                  <td>{{ p.comentario|default_if_none:"" }}</td>
+                  <td>
+                    <a class="btn-detalle" href="{% url 'comisiones_editar_pago' p.id %}?mes={{ mes }}&anio={{ anio }}">Editar</a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">Sin pagos registrados.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </td>
+  </tr>
+{% endblock %}

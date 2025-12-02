@@ -279,6 +279,12 @@ body.reportes-no-scroll { overflow: hidden; }
   color: #d2dee3;
 }
 
+/* Volver ancho cuando es el �nico elemento en la barra */
+.filter-container > a.btn-filter:only-child {
+  justify-content: center;
+  padding: 0.55rem 0.75rem;
+}
+
 /* Responsive: evitar encimado en móviles/tablets */
 @media (max-width: 900px) {
   /* Pila vertical y ancho completo para evitar encimados */
@@ -1229,5 +1235,202 @@ body.reportes-no-scroll { overflow: hidden; }
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+/* === Barra de filtros: layout compacto como en Nuevo_Enrok (sin cambiar colores base) === */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+}
+.filter-container .filter-form-simple {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: .45rem !important;
+  flex-wrap: wrap;
+  margin: 0 auto !important;
+}
+.filter-container .filter-form-simple label {
+  margin: 0 !important;
+}
+.filter-container .filter-form-simple select,
+.filter-container .filter-form-simple input {
+  width: auto !important;
+  min-width: 90px;
+}
+.filter-container #mes {
+  max-width: 110px;
+}
+.filter-container .btn-filter {
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+}
+.filter-container > .btn-primary {
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  margin-left: auto !important;
+  align-self: center !important;
+}
+.filter-title {
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  padding-bottom: .25rem;
+  margin-bottom: .35rem;
+}
+
+/* === Ventas (dispersiones / comisiones) === */
+.filter-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2b313f;
+}
+.filter-form-simple {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: .75rem;
+  width: 100%;
+  margin: .35rem 0 .6rem 0;
+}
+.metric {
+  background: #f4f7fa;
+  border: 1px solid #aebed2;
+  border-radius: 6px;
+  padding: .65rem .75rem;
+  text-align: center;
+  box-shadow: 0 2px 6px #0000000f;
+}
+.metric-label {
+  font-size: .8rem;
+  color: #52606d;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.metric-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2b313f;
+}
+.filter-cut {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: .35rem;
+}
+.filter-cut .line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #dfe6ed 0%, #aebed2 50%, #dfe6ed 100%);
+}
+.filter-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  gap: .5rem;
+}
+.filter-row .actions {
+  display: flex;
+  gap: .35rem;
+  justify-content: flex-end;
+}
+.actions-bottom {
+  justify-content: flex-end;
+}
+.btn-primary-bottom {
+  margin-left: auto;
+}
+.btn-volver-bottom {
+  display: inline-flex;
+  justify-self: center;
+}
+.filter-row form {
+  justify-self: center;
+}
+.filter-row .actions-bottom {
+  justify-self: end;
+}
+/* Encabezado uniforme para tablas lado a lado */
+.two-col .table thead th {
+  background: rgb(206, 212, 218);
+}
+
+/* Centrar columnas en formularios */
+.form-grid {
+  justify-items: center;
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.form-grid > .form-col:only-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+.col-actions { min-width: 90px; }
+.col-fecha { min-width: 110px; }
+.sticky-1 { position: sticky; left: 0; background: #fff; z-index: 3; }
+.sticky-2 { position: sticky; left: 90px; background: #fff; z-index: 3; }
+.sticky-3 { position: sticky; left: 200px; background: #fff; z-index: 3; }
+.table.no-sticky th,
+.table.no-sticky td {
+  position: static;
+  background: inherit;
+}
+.table tr.embed-row td.embed {
+  padding: 0;
+  border: none;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.two-col .table-container {
+  max-height: none;
+}
+.sub-title {
+  font-weight: 700;
+  color: #2b313f;
+  margin: 0 0 .35rem 0;
+}
+.input-currency input {
+  text-align: right;
+}
+
+/* === Unificación botones Volver/Filtro === */
+/* Botones filtro/volver unificados en blanco */
+.btn-filter,
+.filter-container .btn-filter,
+.btn-volver,
+.btn-volver-bottom,
+.filter-container > a.btn-filter:only-child {
+  background-color: #ffffff;
+  color: #003b71;
+  border: 1px solid #aebed2;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+}
+.btn-filter:hover,
+.filter-container .btn-filter:hover,
+.btn-volver:hover,
+.btn-volver-bottom:hover,
+.filter-container > a.btn-filter:only-child:hover {
+  background-color: #eef3f7;
+  border-color: #2b313f;
+  color: #003b71;
 }
 

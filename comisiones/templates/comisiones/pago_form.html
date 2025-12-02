@@ -1,0 +1,44 @@
+{% extends "form.html" %}
+{% load comisiones_extras %}
+
+{% block title %}Registrar pago{% endblock %}
+
+{% block back_link %}
+  <section class="filter-container">
+    <div class="filter-title">Registrar pago – {{ mes_nombre }} {{ anio }}</div>
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </section>
+{% endblock %}
+
+{% block extra_actions %}
+  {% if pago %}
+    <button type="submit" class="btn-delete" formaction="{% url 'comisiones_eliminar_pago' pago.id %}" formmethod="post" onclick="return confirm('¿Eliminar este pago?');">Eliminar</button>
+  {% endif %}
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  <input type="hidden" name="mes" value="{{ mes }}">
+  <input type="hidden" name="anio" value="{{ anio }}">
+
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.comisionista.id_for_label }}">Comisionista</label>
+      {% if comisionista %}
+        <div class="fixed-center">{{ comisionista.nombre }}</div>
+        <input type="hidden" name="comisionista" value="{{ comisionista.id }}">
+      {% else %}
+        {{ form.comisionista }}
+      {% endif %}
+
+      <label for="{{ form.fecha_pago.id_for_label }}">Fecha de pago</label>
+      {{ form.fecha_pago }}
+
+      <label for="{{ form.monto.id_for_label }}">Monto</label>
+      <div class="input-currency">{{ form.monto }}</div>
+
+      <label for="{{ form.comentario.id_for_label }}">Comentario</label>
+      {{ form.comentario|default_if_none:"" }}
+    </div>
+  </div>
+{% endblock %}

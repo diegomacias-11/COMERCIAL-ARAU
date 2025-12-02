@@ -1,0 +1,56 @@
+{% extends "form.html" %}
+
+{% block form_container_classes %}dispersiones-form{% endblock %}
+
+{% block title %}{% if venta %}Editar Venta{% else %}Nueva Venta{% endif %}{% endblock %}
+
+{% block back_link %}
+  <section class="filter-container">
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </section>
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  <input type="hidden" name="mes" value="{{ mes }}">
+  <input type="hidden" name="anio" value="{{ anio }}">
+
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.fecha.id_for_label }}">Fecha</label>
+      {{ form.fecha }}
+
+      <label for="{{ form.cliente.id_for_label }}">Cliente</label>
+      {{ form.cliente|default_if_none:"" }}
+
+      <label for="{{ form.comentarios.id_for_label }}">Comentarios</label>
+      {{ form.comentarios|default_if_none:"" }}
+    </div>
+
+    <div class="form-col">
+      <label for="{{ form.monto_venta.id_for_label }}">Monto venta</label>
+      <div class="input-currency">{{ form.monto_venta|default_if_none:"" }}</div>
+
+      <label for="{{ form.facturadora.id_for_label }}">Facturadora</label>
+      {{ form.facturadora|default_if_none:"" }}
+
+      <label for="{{ form.num_factura.id_for_label }}">No. factura</label>
+      {{ form.num_factura|default_if_none:"" }}
+
+      <label for="{{ form.estatus_pago.id_for_label }}">Estatus pago</label>
+      {{ form.estatus_pago|default_if_none:"" }}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_actions %}
+  {% if venta %}
+    <button type="submit"
+            class="btn-delete"
+            formaction="{% url 'ventas_eliminar' venta.id %}"
+            formmethod="post"
+            onclick="return confirm('¿Eliminar esta venta?');">
+      Eliminar
+    </button>
+  {% endif %}
+{% endblock %}
