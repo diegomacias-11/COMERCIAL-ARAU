@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'alianzas',
     'ventas',
     'comisiones',
+    'leads',
 ]
 
 
