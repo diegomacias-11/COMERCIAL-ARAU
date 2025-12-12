@@ -14,8 +14,10 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     estándar de Django: <app_label>.<action>_<model>.
     """
 
-    # Palabras a ignorar al intentar deducir el modelo desde el url_name
-    _IGNORE = {"lista", "list", "agregar", "add", "editar", "update", "eliminar", "delete", "reporte", "reportes"}
+    _IGNORE = {
+        "lista", "list", "agregar", "add", "editar", "update",
+        "eliminar", "delete", "reporte", "reportes"
+    }
 
     def _infer_action(self, url_name: str) -> str:
         lower = url_name.lower()
@@ -35,12 +37,16 @@ class GroupPermissionMiddleware(MiddlewareMixin):
                 break
         else:
             base = parts[-1] if parts else ""
-        # singularizar suavemente (quitar solo una 's' final)
         if base.endswith("s"):
             base = base[:-1]
         return base
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+
+        # 🔓 EXCEPCIÓN: permitir webhooks externos (Meta, Stripe, etc.)
+        if request.path.startswith("/webhooks/"):
+            return None
+
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
             return None
@@ -49,7 +55,6 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         if not resolver or not resolver.url_name:
             return None
 
-        # Vistas públicas/comunitarias que no requieren permiso
         public_names = {"login", "logout", "inicio"}
         if resolver.url_name in public_names:
             return None
@@ -62,16 +67,16 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             return None
 
         perm_code = f"{app_label}.{action}_{model}"
-        # Si el permiso no existe en la BD, no bloqueamos.
+
         if not Permission.objects.filter(
             content_type__app_label=app_label,
             codename=f"{action}_{model}",
         ).exists():
             return None
+
         if user.has_perm(perm_code):
             return None
 
-        # Sin permiso: responder con popup JS y volver atrás
         return HttpResponse(
             "<script>alert('No tienes permisos.'); window.history.back();</script>",
             status=403,
@@ -85,6 +90,11 @@ class LoginRequiredMiddleware(MiddlewareMixin):
     """
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+
+        # 🔓 EXCEPCIÓN: permitir webhooks externos
+        if request.path.startswith("/webhooks/"):
+            return None
+
         user = getattr(request, "user", None)
         if user and user.is_authenticated:
             return None
