@@ -95,6 +95,15 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         resp = requests.get(url, params=params, timeout=10)
         resp.raise_for_status()
         data = resp.json()
+    except requests.HTTPError as exc:
+        text = getattr(exc.response, "text", "") if hasattr(exc, "response") else ""
+        logger.warning(
+            "Meta Graph devolvio HTTP %s para lead %s. Body: %s",
+            getattr(exc.response, "status_code", "unknown"),
+            leadgen_id,
+            (text or "")[:500],
+        )
+        return
     except Exception as exc:
         logger.exception("No se pudo obtener lead %s desde Meta: %s", leadgen_id, exc)
         return
