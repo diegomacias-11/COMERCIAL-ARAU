@@ -13,7 +13,6 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import MetaLead
 
 logger = logging.getLogger(__name__)
-MARKETING_GROUP_NAME = "Marketing"
 META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
 
 
