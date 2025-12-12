@@ -3,17 +3,20 @@ import logging
 import os
 from datetime import datetime
 
+import requests
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import MetaLead
 
 logger = logging.getLogger(__name__)
 META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
+META_PAGE_TOKEN = os.getenv("META_PAGE_TOKEN")
 
 
 def _normalize_key(name: str) -> str:
@@ -70,6 +73,70 @@ def _parse_created_time(created_value, entry_time):
     return timezone.now()
 
 
+def fetch_and_save_meta_lead(leadgen_id: str):
+    """
+    Fetch full lead data from Meta Graph API and persist it.
+    """
+    if not META_PAGE_TOKEN:
+        logger.error("META_PAGE_TOKEN no configurado; no se puede leer el lead %s", leadgen_id)
+        return
+
+    url = f"https://graph.facebook.com/v24.0/{leadgen_id}"
+    params = {
+        "access_token": META_PAGE_TOKEN,
+        "fields": (
+            "created_time,ad_id,ad_name,adset_id,adset_name,"
+            "campaign_id,campaign_name,form_id,form_name,"
+            "is_organic,platform,field_data"
+        ),
+    }
+
+    try:
+        resp = requests.get(url, params=params, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as exc:
+        logger.exception("No se pudo obtener lead %s desde Meta: %s", leadgen_id, exc)
+        return
+
+    raw_fields = {}
+    for field in data.get("field_data", []) or []:
+        name = (field.get("name") or "").strip()
+        values = field.get("values") or []
+        if not name or not values:
+            continue
+        raw_fields[name] = values[0] if len(values) == 1 else values
+
+    created_dt = parse_datetime(data.get("created_time") or "")
+    if created_dt and timezone.is_naive(created_dt):
+        created_dt = timezone.make_aware(created_dt, timezone.utc)
+
+    defaults = {
+        "created_time": created_dt or timezone.now(),
+        "ad_id": data.get("ad_id") or "",
+        "ad_name": data.get("ad_name") or "",
+        "adset_id": data.get("adset_id") or "",
+        "adset_name": data.get("adset_name") or "",
+        "campaign_id": data.get("campaign_id") or "",
+        "campaign_name": data.get("campaign_name") or "",
+        "form_id": data.get("form_id") or "",
+        "form_name": data.get("form_name") or "",
+        "is_organic": data.get("is_organic") or False,
+        "platform": data.get("platform") or "",
+        "full_name": raw_fields.get("full_name"),
+        "email": raw_fields.get("email"),
+        "phone_number": raw_fields.get("phone_number"),
+        "raw_fields": raw_fields,
+        "raw_payload": data,
+    }
+
+    MetaLead.objects.update_or_create(
+        leadgen_id=str(leadgen_id),
+        defaults=defaults,
+    )
+    logger.info("Lead %s guardado desde Graph API", leadgen_id)
+
+
 @login_required
 def leads_lista(request):
     q = request.GET.get("q", "").strip()
@@ -98,66 +165,33 @@ def meta_lead_webhook(request):
         if mode == "subscribe" and token == META_VERIFY_TOKEN:
             return HttpResponse(challenge)
 
+        logger.warning("Webhook Meta verify failed: mode=%s token=%s", mode, token)
         return HttpResponse("Invalid verify token", status=403)
 
     if request.method == "POST":
+        logger.info("Webhook Meta POST received: %s", request.body[:500])
         try:
-            payload = json.loads(request.body.decode("utf-8"))
-        except json.JSONDecodeError:
-            logger.warning("Webhook Meta: JSON invalido: %s", request.body[:500])
-            return JsonResponse({"error": "invalid_json"}, status=400)
+            payload = json.loads(request.body.decode("utf-8", errors="ignore"))
+        except Exception:
+            logger.warning("Webhook Meta: JSON invalido o no parseable")
+            return HttpResponse("ok")
 
-        processed = []
-
-        values = []
+        leadgen_ids = []
         if "entry" in payload:
             for entry in payload.get("entry", []):
-                entry_time = entry.get("time")
                 for change in entry.get("changes", []):
-                    values.append((change.get("value") or {}, entry_time))
-        elif payload.get("field") == "leadgen" and "value" in payload:
-            values.append((payload.get("value") or {}, payload.get("time")))
+                    val = change.get("value") or {}
+                    if val.get("leadgen_id"):
+                        leadgen_ids.append(val.get("leadgen_id"))
+        elif payload.get("field") == "leadgen":
+            val = payload.get("value") or {}
+            if val.get("leadgen_id"):
+                leadgen_ids.append(val.get("leadgen_id"))
 
-        for value, entry_time in values:
-            leadgen_id = value.get("leadgen_id")
-            if not leadgen_id:
-                continue
+        for lgid in leadgen_ids:
+            fetch_and_save_meta_lead(str(lgid))
 
-            raw_fields, normalized_fields = _split_field_data(value.get("field_data"))
-
-            defaults = {
-                "created_time": _parse_created_time(value.get("created_time"), entry_time),
-                "ad_id": str(value.get("ad_id") or ""),
-                "ad_name": value.get("ad_name") or "",
-                "adset_id": str(value.get("adset_id") or value.get("adgroup_id") or ""),
-                "adset_name": value.get("adset_name") or value.get("adgroup_name") or "",
-                "campaign_id": str(value.get("campaign_id") or ""),
-                "campaign_name": value.get("campaign_name") or "",
-                "form_id": str(value.get("form_id") or ""),
-                "form_name": value.get("form_name") or "",
-                "is_organic": bool(value.get("is_organic")),
-                "platform": value.get("platform") or value.get("channel") or "",
-                "full_name": _pick_first(
-                    normalized_fields,
-                    ["full_name", "nombre_completo", "nombre", "name"],
-                ),
-                "email": _pick_first(normalized_fields, ["email", "correo", "correo_electronico"]),
-                "phone_number": _pick_first(
-                    normalized_fields,
-                    ["phone_number", "telefono", "celular", "mobile_phone", "phone"],
-                ),
-                "raw_fields": raw_fields,
-                "raw_payload": value,
-            }
-
-            lead, created = MetaLead.objects.update_or_create(
-                leadgen_id=str(leadgen_id),
-                defaults=defaults,
-            )
-
-            processed.append({"leadgen_id": lead.leadgen_id, "created": created})
-
-        logger.info("Webhook Meta procesado: %s", processed)
-        return JsonResponse({"status": "ok", "processed": processed})
+        logger.info("Webhook Meta procesado; leadgen_ids=%s", leadgen_ids)
+        return HttpResponse("ok")
 
     return HttpResponse(status=405)
