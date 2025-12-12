@@ -4,6 +4,10 @@
     <img src="{% static 'img/logo_header.png' %}" alt="ARAU" class="logo" />
   </div>
   <nav class="main-nav">
+    {% if user.is_superuser or user.groups.filter(name__iexact="Marketing").exists %}
+      <a href="{% url 'leads_lista' %}"
+         class="{% if 'leads' in request.path %}active{% endif %}">Leads</a>
+    {% endif %}
     <a href="{% url 'alianzas_lista' %}"
        class="{% if 'alianzas' in request.path %}active{% endif %}">Alianzas</a>
     <a href="{% url 'citas_lista' %}"

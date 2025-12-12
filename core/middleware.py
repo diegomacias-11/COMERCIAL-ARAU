@@ -10,8 +10,8 @@ from django.utils.http import urlencode
 class GroupPermissionMiddleware(MiddlewareMixin):
     """
     Enforce CRUD permisos por grupo sin configurar vista por vista.
-    Usa el nombre de la vista (url_name) y el módulo para construir el permiso
-    estándar de Django: <app_label>.<action>_<model>.
+    Usa el nombre de la vista (url_name) y el modulo para construir el permiso
+    estandar de Django: <app_label>.<action>_<model>.
     """
 
     _IGNORE = {
@@ -43,13 +43,23 @@ class GroupPermissionMiddleware(MiddlewareMixin):
 
     def process_view(self, request, view_func, view_args, view_kwargs):
 
-        # 🔓 EXCEPCIÓN: permitir webhooks externos (Meta, Stripe, etc.)
+        # Excepcion: permitir webhooks externos (Meta, Stripe, etc.)
         if request.path.startswith("/webhooks/"):
             return None
 
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
             return None
+
+        # Leads visibles solo para Marketing o superuser
+        if request.path.startswith("/leads"):
+            if user.is_superuser or user.groups.filter(name__iexact="Marketing").exists():
+                return None
+            return HttpResponse(
+                "<script>alert('No tienes permisos para ver leads.'); window.history.back();</script>",
+                status=403,
+                content_type="text/html",
+            )
 
         resolver = getattr(request, "resolver_match", None)
         if not resolver or not resolver.url_name:
@@ -86,12 +96,12 @@ class GroupPermissionMiddleware(MiddlewareMixin):
 
 class LoginRequiredMiddleware(MiddlewareMixin):
     """
-    Redirige a login si el usuario no está autenticado, salvo rutas públicas.
+    Redirige a login si el usuario no esta autenticado, salvo rutas publicas.
     """
 
     def process_view(self, request, view_func, view_args, view_kwargs):
 
-        # 🔓 EXCEPCIÓN: permitir webhooks externos
+        # Excepcion: permitir webhooks externos
         if request.path.startswith("/webhooks/"):
             return None
 

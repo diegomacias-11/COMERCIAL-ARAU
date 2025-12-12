@@ -1,0 +1,57 @@
+{% extends "lista.html" %}
+
+{% block title %}Leads{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .table-container { overflow-x: auto !important; }
+    .table { min-width: 1100px; }
+  </style>
+{% endblock %}
+
+{% block filtros %}
+  <form method="get" class="inline-filter">
+    <input
+      type="text"
+      name="q"
+      placeholder="Buscar nombre, email, telefono, campana o formulario"
+      value="{{ q }}"
+    />
+    <button type="submit" class="btn-filter">Buscar</button>
+    <a href="{% url 'leads_lista' %}" class="btn-filter">Limpiar</a>
+  </form>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th>Fecha lead</th>
+    <th>Nombre</th>
+    <th>Email</th>
+    <th>Telefono</th>
+    <th>Campana</th>
+    <th>Formulario</th>
+    <th>Plataforma</th>
+    <th>Organic</th>
+    <th>Lead ID</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for lead in leads %}
+    <tr>
+      <td>{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</td>
+      <td>{{ lead.full_name|default_if_none:"" }}</td>
+      <td>{{ lead.email|default_if_none:"" }}</td>
+      <td>{{ lead.phone_number|default_if_none:"" }}</td>
+      <td>{{ lead.campaign_name|default_if_none:"" }}</td>
+      <td>{{ lead.form_name|default_if_none:"" }}</td>
+      <td>{{ lead.platform|default_if_none:"" }}</td>
+      <td>{{ lead.is_organic|yesno:"Si,No" }}</td>
+      <td>{{ lead.leadgen_id }}</td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="100%">Sin leads registrados</td>
+    </tr>
+  {% endfor %}
+{% endblock %}
