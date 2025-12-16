@@ -51,16 +51,6 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         if not user or not user.is_authenticated:
             return None
 
-        # Leads visibles solo para Marketing o superuser
-        if request.path.startswith("/leads"):
-            if user.is_superuser or user.groups.filter(name__iexact="Marketing").exists():
-                return None
-            return HttpResponse(
-                "<script>alert('No tienes permisos para ver leads.'); window.history.back();</script>",
-                status=403,
-                content_type="text/html",
-            )
-
         resolver = getattr(request, "resolver_match", None)
         if not resolver or not resolver.url_name:
             return None
