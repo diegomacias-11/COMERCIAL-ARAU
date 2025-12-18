@@ -95,3 +95,26 @@
     </button>
   {% endif %}
 {% endblock %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('.form-container form');
+    if (!form) return;
+
+    form.addEventListener('submit', (event) => {
+      const razonInput = form.querySelector('#id_cliente');
+      const razon = (razonInput?.value || '').trim() || 'este cliente';
+      const comisionInputs = form.querySelectorAll('input[name^="comision_"]');
+      let total = 0;
+      comisionInputs.forEach((input) => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) total += val;
+      });
+      const totalTexto = `${total.toFixed(2)}%`;
+      const mensaje = `¿Estás seguro que deseas guardar el cliente "${razon}" con ${totalTexto} de comisión?`;
+      if (!confirm(mensaje)) {
+        event.preventDefault();
+      }
+    });
+  });
+</script>

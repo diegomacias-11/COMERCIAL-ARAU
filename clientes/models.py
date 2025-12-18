@@ -38,6 +38,7 @@ class Cliente(models.Model):
     comision_8 = models.DecimalField(max_digits=8, decimal_places=6, blank=True, null=True)
     comision_9 = models.DecimalField(max_digits=8, decimal_places=6, blank=True, null=True)
     comision_10 = models.DecimalField(max_digits=8, decimal_places=6, blank=True, null=True)
+    total_comisiones = models.DecimalField(max_digits=10, decimal_places=6, default=0)
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -50,6 +51,12 @@ class Cliente(models.Model):
             self.contacto = self.contacto.title()
         if self.conexion:
             self.conexion = self.conexion.title()
+        # Recalcula el total de comisiones (suma de los decimales almacenados)
+        comisiones = [
+            self.comision_1, self.comision_2, self.comision_3, self.comision_4, self.comision_5,
+            self.comision_6, self.comision_7, self.comision_8, self.comision_9, self.comision_10,
+        ]
+        self.total_comisiones = sum([c for c in comisiones if c is not None]) if any(comisiones) else 0
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:

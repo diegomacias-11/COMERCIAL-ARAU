@@ -63,6 +63,17 @@ class ClienteForm(forms.ModelForm):
                 cleaned[campo] = val / 100
         return cleaned
 
+    @property
+    def total_comision_porcentaje(self):
+        data = getattr(self, "cleaned_data", {}) or {}
+        total = 0
+        for campo in self.comision_campos:
+            val = data.get(campo)
+            if val is None:
+                continue
+            total += val * 100  # vuelve a porcentaje para mostrar
+        return total
+
 
 def _comision_pairs(form: ClienteForm):
     pairs = []

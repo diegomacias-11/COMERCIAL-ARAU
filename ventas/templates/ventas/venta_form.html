@@ -23,6 +23,13 @@
       <label for="{{ form.cliente.id_for_label }}">Cliente</label>
       {{ form.cliente|default_if_none:"" }}
 
+      <label for="id_comision_porcentaje_display">Comisión (%)</label>
+      <input
+        type="text"
+        id="id_comision_porcentaje_display"
+        value="{% if form.instance and form.instance.comision_porcentaje %}{{ form.instance.comision_porcentaje|floatformat:2 }}%{% else %}0.00%{% endif %}"
+        readonly />
+
       <label for="{{ form.comentarios.id_for_label }}">Comentarios</label>
       {{ form.comentarios|default_if_none:"" }}
     </div>

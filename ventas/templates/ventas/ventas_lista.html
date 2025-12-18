@@ -35,7 +35,6 @@
     <th>No. factura</th>
     <th>Monto venta</th>
     <th>Comisión (%)</th>
-    <th>Monto comisión</th>
     <th>Estatus pago</th>
     <th>Comentarios</th>
   </tr>
@@ -52,11 +51,10 @@
       <td>{{ d.num_factura|default_if_none:"" }}</td>
       <td>{{ d.monto_venta|currency }}</td>
       <td>{{ d.comision_porcentaje|floatformat:2 }}%</td>
-      <td>{{ d.monto_comision|currency }}</td>
       <td>{{ d.estatus_pago }}</td>
       <td>{{ d.comentarios|default_if_none:"" }}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="11">Sin ventas en el periodo.</td></tr>
+    <tr><td colspan="10">Sin ventas en el periodo.</td></tr>
   {% endfor %}
 {% endblock %}

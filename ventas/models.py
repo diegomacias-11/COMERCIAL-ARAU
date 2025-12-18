@@ -26,13 +26,23 @@ class Venta(models.Model):
 
     def save(self, *args, **kwargs):
         rate = None
+        # Preferir el total de comisiones definido en Cliente (suma de comisionistas)
         try:
-            if getattr(self.cliente, "comision_servicio", None) is not None:
-                rate = Decimal(str(self.cliente.comision_servicio))
-            elif getattr(self.cliente, "comision_procom", None) is not None:
-                rate = Decimal(str(self.cliente.comision_procom))
+            total_cliente = getattr(self.cliente, "total_comisiones", None)
+            if total_cliente is not None:
+                rate = Decimal(str(total_cliente))
         except (InvalidOperation, TypeError):
             rate = None
+
+        # Fallback a campos legacy si existen
+        if rate in (None, Decimal("0")):
+            try:
+                if getattr(self.cliente, "comision_servicio", None) is not None:
+                    rate = Decimal(str(self.cliente.comision_servicio))
+                elif getattr(self.cliente, "comision_procom", None) is not None:
+                    rate = Decimal(str(self.cliente.comision_procom))
+            except (InvalidOperation, TypeError):
+                rate = None
 
         if rate is None:
             rate_fraction = Decimal("0")
