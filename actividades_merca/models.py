@@ -48,11 +48,6 @@ class ActividadMerca(models.Model):
     def fecha_compromiso(self) -> date | None:
         return _add_business_days(self.fecha_inicio, self.dias)
 
-    def save(self, *args, **kwargs):
-        # calcular fecha_fin como fecha_compromiso (solo días hábiles)
-        self.fecha_fin = self.fecha_compromiso
-        super().save(*args, **kwargs)
-
     @property
     def estatus(self) -> str:
         """

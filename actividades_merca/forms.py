@@ -35,6 +35,7 @@ class ActividadMercaForm(forms.ModelForm):
             "cliente",
             "area",
             "fecha_inicio",
+            "fecha_fin",
             "tarea",
             "dias",
             "mercadologo",
@@ -43,6 +44,7 @@ class ActividadMercaForm(forms.ModelForm):
         ]
         widgets = {
             "fecha_inicio": forms.DateInput(attrs={"type": "date"}),
+            "fecha_fin": forms.DateInput(attrs={"type": "date"}),
         }
 
     def __init__(self, *args, **kwargs):
