@@ -61,10 +61,10 @@
         <a class="btn-detalle" href="{% url 'comisiones_detalle' r.comisionista_id %}?mes={{ mes }}&anio={{ anio }}">Detalle</a>
       </td>
       <td class="sticky-2">{{ r.comisionista__nombre }}</td>
-      <td>{{ r.total|default_if_none:""|currency }}</td>
-      <td>{{ r.liberadas|default_if_none:""|currency }}</td>
-      <td>{{ r.pagos|default_if_none:""|currency }}</td>
-      <td>{{ r.pendiente|default_if_none:""|currency }}</td>
+      <td>{{ r.total|default_if_none:"0"|currency }}</td>
+      <td>{{ r.liberadas|default_if_none:"0"|currency }}</td>
+      <td>{{ r.pagos|default_if_none:"0"|currency }}</td>
+      <td>{{ r.pendiente|default_if_none:"0"|currency }}</td>
     </tr>
   {% empty %}
     <tr><td colspan="6">Sin comisiones en el periodo.</td></tr>
