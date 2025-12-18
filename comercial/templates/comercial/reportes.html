@@ -30,28 +30,18 @@
 {% block content %}
   <main style="margin:0; padding:0;">
     <div class="full-bleed">
-        <iframe id="ls-iframe"
-          src="https://lookerstudio.google.com/embed/reporting/2d02df74-5920-4285-b62c-b68794e288b5/page/p_uv7fhcpvxd"
-          frameborder="0"
-          allowfullscreen
-          sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-modals">
-        </iframe>
-      </div>
+      <iframe
+        id="ls-iframe"
+        src="https://lookerstudio.google.com/embed/reporting/2d02df74-5920-4285-b62c-b68794e288b5/page/p_uv7fhcpvxd?rm=minimal"
+        style="width:100%; height:90vh; border:0;"
+        allowfullscreen
+        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+      </iframe>
     </div>
   </main>
   <script>
     (function(){
-      function fit() {
-        var header = document.querySelector('.main-header');
-        var iframe = document.getElementById('ls-iframe');
-        if (!iframe) return;
-        var h = window.innerHeight - (header ? header.offsetHeight : 0);
-        if (h > 0) iframe.style.height = h + 'px';
-      }
       document.body.classList.add('reportes-no-scroll');
-      window.addEventListener('resize', fit);
-      window.addEventListener('load', fit);
-      fit();  
-})();
+    })();
   </script>
 {% endblock %}

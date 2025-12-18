@@ -1,23 +1,50 @@
 {% load static %}
+{% with path=request.path %}
 <header class="main-header">
   <div class="logo-title">
     <img src="{% static 'img/logo_header.png' %}" alt="ARAU" class="logo" />
   </div>
-  <nav class="main-nav">
-    <a href="{% url 'leads_lista' %}"
-       class="{% if 'leads' in request.path %}active{% endif %}">Leads</a>
-    <a href="{% url 'alianzas_lista' %}"
-       class="{% if 'alianzas' in request.path %}active{% endif %}">Alianzas</a>
-    <a href="{% url 'citas_lista' %}"
-       class="{% if 'citas' in request.path %}active{% endif %}">Citas</a>
-    <a href="{% url 'clientes_lista' %}"
-       class="{% if 'clientes' in request.path %}active{% endif %}">Clientes</a>
-    <a href="{% url 'ventas_lista' %}"
-       class="{% if 'ventas' in request.path %}active{% endif %}">Ventas</a>
-    <a href="{% url 'comisiones_lista' %}"
-       class="{% if 'comisiones' in request.path %}active{% endif %}">Comisiones</a>
-    <a href="{% url 'reportes_dashboard' %}"
-       class="{% if 'reportes' in request.path %}active{% endif %}">Reportes</a>
+  <nav class="main-nav main-nav-areas" aria-label="Áreas principales">
+    <div class="nav-area{% if 'leads' in path %} is-active{% endif %}">
+      <button type="button" class="area-trigger" data-area="marketing" aria-expanded="false">
+        Marketing
+      </button>
+      <div class="area-dropdown" role="menu" aria-label="Marketing">
+        <a href="#" role="menuitem">Actividades</a>
+        <a href="{% url 'leads_lista' %}" role="menuitem"
+           class="{% if 'leads' in path %}is-active{% endif %}">Leads</a>
+        <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
+      </div>
+    </div>
+
+    <div class="nav-area{% if 'citas' in path or 'clientes' in path or 'reportes' in path %} is-active{% endif %}">
+      <button type="button" class="area-trigger" data-area="comercial" aria-expanded="false">
+        Comercial
+      </button>
+      <div class="area-dropdown" role="menu" aria-label="Comercial">
+        <a href="{% url 'citas_lista' %}" role="menuitem"
+           class="{% if 'citas' in path %}is-active{% endif %}">Citas</a>
+        <a href="{% url 'clientes_lista' %}" role="menuitem"
+           class="{% if 'clientes' in path %}is-active{% endif %}">Clientes</a>
+        <a href="{% url 'reportes_dashboard' %}" role="menuitem"
+           class="{% if 'reportes' in path %}is-active{% endif %}">Reporte</a>
+      </div>
+    </div>
+
+    <div class="nav-area{% if 'alianzas' in path or 'ventas' in path or 'comisiones' in path %} is-active{% endif %}">
+      <button type="button" class="area-trigger" data-area="operaciones" aria-expanded="false">
+        Operaciones
+      </button>
+      <div class="area-dropdown" role="menu" aria-label="Operaciones">
+        <a href="{% url 'alianzas_lista' %}" role="menuitem"
+           class="{% if 'alianzas' in path %}is-active{% endif %}">Alianzas</a>
+        <a href="{% url 'ventas_lista' %}" role="menuitem"
+           class="{% if 'ventas' in path %}is-active{% endif %}">Ventas</a>
+        <a href="{% url 'comisiones_lista' %}" role="menuitem"
+           class="{% if 'comisiones' in path %}is-active{% endif %}">Comisiones</a>
+        <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
+      </div>
+    </div>
   </nav>
   <div class="user-card">
     <div class="user-text">
@@ -37,4 +64,63 @@
       </button>
     </form>
   </div>
+  {% if 'leads' in path or 'citas' in path or 'clientes' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path %}
+  <div class="area-title-bar">
+    {% if 'leads' in path %}
+      <span class="area-title">Leads</span>
+    {% elif 'citas' in path %}
+      <span class="area-title">Citas</span>
+    {% elif 'clientes' in path %}
+      <span class="area-title">Clientes</span>
+    {% elif 'reportes' in path %}
+      <span class="area-title">Reportes</span>
+    {% elif 'alianzas' in path %}
+      <span class="area-title">Alianzas</span>
+    {% elif 'ventas' in path %}
+      <span class="area-title">Ventas</span>
+    {% elif 'comisiones' in path %}
+      <span class="area-title">Comisiones</span>
+    {% endif %}
+  </div>
+  {% endif %}
 </header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const areas = Array.from(document.querySelectorAll('.nav-area'));
+    const triggers = Array.from(document.querySelectorAll('.area-trigger'));
+
+    const closeAll = (except) => {
+      areas.forEach((area) => {
+        if (area !== except) {
+          area.classList.remove('is-open');
+          const btn = area.querySelector('.area-trigger');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    };
+
+    triggers.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const parent = btn.closest('.nav-area');
+        const isOpen = parent.classList.contains('is-open');
+        closeAll(parent);
+        parent.classList.toggle('is-open', !isOpen);
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.nav-area')) {
+        closeAll();
+      }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      if (event.key === 'Escape') {
+        closeAll();
+      }
+    });
+  });
+</script>
+{% endwith %}
