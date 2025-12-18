@@ -97,6 +97,12 @@ class LoginRequiredMiddleware(MiddlewareMixin):
 
         user = getattr(request, "user", None)
         if user and user.is_authenticated:
+            resolver = getattr(request, "resolver_match", None)
+            url_name = resolver.url_name if resolver else None
+            # Redirigir a actividades_merca al ingresar (home) para grupos de marketing/diseño
+            if url_name in {None, "", "root", "inicio"} or request.path == "/":
+                if user.groups.filter(name__in=["Dirección Marketing", "Marketing", "Diseño"]).exists():
+                    return HttpResponseRedirect("/actividades_merca/")
             return None
 
         resolver = getattr(request, "resolver_match", None)

@@ -48,6 +48,7 @@ class ActividadMercaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.fields["cliente"] = forms.ChoiceField(
             label="Cliente",
@@ -65,3 +66,23 @@ class ActividadMercaForm(forms.ModelForm):
         else:
             # Al crear, ocultar evaluacion (solo se usa en edición)
             self.fields.pop("evaluacion", None)
+
+        if self.user and self.user.is_authenticated:
+            first = (self.user.first_name or "").strip().split(" ")[0].lower()
+            is_dir = self.user.groups.filter(name__iexact="Dirección Marketing").exists()
+            is_mkt = self.user.groups.filter(name__iexact="Marketing").exists()
+            is_dsn = self.user.groups.filter(name__iexact="Diseño").exists()
+
+            if is_mkt and not is_dir and "mercadologo" in self.fields:
+                opciones = [(v, l) for v, l in self.fields["mercadologo"].choices if v.lower().startswith(first)]
+                if opciones:
+                    self.fields["mercadologo"].choices = opciones
+            if is_dsn and not is_dir and "disenador" in self.fields:
+                opciones = [(v, l) for v, l in self.fields["disenador"].choices if v.lower().startswith(first)]
+                if opciones:
+                    self.fields["disenador"].choices = opciones
+
+            if (is_mkt or is_dsn) and not is_dir and self.instance and getattr(self.instance, "pk", None):
+                for fname, field in self.fields.items():
+                    if fname != "fecha_fin":
+                        field.disabled = True

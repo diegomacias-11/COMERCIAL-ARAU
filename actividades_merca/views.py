@@ -57,12 +57,12 @@ def actividades_lista(request):
 def crear_actividad(request):
     back_url = request.GET.get("next") or "/actividades_merca/"
     if request.method == "POST":
-        form = ActividadMercaForm(request.POST)
+        form = ActividadMercaForm(request.POST, user=request.user)
         if form.is_valid():
             form.save()
             return redirect(request.POST.get("next") or back_url)
     else:
-        form = ActividadMercaForm()
+        form = ActividadMercaForm(user=request.user)
     return render(
         request,
         "actividades_merca/form.html",
@@ -77,12 +77,12 @@ def editar_actividad(request, pk: int):
     actividad = get_object_or_404(ActividadMerca, pk=pk)
     back_url = request.GET.get("next") or "/actividades_merca/"
     if request.method == "POST":
-        form = ActividadMercaForm(request.POST, instance=actividad)
+        form = ActividadMercaForm(request.POST, instance=actividad, user=request.user)
         if form.is_valid():
             form.save()
             return redirect(request.POST.get("next") or back_url)
     else:
-        form = ActividadMercaForm(instance=actividad)
+        form = ActividadMercaForm(instance=actividad, user=request.user)
     return render(
         request,
         "actividades_merca/form.html",
