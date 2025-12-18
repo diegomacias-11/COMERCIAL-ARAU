@@ -1,0 +1,57 @@
+{% extends "form.html" %}
+
+{% block title %}Nueva actividad{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
+      {{ form.cliente }}
+
+      <label for="{{ form.area.id_for_label }}">{{ form.area.label }}</label>
+      {{ form.area }}
+
+      <label for="{{ form.mercadologo.id_for_label }}">{{ form.mercadologo.label }}</label>
+      {{ form.mercadologo }}
+
+      <label for="{{ form.disenador.id_for_label }}">{{ form.disenador.label }}</label>
+      {{ form.disenador }}
+    </div>
+    <div class="form-col">
+      <label for="{{ form.tarea.id_for_label }}">{{ form.tarea.label }}</label>
+      {{ form.tarea }}
+
+      <label for="{{ form.fecha_inicio.id_for_label }}">{{ form.fecha_inicio.label }}</label>
+      {{ form.fecha_inicio }}
+
+      <label for="{{ form.dias.id_for_label }}">{{ form.dias.label }}</label>
+      {{ form.dias }}
+
+      {% if actividad %}
+      <label for="{{ form.evaluacion.id_for_label }}">{{ form.evaluacion.label }}</label>
+      {{ form.evaluacion }}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_actions %}
+  {% if actividad %}
+    <input type="hidden" name="next" value="{{ back_url }}" />
+    <button type="submit"
+            class="btn-delete"
+            formmethod="post"
+            formnovalidate
+            formaction="{% url 'actividades_merca_eliminar' actividad.id %}"
+            onclick="return confirm('¿Eliminar esta actividad?');">
+      Eliminar
+    </button>
+  {% endif %}
+{% endblock %}

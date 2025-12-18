@@ -1,0 +1,101 @@
+{% extends "lista.html" %}
+
+{% block title %}Actividades de Marketing{% endblock %}
+
+{% block filtros %}
+  <form action="{% url 'actividades_merca_lista' %}" method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="fecha_inicio">Fecha inicio</label>
+      <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ f_desde }}">
+    </div>
+
+    <span class="filter-separator"></span>
+
+    <div class="filter-block">
+      <label for="fecha_fin">Fecha fin</label>
+      <input type="date" id="fecha_fin" name="fecha_fin" value="{{ f_hasta }}">
+    </div>
+
+    <span class="filter-separator"></span>
+
+    <div class="filter-block">
+      <label for="cliente">Cliente</label>
+      <select id="cliente" name="cliente">
+        <option value="">Todos</option>
+        {% for val, label in clientes_choices %}
+          <option value="{{ val }}" {% if cliente_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <span class="filter-separator"></span>
+
+    <div class="filter-block">
+      <label for="estatus">Estatus</label>
+      <select id="estatus" name="estatus">
+        <option value="">Todos</option>
+        {% for est in estatus_choices %}
+          <option value="{{ est }}" {% if estatus_sel == est %}selected{% endif %}>{{ est }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'actividades_merca_lista' %}" class="btn-filter">Limpiar</a>
+    </div>
+  </form>
+  <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th>Acciones</th>
+    <th>Estatus</th>
+    <th>Cliente</th>
+    <th>Área</th>
+    <th>Fecha de Inicio</th>
+    <th>Tarea</th>
+    <th>Días</th>
+    <th>Mercadólogo</th>
+    <th>Diseñador</th>
+    <th>Fecha de Fin</th>
+    <th>Evaluación</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for a in actividades %}
+    <tr>
+      <td>
+        <a class="btn-detalle" href="{% url 'actividades_merca_editar' a.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
+      </td>
+      {% with a.estatus as st %}
+      <td class="status-pill
+                 {% if st == 'Entregada a tiempo' %} status-on-time
+                 {% elif st == 'Vence hoy' %} status-due-today
+                 {% elif st == 'En tiempo' %} status-in-time
+                 {% elif st == 'Se entregó tarde' %} status-late
+                 {% endif %}">{{ st }}</td>
+      {% endwith %}
+      <td>{{ a.cliente }}</td>
+      <td>{{ a.area }}</td>
+      <td>{{ a.fecha_inicio|date:"d/m/Y" }}</td>
+      <td>{{ a.tarea }}</td>
+      <td>{{ a.dias }}</td>
+      <td>{{ a.mercadologo }}</td>
+      <td>{{ a.disenador }}</td>
+      <td>{% if a.fecha_fin %}{{ a.fecha_fin|date:"d/m/Y" }}{% endif %}</td>
+      {% with a.evaluacion as ev %}
+      <td class="eval-pill
+                 {% if ev == 'Excelente' %} eval-excelente
+                 {% elif ev == 'Muy Bueno' %} eval-muy-bueno
+                 {% elif ev == 'Regular' %} eval-regular
+                 {% elif ev == 'Malo' %} eval-malo
+                 {% endif %}">{{ ev|default_if_none:"" }}</td>
+      {% endwith %}
+    </tr>
+  {% empty %}
+    <tr><td colspan="11">Sin actividades registradas.</td></tr>
+  {% endfor %}
+{% endblock %}

@@ -22,7 +22,7 @@
     <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
     <button type="submit" class="btn-filter">Filtrar</button>
   </form>
-  <a href="{% url 'ventas_agregar' %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary">Nueva venta</a>
+  <a href="{% url 'ventas_agregar' %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva venta</a>
 {% endblock %}
 
 {% block tabla_head %}

@@ -5,12 +5,13 @@
     <img src="{% static 'img/logo_header.png' %}" alt="ARAU" class="logo" />
   </div>
   <nav class="main-nav main-nav-areas" aria-label="Áreas principales">
-    <div class="nav-area{% if 'leads' in path %} is-active{% endif %}">
+    <div class="nav-area{% if 'leads' in path or 'actividades_merca' in path %} is-active{% endif %}">
       <button type="button" class="area-trigger" data-area="marketing" aria-expanded="false">
         Marketing
       </button>
       <div class="area-dropdown" role="menu" aria-label="Marketing">
-        <a href="#" role="menuitem">Actividades</a>
+        <a href="{% url 'actividades_merca_lista' %}" role="menuitem"
+           class="{% if 'actividades_merca' in path %}is-active{% endif %}">Actividades</a>
         <a href="{% url 'leads_lista' %}" role="menuitem"
            class="{% if 'leads' in path %}is-active{% endif %}">Leads</a>
         <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
@@ -64,9 +65,11 @@
       </button>
     </form>
   </div>
-  {% if 'leads' in path or 'citas' in path or 'clientes' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path %}
+  {% if 'actividades_merca' in path or 'leads' in path or 'citas' in path or 'clientes' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path %}
   <div class="area-title-bar">
-    {% if 'leads' in path %}
+    {% if 'actividades_merca' in path %}
+      <span class="area-title">Actividades</span>
+    {% elif 'leads' in path %}
       <span class="area-title">Leads</span>
     {% elif 'citas' in path %}
       <span class="area-title">Citas</span>

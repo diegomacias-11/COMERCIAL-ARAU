@@ -10,15 +10,21 @@
 {% endblock %}
 
 {% block filtros %}
-  <form method="get" class="inline-filter">
-    <input
-      type="text"
-      name="q"
-      placeholder="Buscar nombre, email, telefono, campana o formulario"
-      value="{{ q }}"
-    />
-    <button type="submit" class="btn-filter">Buscar</button>
-    <a href="{% url 'leads_lista' %}" class="btn-filter">Limpiar</a>
+  <form method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="q">Buscar</label>
+      <input
+        type="text"
+        id="q"
+        name="q"
+        placeholder="Buscar nombre, email, telefono, campana o formulario"
+        value="{{ q }}"
+      />
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Buscar</button>
+      <a href="{% url 'leads_lista' %}" class="btn-filter">Limpiar</a>
+    </div>
   </form>
 {% endblock %}
 

@@ -4,14 +4,14 @@ TIPO_CHOICES = [
 ]
 
 MEDIO_CHOICES = [
-    ("Apollo", "Apollo"),
-    ("Remarketing", "Remarketing"),
     ("Alianzas", "Alianzas"),
-    ("Lead", "Lead"),
-    ("Procompite", "Procompite"),
+    ("Apollo", "Apollo"),
     ("Ejecutivos", "Ejecutivos"),
-    ("Personales", "Personales"),
     ("Expos / Eventos Deportivos", "Expos / Eventos Deportivos"),
+    ("Lead", "Lead"),
+    ("Personales", "Personales"),
+    ("Procompite", "Procompite"),
+    ("Remarketing", "Remarketing"),
 ]
 
 SERVICIO_CHOICES = [
@@ -25,4 +25,40 @@ SERVICIO_CHOICES = [
     ("Marketing", "Marketing"),
     ("Reclutamiento", "Reclutamiento"),
     ("REPSE", "REPSE"),
+]
+
+AREA_CHOICES = [
+    ("Análisis de Mkt", "Análisis de Mkt"),
+    ("Blog", "Blog"),
+    ("Branding", "Branding"),
+    ("Campañas", "Campañas"),
+    ("Capacitación y/o juntas", "Capacitación y/o juntas"),
+    ("Comercialización", "Comercialización"),
+    ("Extras", "Extras"),
+    ("Internas", "Internas"),
+    ("Página Web Diseño/Mtto", "Página Web Diseño/Mtto"),
+    ("Parrilla", "Parrilla"),
+    ("Performance Mkt", "Performance Mkt"),
+    ("Reportes", "Reportes"),
+    ("Vídeos", "Vídeos"),
+]
+
+MERCADOLOGO_CHOICES = [
+    ("Alan S.", "Alan S."),
+    ("Paty L.", "Paty L."),
+    ("Todos", "Todos"),
+]
+
+DISEÑADOR_CHOICES = [
+    ("Leo G.", "Leo G."),
+    ("Luis F.", "Luis F."),
+    ("Sabine G.", "Sabine G."),
+    ("Todos", "Todos"),
+]
+
+EVALUACION_CHOICES = [
+    ("Excelente", "Excelente"),
+    ("Muy Bueno", "Muy Bueno"),
+    ("Regular", "Regular"),
+    ("Malo", "Malo"),
 ]

@@ -3,10 +3,15 @@
 {% block title %}Alianzas{% endblock %}
 
 {% block filtros %}
-  <form method="get" class="inline-filter">
-    <input type="text" id="q" name="q" value="{{ q }}" placeholder="Buscar por nombre" />
-    <button type="submit" class="btn-filter">Filtrar</button>
-    <a href="{% url 'alianzas_lista' %}" class="btn-filter">Limpiar</a>
+  <form method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="q">Nombre</label>
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder="Buscar por nombre" />
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'alianzas_lista' %}" class="btn-filter">Limpiar</a>
+    </div>
   </form>
   <a href="{% url 'agregar_alianzas' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva alianza</a>
 {% endblock %}

@@ -10,13 +10,20 @@
 {% endblock %}
 
 {% block filtros %}
-  <form method="get" class="inline-filter">
-    <label for="fecha_desde">Fecha desde</label>
-    <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}" />
-    <label for="fecha_hasta">Fecha hasta</label>
-    <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
-    <button type="submit" class="btn-filter">Filtrar</button>
-    <a href="{% url 'clientes_lista' %}" class="btn-filter">Limpiar</a>
+  <form method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="fecha_desde">Fecha desde</label>
+      <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}" />
+    </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="fecha_hasta">Fecha hasta</label>
+      <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'clientes_lista' %}" class="btn-filter">Limpiar</a>
+    </div>
   </form>
   <a href="{% url 'agregar_cliente' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nuevo cliente</a>
 {% endblock %}
