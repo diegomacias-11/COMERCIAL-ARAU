@@ -40,6 +40,8 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         # Ajuste manual para apps con nombres compuestos
         if "actividades_merca" in url_name:
             return "actividadmerca"
+        if "pago" in parts and "comisiones" in parts:
+            return "pagocomision"
         if base.endswith("s"):
             base = base[:-1]
         return base
