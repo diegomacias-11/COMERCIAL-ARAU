@@ -16,10 +16,9 @@ def _add_business_days(start: date, days: int | None) -> date | None:
         return None
     current = start
     remaining = int(days)
-    # Si dias es 0, devuelve la misma fecha
     while remaining > 0:
         current += timedelta(days=1)
-        if current.weekday() < 5:  # 0=lunes, 6=domingo
+        if current.weekday() < 5:
             remaining -= 1
     return current
 

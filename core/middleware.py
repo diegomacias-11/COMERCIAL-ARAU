@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.contrib.auth.models import Permission
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 from django.utils.http import urlencode
@@ -70,12 +69,6 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             return None
 
         perm_code = f"{app_label}.{action}_{model}"
-
-        if not Permission.objects.filter(
-            content_type__app_label=app_label,
-            codename=f"{action}_{model}",
-        ).exists():
-            return None
 
         if user.has_perm(perm_code):
             return None

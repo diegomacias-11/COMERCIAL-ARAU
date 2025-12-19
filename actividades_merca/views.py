@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
 from .forms import _cliente_choices, ActividadMercaForm
@@ -97,5 +98,11 @@ def editar_actividad(request, pk: int):
 def eliminar_actividad(request, pk: int):
     back_url = request.POST.get("next") or request.GET.get("next") or "/actividades_merca/"
     actividad = get_object_or_404(ActividadMerca, pk=pk)
+    if not request.user.has_perm("actividades_merca.delete_actividadmerca"):
+        return HttpResponse(
+            "<script>alert('No tienes permisos para eliminar.'); window.history.back();</script>",
+            status=403,
+            content_type="text/html",
+        )
     actividad.delete()
     return redirect(back_url)
