@@ -31,22 +31,27 @@ class GroupPermissionMiddleware(MiddlewareMixin):
 
     def _infer_model(self, url_name: str) -> str:
         parts = [p for p in url_name.lower().split("_") if p]
+        # Tomar el ultimo segmento que no sea de accion
+        base = ""
         for part in reversed(parts):
             if part not in self._IGNORE:
                 base = part
                 break
-        else:
-            base = parts[-1] if parts else ""
-        # Ajuste manual para apps con nombres compuestos
+        if not base and parts:
+            base = parts[-1]
+
+        # Ajustes manuales por app
         if "actividades_merca" in url_name:
             return "actividadmerca"
-        if "pago" in parts and "comisiones" in parts:
-            return "pagocomision"
-        if base == "comisiones":
-            base = "comision"
-        elif base.endswith("es"):
+        if "comisiones" in parts:
+            if "pago" in parts:
+                return "pagocomision"
+            return "comision"
+
+        # Singularizar de forma basica
+        if base.endswith("es"):
             base = base[:-2]
-        if base.endswith("s"):
+        elif base.endswith("s"):
             base = base[:-1]
         return base
 
