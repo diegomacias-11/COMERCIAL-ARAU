@@ -56,6 +56,9 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             return "comision"
         if "clientes" in parts or base == "clientes":
             return "cliente"
+        if app_label := getattr(self, "_current_app_label", None):
+            if app_label == "leads":
+                return "metalead"
 
         # Singularizar de forma basica
         if base.endswith("es"):
@@ -98,8 +101,10 @@ class GroupPermissionMiddleware(MiddlewareMixin):
                 )
 
         app_label = view_func.__module__.split(".")[0]
+        self._current_app_label = app_label
         action = self._infer_action(resolver.url_name)
         model = self._infer_model(resolver.url_name)
+        self._current_app_label = None
 
         if not model:
             return None
