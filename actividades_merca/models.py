@@ -9,6 +9,13 @@ from core.choices import (
     EVALUACION_CHOICES,
 )
 
+ESTATUS_CHOICES = [
+    ("En tiempo", "En tiempo"),
+    ("Vence hoy", "Vence hoy"),
+    ("Se entregó tarde", "Se entregó tarde"),
+    ("Entregada a tiempo", "Entregada a tiempo"),
+]
+
 
 def _add_business_days(start: date, days: int | None) -> date | None:
     """Suma días hábiles (excluye fines de semana)."""
@@ -33,6 +40,7 @@ class ActividadMerca(models.Model):
     disenador = models.CharField(max_length=100, choices=DISEÑADOR_CHOICES, blank=True, null=True)
     fecha_fin = models.DateField(blank=True, null=True)
     evaluacion = models.CharField(max_length=50, choices=EVALUACION_CHOICES, blank=True, null=True)
+    estatus = models.CharField(max_length=50, choices=ESTATUS_CHOICES, blank=True, null=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -47,8 +55,7 @@ class ActividadMerca(models.Model):
     def fecha_compromiso(self) -> date | None:
         return _add_business_days(self.fecha_inicio, self.dias)
 
-    @property
-    def estatus(self) -> str:
+    def calcular_estatus(self) -> str:
         """
         Lógica:
         - Sin fecha fin:
@@ -79,3 +86,7 @@ class ActividadMerca(models.Model):
             if fin <= compromiso:
                 return "Entregada a tiempo"
         return ""
+
+    def save(self, *args, **kwargs):
+        self.estatus = self.calcular_estatus()
+        super().save(*args, **kwargs)
