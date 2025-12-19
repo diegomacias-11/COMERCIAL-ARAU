@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth.models import Permission
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 from django.utils.http import urlencode
@@ -17,6 +18,12 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         "lista", "list", "agregar", "add", "editar", "update",
         "eliminar", "delete", "reporte", "reportes",
         "detalle", "detail", "ver",
+    }
+
+    REPORTS_ALLOWED = {
+        "/comercial/reportes/": {"Dirección Comercial"},
+        "/marketing/reportes/": set(),    # Completar cuando exista
+        "/operaciones/reportes/": set(),  # Completar cuando exista
     }
 
     def _infer_action(self, url_name: str) -> str:
@@ -75,6 +82,19 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         if resolver.url_name in public_names:
             return None
 
+        # Control fino para reportes (no hay modelo en admin)
+        for prefix, allowed_groups in self.REPORTS_ALLOWED.items():
+            if request.path.startswith(prefix):
+                if user.is_superuser:
+                    return None
+                if allowed_groups and user.groups.filter(name__in=allowed_groups).exists():
+                    return None
+                return HttpResponse(
+                    "<script>alert('No tienes permisos para este reporte.'); window.history.back();</script>",
+                    status=403,
+                    content_type="text/html",
+                )
+
         app_label = view_func.__module__.split(".")[0]
         action = self._infer_action(resolver.url_name)
         model = self._infer_model(resolver.url_name)
@@ -83,6 +103,13 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             return None
 
         perm_code = f"{app_label}.{action}_{model}"
+
+        # Si no existe un permiso definido para este modelo/acción, no bloquear
+        if not Permission.objects.filter(
+            content_type__app_label=app_label,
+            codename=f"{action}_{model}",
+        ).exists():
+            return None
 
         if user.has_perm(perm_code):
             return None
