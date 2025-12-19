@@ -83,8 +83,8 @@
       <td>{{ a.fecha_inicio|date:"d/m/Y" }}</td>
       <td>{{ a.tarea }}</td>
       <td>{{ a.dias }}</td>
-      <td>{{ a.mercadologo }}</td>
-      <td>{{ a.disenador }}</td>
+      <td>{{ a.mercadologo|default_if_none:"" }}</td>
+      <td>{{ a.disenador|default_if_none:"" }}</td>
       <td>{% if a.fecha_fin %}{{ a.fecha_fin|date:"d/m/Y" }}{% endif %}</td>
       {% with a.evaluacion as ev %}
       <td class="eval-pill

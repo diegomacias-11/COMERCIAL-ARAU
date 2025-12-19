@@ -15,7 +15,8 @@ class GroupPermissionMiddleware(MiddlewareMixin):
 
     _IGNORE = {
         "lista", "list", "agregar", "add", "editar", "update",
-        "eliminar", "delete", "reporte", "reportes"
+        "eliminar", "delete", "reporte", "reportes",
+        "detalle", "detail", "ver",
     }
 
     def _infer_action(self, url_name: str) -> str:

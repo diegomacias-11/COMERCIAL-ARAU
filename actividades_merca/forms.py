@@ -77,8 +77,9 @@ class ActividadMercaForm(forms.ModelForm):
                     # Una vez establecida no es editable por nadie
                     self.fields["fecha_fin"].disabled = True
         else:
-            # Al crear, ocultar evaluacion (solo se usa en edición)
+            # Al crear, ocultar campos que solo se manejan en edición
             self.fields.pop("evaluacion", None)
+            self.fields.pop("fecha_fin", None)
 
         if self.user and self.user.is_authenticated:
             first = (self.user.first_name or "").strip().split(" ")[0].lower()
