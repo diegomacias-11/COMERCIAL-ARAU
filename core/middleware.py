@@ -37,6 +37,9 @@ class GroupPermissionMiddleware(MiddlewareMixin):
                 break
         else:
             base = parts[-1] if parts else ""
+        # Ajuste manual para apps con nombres compuestos
+        if "actividades_merca" in url_name:
+            return "actividadmerca"
         if base.endswith("s"):
             base = base[:-1]
         return base

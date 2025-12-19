@@ -77,10 +77,21 @@ class ActividadMercaForm(forms.ModelForm):
                 opciones = [(v, l) for v, l in self.fields["mercadologo"].choices if v.lower().startswith(first)]
                 if opciones:
                     self.fields["mercadologo"].choices = opciones
+                    self.fields["mercadologo"].initial = opciones[0][0]
+                self.fields["mercadologo"].disabled = True
+                if "disenador" in self.fields:
+                    self.fields["disenador"].disabled = True
+                    self.fields["disenador"].required = False
+
             if is_dsn and not is_dir and "disenador" in self.fields:
                 opciones = [(v, l) for v, l in self.fields["disenador"].choices if v.lower().startswith(first)]
                 if opciones:
                     self.fields["disenador"].choices = opciones
+                    self.fields["disenador"].initial = opciones[0][0]
+                self.fields["disenador"].disabled = True
+                if "mercadologo" in self.fields:
+                    self.fields["mercadologo"].disabled = True
+                    self.fields["mercadologo"].required = False
 
             if (is_mkt or is_dsn) and not is_dir and self.instance and getattr(self.instance, "pk", None):
                 for fname, field in self.fields.items():

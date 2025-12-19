@@ -12,33 +12,33 @@
   <input type="hidden" name="next" value="{{ back_url }}">
   <div class="form-grid">
     <div class="form-col">
-      <label for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
+      <label for="{{ form.cliente.id_for_label }}">Cliente</label>
       {{ form.cliente }}
 
-      <label for="{{ form.area.id_for_label }}">{{ form.area.label }}</label>
+      <label for="{{ form.area.id_for_label }}">Área</label>
       {{ form.area }}
 
-      <label for="{{ form.mercadologo.id_for_label }}">{{ form.mercadologo.label }}</label>
+      <label for="{{ form.mercadologo.id_for_label }}">Mercadólogo</label>
       {{ form.mercadologo }}
 
-      <label for="{{ form.disenador.id_for_label }}">{{ form.disenador.label }}</label>
+      <label for="{{ form.disenador.id_for_label }}">Diseñador</label>
       {{ form.disenador }}
     </div>
     <div class="form-col">
-      <label for="{{ form.tarea.id_for_label }}">{{ form.tarea.label }}</label>
+      <label for="{{ form.tarea.id_for_label }}">Tarea</label>
       {{ form.tarea }}
 
-      <label for="{{ form.fecha_inicio.id_for_label }}">{{ form.fecha_inicio.label }}</label>
+      <label for="{{ form.fecha_inicio.id_for_label }}">Fecha de inicio</label>
       {{ form.fecha_inicio }}
 
-      <label for="{{ form.fecha_fin.id_for_label }}">{{ form.fecha_fin.label }}</label>
-      {{ form.fecha_fin }}
-
-      <label for="{{ form.dias.id_for_label }}">{{ form.dias.label }}</label>
+      <label for="{{ form.dias.id_for_label }}">Días</label>
       {{ form.dias }}
 
+      <label for="{{ form.fecha_fin.id_for_label }}">Fecha de fin</label>
+      {{ form.fecha_fin }}
+
       {% if actividad %}
-      <label for="{{ form.evaluacion.id_for_label }}">{{ form.evaluacion.label }}</label>
+      <label for="{{ form.evaluacion.id_for_label }}">Evaluación</label>
       {{ form.evaluacion }}
       {% endif %}
     </div>
