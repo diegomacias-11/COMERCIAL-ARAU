@@ -34,7 +34,7 @@ class ActividadMerca(models.Model):
     cliente = models.CharField(max_length=200)
     area = models.CharField(max_length=100, choices=AREA_CHOICES)
     fecha_inicio = models.DateField()
-    tarea = models.CharField(max_length=255)
+    tarea = models.CharField(max_length=1000)
     dias = models.PositiveIntegerField(default=0)
     mercadologo = models.CharField(max_length=100, choices=MERCADOLOGO_CHOICES, blank=True, null=True)
     disenador = models.CharField(max_length=100, choices=DISEÑADOR_CHOICES, blank=True, null=True)
