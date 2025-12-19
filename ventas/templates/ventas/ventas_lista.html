@@ -3,25 +3,32 @@
 
 {% block title %}Ventas{% endblock %}
 
+{% block filtros_left %}{% endblock %}
+
 {% block filtros %}
-  <div class="filter-title">{{ mes_nombre }} {{ anio }}</div>
-  <form action="{% url 'ventas_lista' %}" method="get" class="filter-form-simple dispersiones-filter">
-    <label for="mes">Mes</label>
-    <select id="mes" name="mes">
-      {% if meses_choices %}
-        {% for m, nombre in meses_choices %}
-          <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ nombre }}</option>
-        {% endfor %}
-      {% else %}
-        {% for m in meses %}
-          <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ m|stringformat:"02d" }}</option>
-        {% endfor %}
-      {% endif %}
-    </select>
-    <label for="anio">Año</label>
-    <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
-    <button type="submit" class="btn-filter">Filtrar</button>
-  </form>
+  <div class="ventas-filter-center">
+    <div class="filter-title">{{ mes_nombre }} {{ anio }}</div>
+    <form action="{% url 'ventas_lista' %}" method="get" class="filter-form-simple dispersiones-filter">
+      <label for="mes">Mes</label>
+      <select id="mes" name="mes">
+        {% if meses_choices %}
+          {% for m, nombre in meses_choices %}
+            <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        {% else %}
+          {% for m in meses %}
+            <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ m|stringformat:"02d" }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+      <label for="anio">Año</label>
+      <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
+      <button type="submit" class="btn-filter">Filtrar</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block filtros_right %}
   <a href="{% url 'ventas_agregar' %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva venta</a>
 {% endblock %}
 

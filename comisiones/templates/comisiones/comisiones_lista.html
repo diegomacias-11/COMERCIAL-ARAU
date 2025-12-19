@@ -3,43 +3,50 @@
 
 {% block title %}Comisiones{% endblock %}
 
+{% block filtros_left %}{% endblock %}
+
 {% block filtros %}
-  <div class="filter-title">{{ mes_nombre }} {{ anio }}</div>
-  <div class="metrics-row">
-    <div class="metric">
-      <div class="metric-label">Total periodo</div>
-      <div class="metric-value">{{ total_periodo|currency }}</div>
+  <div class="comisiones-center">
+    <div class="filter-title">{{ mes_nombre }} {{ anio }}</div>
+    <div class="metrics-row">
+      <div class="metric">
+        <div class="metric-label">Total periodo</div>
+        <div class="metric-value">{{ total_periodo|currency }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Liberado</div>
+        <div class="metric-value">{{ total_liberado|currency }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Pagos</div>
+        <div class="metric-value">{{ total_pagos|currency }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Pendiente</div>
+        <div class="metric-value">{{ total_pendiente|currency }}</div>
+      </div>
     </div>
-    <div class="metric">
-      <div class="metric-label">Liberado</div>
-      <div class="metric-value">{{ total_liberado|currency }}</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Pagos</div>
-      <div class="metric-value">{{ total_pagos|currency }}</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Pendiente</div>
-      <div class="metric-value">{{ total_pendiente|currency }}</div>
-    </div>
+    <form action="{% url 'comisiones_lista' %}" method="get" class="filter-form-simple comisiones-filter">
+      <label for="mes">Mes</label>
+      <select id="mes" name="mes">
+        {% if meses_choices %}
+          {% for m, nombre in meses_choices %}
+            <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ nombre }}</option>
+          {% endfor %}
+        {% else %}
+          {% for m in meses %}
+            <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ m|stringformat:"02d" }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+      <label for="anio">Año</label>
+      <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
+      <button type="submit" class="btn-filter">Filtrar</button>
+    </form>
   </div>
-  <form action="{% url 'comisiones_lista' %}" method="get" class="filter-form-simple comisiones-filter">
-    <label for="mes">Mes</label>
-    <select id="mes" name="mes">
-      {% if meses_choices %}
-        {% for m, nombre in meses_choices %}
-          <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ nombre }}</option>
-        {% endfor %}
-      {% else %}
-        {% for m in meses %}
-          <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ m|stringformat:"02d" }}</option>
-        {% endfor %}
-      {% endif %}
-    </select>
-    <label for="anio">Año</label>
-    <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
-    <button type="submit" class="btn-filter">Filtrar</button>
-  </form>
+{% endblock %}
+
+{% block filtros_right %}
   <a href="{% url 'comisiones_registrar_pago' %}?mes={{ mes }}&anio={{ anio }}" class="btn-primary">Registrar pago</a>
 {% endblock %}
 

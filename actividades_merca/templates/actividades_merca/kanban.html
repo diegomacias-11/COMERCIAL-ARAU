@@ -1,0 +1,72 @@
+{% extends "kanban_base.html" %}
+
+{% block title %}Actividades (Kanban){% endblock %}
+
+{% block filtros_left %}
+  <a class="btn-primary btn-primary-inline btn-view" href="?vista=lista&cliente={{ cliente_sel }}">Vista</a>
+{% endblock %}
+
+{% block filtros %}
+  <form method="get" class="filter-form-simple kanban-filter">
+    <input type="hidden" name="vista" value="kanban">
+    <div class="filter-block">
+      <label for="cliente">Cliente</label>
+      <select id="cliente" name="cliente">
+        <option value="">Todos</option>
+        {% for val,label in clientes_choices %}
+          <option value="{{ val }}" {% if cliente_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="?vista=kanban" class="btn-filter">Limpiar</a>
+    </div>
+  </form>
+{% endblock %}
+
+{% block filtros_right %}
+  <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+{% endblock %}
+
+{% block kanban_content %}
+  <div class="kanban-board">
+    {% for bloque in kanban_data %}
+      <div class="kanban-column">
+        <div class="kanban-column-title">{{ bloque.cliente }}</div>
+        {% for area in bloque.areas %}
+          <div class="kanban-area">
+            <div class="kanban-area-title">{{ area.nombre }}</div>
+            {% if area.items %}
+              {% for act in area.items %}
+                {% with act.estatus as st %}
+                <div class="kanban-card
+                           {% if st == 'Entregada a tiempo' %} status-on-time
+                           {% elif st == 'Vence hoy' %} status-due-today
+                           {% elif st == 'En tiempo' %} status-in-time
+                           {% elif st == 'Se entregó tarde' %} status-late
+                           {% endif %}">
+                  <div class="kanban-card-header">
+                    <a href="{% url 'actividades_merca_editar' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+                    {% if st %}
+                      <span class="status-pill">{{ st }}</span>
+                    {% endif %}
+                  </div>
+                  <div class="kanban-card-body">
+                    <div class="kanban-task">{{ act.tarea }}</div>
+                    <div class="kanban-meta">Inicio {{ act.fecha_inicio|date:"d/m/y" }} · Días restantes {{ act.dias_restantes }}</div>
+                  </div>
+                </div>
+                {% endwith %}
+              {% endfor %}
+            {% else %}
+              <div class="kanban-empty">Sin tareas</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% empty %}
+      <div class="kanban-empty">Sin actividades</div>
+    {% endfor %}
+  </div>
+{% endblock %}

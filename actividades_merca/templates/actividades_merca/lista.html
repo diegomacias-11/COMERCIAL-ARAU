@@ -2,8 +2,14 @@
 
 {% block title %}Actividades de Marketing{% endblock %}
 
+{% block filtros_left %}
+  <a class="btn-primary btn-primary-inline" href="?vista=kanban&cliente={{ cliente_sel }}&estatus={{ estatus_sel }}">Vista</a>
+{% endblock %}
+
 {% block filtros %}
   <form action="{% url 'actividades_merca_lista' %}" method="get" class="filter-form-simple">
+    <input type="hidden" name="vista" value="lista">
+
     <div class="filter-block">
       <label for="fecha_inicio">Fecha inicio</label>
       <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ f_desde }}">
@@ -45,6 +51,9 @@
       <a href="{% url 'actividades_merca_lista' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
+{% endblock %}
+
+{% block filtros_right %}
   <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 

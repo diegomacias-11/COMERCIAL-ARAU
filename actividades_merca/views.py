@@ -27,14 +27,18 @@ def _parse_date(val: str | None):
 def actividades_lista(request):
     qs = ActividadMerca.objects.all().order_by("-fecha_inicio")
 
+    vista = (request.GET.get("vista") or "lista").lower()
     f_desde = _parse_date(request.GET.get("fecha_inicio"))
     f_hasta = _parse_date(request.GET.get("fecha_fin"))
     cliente_sel = request.GET.get("cliente") or ""
     estatus_sel = request.GET.get("estatus") or ""
 
-    if f_desde:
+    if vista == "kanban":
+        qs = qs.exclude(estatus__in=["Entregada a tiempo", "Se entregó tarde"])
+
+    if vista == "lista" and f_desde:
         qs = qs.filter(fecha_inicio__gte=f_desde)
-    if f_hasta:
+    if vista == "lista" and f_hasta:
         qs = qs.filter(fecha_inicio__lte=f_hasta)
     if cliente_sel:
         qs = qs.filter(cliente__iexact=cliente_sel)
@@ -51,7 +55,35 @@ def actividades_lista(request):
         "f_hasta": request.GET.get("fecha_fin", ""),
         "cliente_sel": cliente_sel,
         "estatus_sel": estatus_sel,
+        "vista": vista,
     }
+
+    if vista == "kanban":
+        # Agrupar por cliente y dentro por área
+        grouped = []
+        by_cliente = {}
+        for act in actividades:
+            try:
+                compromiso = act.fecha_compromiso
+                remaining = (compromiso - datetime.today().date()).days if compromiso else None
+                act.dias_restantes = remaining if remaining is not None else ""
+            except Exception:
+                act.dias_restantes = ""
+            key = (act.cliente or "").strip().upper()
+            if key not in by_cliente:
+                by_cliente[key] = {}
+            area_key = act.area or "Sin área"
+            by_cliente[key].setdefault(area_key, []).append(act)
+        for cliente, areas in by_cliente.items():
+            grouped.append(
+                {
+                    "cliente": cliente or "Sin cliente",
+                    "areas": [{ "nombre": area, "items": acts } for area, acts in areas.items()],
+                }
+            )
+        context["kanban_data"] = grouped
+        return render(request, "actividades_merca/kanban.html", context)
+
     return render(request, "actividades_merca/lista.html", context)
 
 

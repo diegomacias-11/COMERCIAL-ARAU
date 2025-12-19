@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Lista{% endblock %}
+{% block title %}Kanban{% endblock %}
 
 {% block content %}
 <main>
-  <!--Sección de filtros -->
   <section class="filter-container">
     <div class="filter-bar">
       <div class="filter-slot filter-slot-left">
@@ -18,19 +17,8 @@
     </div>
   </section>
 
-  <!--Sección de contenido dinámico (tablas, tarjetas, etc.) -->
-  <div class="table-container">
-    <table class="table">
-      <thead>
-        {% block tabla_head %}{% endblock %}
-      </thead>
-      <tbody>
-        {% block tabla_body %}{% endblock %}
-      </tbody>
-    </table>
+  <div class="kanban-wrapper">
+    {% block kanban_content %}{% endblock %}
   </div>
-
-  <!--Bloque opcional para cosas debajo de la tabla -->
-  {% block extra_content %}{% endblock %}
 </main>
 {% endblock %}
