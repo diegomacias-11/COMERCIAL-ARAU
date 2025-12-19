@@ -74,8 +74,15 @@ class ActividadMercaForm(forms.ModelForm):
                         self.initial["fecha_fin"] = self.instance.fecha_fin.strftime("%Y-%m-%d")
                     except Exception:
                         pass
-                    # Una vez establecida no es editable por nadie
+                    # Una vez establecida no es editable
                     self.fields["fecha_fin"].disabled = True
+                else:
+                    # Al editar, solo estas quedan editables
+                    self.fields["fecha_fin"].disabled = True
+            # Bloquear todo excepto tarea, dias, evaluacion y asignaciones
+            for fname, field in self.fields.items():
+                if fname not in {"tarea", "dias", "evaluacion", "mercadologo", "disenador"}:
+                    field.disabled = True
         else:
             # Al crear, ocultar campos que solo se manejan en edición
             self.fields.pop("evaluacion", None)
