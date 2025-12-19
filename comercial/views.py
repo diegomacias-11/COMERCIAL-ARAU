@@ -1,11 +1,13 @@
-﻿from django import forms
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.utils import timezone
 from datetime import datetime, time
 
-from .models import Cita, NUM_CITA_CHOICES
+from django import forms
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+
+from core.choices import SERVICIO_CHOICES
+from .models import Cita, NUM_CITA_CHOICES
 
 
 class CitaForm(forms.ModelForm):
@@ -18,6 +20,7 @@ class CitaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         from django.utils import timezone
+
         super().__init__(*args, **kwargs)
         # Al editar, mostrar la fecha en formato compatible con datetime-local
         if getattr(self, "instance", None) and getattr(self.instance, "pk", None) and self.instance.fecha_cita:
@@ -90,10 +93,13 @@ def _initial_desde_cita(cita: Cita) -> dict:
         # fecha_cita se deja en blanco para obligar a definir la nueva
     }
 
+
 def citas_lista(request):
     citas = Cita.objects.all().order_by("-fecha_registro")
-    fecha_desde = request.GET.get("fecha_desde") or ""
-    fecha_hasta = request.GET.get("fecha_hasta") or ""
+    fecha_desde = (request.GET.get("fecha_desde") or "").strip()
+    fecha_hasta = (request.GET.get("fecha_hasta") or "").strip()
+    prospecto = (request.GET.get("prospecto") or "").strip()
+    servicio = (request.GET.get("servicio") or "").strip()
 
     tz = timezone.get_current_timezone()
     if fecha_desde:
@@ -110,11 +116,17 @@ def citas_lista(request):
             citas = citas.filter(fecha_cita__lte=end_dt)
         except ValueError:
             pass
+    if prospecto:
+        citas = citas.filter(prospecto__icontains=prospecto)
+    if servicio:
+        citas = citas.filter(servicio=servicio)
     context = {
         "citas": citas,
-        # Contexto mÃ­nimo; dejamos valores para el filtro de fechas
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
+        "prospecto": prospecto,
+        "servicio": servicio,
+        "servicio_choices": SERVICIO_CHOICES,
     }
     return render(request, "comercial/lista.html", context)
 
@@ -164,7 +176,3 @@ def eliminar_cita(request, id: int):
 
 def reportes_dashboard(request):
     return render(request, "comercial/reportes.html")
-
-
-
-

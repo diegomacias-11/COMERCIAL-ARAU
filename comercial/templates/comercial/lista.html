@@ -21,6 +21,21 @@
       <label for="fecha_hasta">Fecha hasta</label>
       <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
     </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="prospecto">Prospecto</label>
+      <input type="text" id="prospecto" name="prospecto" value="{{ prospecto }}" placeholder="Buscar prospecto" />
+    </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="servicio">Servicio</label>
+      <select id="servicio" name="servicio">
+        <option value="">Todos</option>
+        {% for val,label in servicio_choices %}
+          <option value="{{ val }}" {% if servicio == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
       <a href="{% url 'citas_lista' %}" class="btn-filter">Limpiar</a>
@@ -66,7 +81,6 @@
     </tr>
   {% endfor %}
 {% endblock %}
-
 
 
 
