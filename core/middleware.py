@@ -42,6 +42,10 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             return "actividadmerca"
         if "pago" in parts and "comisiones" in parts:
             return "pagocomision"
+        if base == "comisiones":
+            base = "comision"
+        elif base.endswith("es"):
+            base = base[:-2]
         if base.endswith("s"):
             base = base[:-1]
         return base
