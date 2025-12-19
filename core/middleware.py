@@ -47,6 +47,8 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             if "pago" in parts:
                 return "pagocomision"
             return "comision"
+        if "clientes" in parts or base == "clientes":
+            return "cliente"
 
         # Singularizar de forma basica
         if base.endswith("es"):
