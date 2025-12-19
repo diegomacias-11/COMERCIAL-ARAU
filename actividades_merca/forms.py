@@ -54,7 +54,12 @@ class ActividadMercaForm(forms.ModelForm):
             label="Cliente",
             choices=[("", "----")] + _cliente_choices(),
         )
+
         if self.instance and getattr(self.instance, "pk", None):
+            if "mercadologo" in self.fields:
+                self.initial["mercadologo"] = self.instance.mercadologo or ""
+            if "disenador" in self.fields:
+                self.initial["disenador"] = self.instance.disenador or ""
             if "fecha_inicio" in self.fields:
                 self.fields["fecha_inicio"].disabled = True
                 self.fields["fecha_inicio"].required = False
@@ -63,6 +68,14 @@ class ActividadMercaForm(forms.ModelForm):
                         self.initial["fecha_inicio"] = self.instance.fecha_inicio.strftime("%Y-%m-%d")
                     except Exception:
                         pass
+            if "fecha_fin" in self.fields:
+                if self.instance.fecha_fin:
+                    try:
+                        self.initial["fecha_fin"] = self.instance.fecha_fin.strftime("%Y-%m-%d")
+                    except Exception:
+                        pass
+                    # Una vez establecida no es editable por nadie
+                    self.fields["fecha_fin"].disabled = True
         else:
             # Al crear, ocultar evaluacion (solo se usa en edición)
             self.fields.pop("evaluacion", None)
