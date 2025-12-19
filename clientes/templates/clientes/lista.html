@@ -9,6 +9,8 @@
   </style>
 {% endblock %}
 
+{% block filtros_left %}{% endblock %}
+
 {% block filtros %}
   <form method="get" class="filter-form-simple">
     <div class="filter-block">
@@ -20,11 +22,19 @@
       <label for="fecha_hasta">Fecha hasta</label>
       <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
     </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="cliente">Cliente</label>
+      <input type="text" id="cliente" name="cliente" value="{{ cliente_nombre }}" placeholder="Buscar cliente" />
+    </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
       <a href="{% url 'clientes_lista' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
+{% endblock %}
+
+{% block filtros_right %}
   <a href="{% url 'agregar_cliente' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nuevo cliente</a>
 {% endblock %}
 

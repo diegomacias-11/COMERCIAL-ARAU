@@ -89,6 +89,7 @@ def clientes_lista(request):
     clientes = Cliente.objects.all().order_by("-fecha_registro")
     fecha_desde = request.GET.get("fecha_desde") or ""
     fecha_hasta = request.GET.get("fecha_hasta") or ""
+    nombre = (request.GET.get("cliente") or "").strip()
 
     tz = timezone.get_current_timezone()
     if fecha_desde:
@@ -105,10 +106,13 @@ def clientes_lista(request):
             clientes = clientes.filter(fecha_registro__lte=end_dt)
         except ValueError:
             pass
+    if nombre:
+        clientes = clientes.filter(cliente__icontains=nombre)
     context = {
         "clientes": clientes,
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
+        "cliente_nombre": nombre,
     }
     return render(request, "clientes/lista.html", context)
 
