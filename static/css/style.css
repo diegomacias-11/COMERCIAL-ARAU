@@ -43,6 +43,15 @@
   display: block;
   text-align: center; /* asegurar labels centrados */
 }
+
+/* Texto centrado para valores fijos en formularios (pago comisionista) */
+.fixed-center {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-weight: 600;
+  padding: 6px 10px;
+}
 .form-sep {
   width: 100%;
   border: 0;
