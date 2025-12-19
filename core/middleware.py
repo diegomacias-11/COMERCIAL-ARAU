@@ -21,7 +21,7 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     }
 
     REPORTS_ALLOWED = {
-        "/comercial/reportes/": {"Dirección Comercial"},
+        "/comercial/reportes/": {"dirección comercial"},
         "/marketing/reportes/": set(),    # Completar cuando exista
         "/operaciones/reportes/": set(),  # Completar cuando exista
     }
@@ -87,8 +87,10 @@ class GroupPermissionMiddleware(MiddlewareMixin):
             if request.path.startswith(prefix):
                 if user.is_superuser:
                     return None
-                if allowed_groups and user.groups.filter(name__in=allowed_groups).exists():
-                    return None
+                if allowed_groups:
+                    user_groups = {g.lower() for g in user.groups.values_list("name", flat=True)}
+                    if user_groups & allowed_groups:
+                        return None
                 return HttpResponse(
                     "<script>alert('No tienes permisos para este reporte.'); window.history.back();</script>",
                     status=403,
