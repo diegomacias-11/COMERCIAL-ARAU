@@ -10,13 +10,13 @@
 
 {% block form_fields %}
   <input type="hidden" name="next" value="{{ back_url }}">
+  {% if actividad %}
+    <div class="form-meta">
+      Fecha de registro: {{ actividad.fecha_registro|date:"d/m/Y H:i" }}
+    </div>
+  {% endif %}
   <div class="form-grid">
     <div class="form-col">
-      {% if actividad %}
-        <label>Fecha de registro</label>
-        <input type="text" value="{{ actividad.fecha_registro|date:'d/m/Y H:i' }}" disabled class="form-control">
-      {% endif %}
-
       <label for="{{ form.cliente.id_for_label }}">Cliente</label>
       {{ form.cliente }}
 
