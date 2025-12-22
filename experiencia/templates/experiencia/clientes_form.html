@@ -32,8 +32,6 @@
       <label>Correo</label>
       <input type="text" value="{{ cliente_exp.correo|default_if_none:'' }}" disabled>
 
-      <label>Activo</label>
-      <input type="text" value="{% if cliente_exp.activo %}Sí{% else %}No{% endif %}" disabled>
     </div>
 
     <div class="form-col">

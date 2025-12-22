@@ -48,7 +48,6 @@
     <th>Teléfono</th>
     <th>Correo</th>
     <th>Conexión</th>
-    <th>Activo</th>
     <th>Fecha registro</th>
     <th>Acciones</th>
   </tr>
@@ -65,7 +64,6 @@
       <td>{{ c.telefono|default_if_none:"" }}</td>
       <td>{{ c.correo|default_if_none:"" }}</td>
       <td>{{ c.conexion|default_if_none:"" }}</td>
-      <td>{% if c.activo %}Sí{% else %}No{% endif %}</td>
       <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>
       <td>
         <a href="{% url 'editar_cliente' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>

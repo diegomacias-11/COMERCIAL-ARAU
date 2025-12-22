@@ -37,7 +37,6 @@
     <th>Contacto</th>
     <th>Teléfono</th>
     <th>Correo</th>
-    <th>Activo</th>
     <th>Nombre comercial</th>
     <th>Domicilio</th>
     <th>Puesto</th>
@@ -59,7 +58,6 @@
       <td>{{ c.contacto|default_if_none:"" }}</td>
       <td>{{ c.telefono|default_if_none:"" }}</td>
       <td>{{ c.correo|default_if_none:"" }}</td>
-      <td>{% if c.activo %}Sí{% else %}No{% endif %}</td>
       <td>{{ c.nombre_comercial|default_if_none:"" }}</td>
       <td>{{ c.domicilio|default_if_none:"" }}</td>
       <td>{{ c.puesto|default_if_none:"" }}</td>

@@ -8,9 +8,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="cliente",
-            name="activo",
-            field=models.BooleanField(default=True),
+        migrations.RunSQL(
+            sql="ALTER TABLE clientes_cliente DROP COLUMN IF EXISTS activo;",
+            reverse_sql=migrations.RunSQL.noop,
         ),
     ]

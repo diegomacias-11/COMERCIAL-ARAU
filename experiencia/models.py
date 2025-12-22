@@ -11,7 +11,6 @@ class ExperienciaCliente(models.Model):
     contacto = models.CharField(max_length=150, blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     correo = models.EmailField(blank=True, null=True)
-    activo = models.BooleanField(default=True)
 
     # Campos gestionados en experiencia
     nombre_comercial = models.CharField(max_length=200, blank=True, null=True)
