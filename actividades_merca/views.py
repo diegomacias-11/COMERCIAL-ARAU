@@ -44,6 +44,13 @@ def actividades_lista(request):
         qs = qs.filter(cliente__iexact=cliente_sel)
 
     actividades = list(qs)
+    # Recalcular estatus al vuelo para mantenerlo fresco
+    for act in actividades:
+        nuevo = act.calcular_estatus()
+        if nuevo != act.estatus:
+            act.estatus = nuevo
+            act.save(update_fields=["estatus"])
+
     if estatus_sel:
         actividades = [a for a in actividades if a.estatus == estatus_sel]
 
