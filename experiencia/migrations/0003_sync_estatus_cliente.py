@@ -2,14 +2,11 @@ from django.db import migrations
 
 
 def sync_estatus_forward(apps, schema_editor):
-    ExperienciaCliente = apps.get_model("experiencia", "ExperienciaCliente")
-    Cliente = apps.get_model("clientes", "Cliente")
-    for exp in ExperienciaCliente.objects.all():
-        Cliente.objects.filter(pk=exp.cliente_id).update(estatus_cliente=exp.estatus_cliente)
+    # No-op: estatus syncing removed
+    return
 
 
 def sync_estatus_backward(apps, schema_editor):
-    # No-op rollback
     return
 
 
