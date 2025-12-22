@@ -56,6 +56,10 @@ class ActividadMercaForm(forms.ModelForm):
         )
 
         if self.instance and getattr(self.instance, "pk", None):
+            if "cliente" in self.fields:
+                self.initial["cliente"] = (self.instance.cliente or "").strip().upper()
+            if "area" in self.fields:
+                self.initial["area"] = self.instance.area or ""
             if "mercadologo" in self.fields:
                 self.initial["mercadologo"] = self.instance.mercadologo or ""
             if "disenador" in self.fields:
