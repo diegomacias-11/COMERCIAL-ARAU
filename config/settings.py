@@ -148,7 +148,7 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/citas/'
+LOGIN_REDIRECT_URL = '/'
 # Mensaje de error simplificado
 from django.contrib.messages import constants as messages  # noqa
 MESSAGE_TAGS = {
