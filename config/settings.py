@@ -64,7 +64,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.LoginRequiredMiddleware',
     'core.middleware.GroupPermissionMiddleware',
-]
+    'core.middleware.ActivityLogMiddleware',
+  ]
 
 
 # ======================

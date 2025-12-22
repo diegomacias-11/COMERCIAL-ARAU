@@ -6,6 +6,8 @@ from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 from django.utils.http import urlencode
 
+from .models import UserSessionActivity, UserActionLog
+
 
 class GroupPermissionMiddleware(MiddlewareMixin):
     """
@@ -164,3 +166,44 @@ class LoginRequiredMiddleware(MiddlewareMixin):
         login_url = settings.LOGIN_URL
         next_param = urlencode({"next": request.get_full_path()})
         return HttpResponseRedirect(f"{login_url}?{next_param}")
+
+
+class ActivityLogMiddleware(MiddlewareMixin):
+    """
+    Registra últimas sesiones y acciones (solo usuarios autenticados).
+    - UserSessionActivity: mantiene last_seen por session_key.
+    - UserActionLog: registra métodos no seguros (POST/PUT/PATCH/DELETE).
+    """
+
+    def _get_ip(self, request):
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR")
+
+    def process_response(self, request, response):
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated:
+            session_key = getattr(request, "session", None) and request.session.session_key
+            if session_key:
+                UserSessionActivity.objects.update_or_create(
+                    session_key=session_key,
+                    defaults={
+                        "user": user,
+                        "user_agent": request.META.get("HTTP_USER_AGENT", "")[:255],
+                        "ip_address": self._get_ip(request),
+                    },
+                )
+            if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+                try:
+                    UserActionLog.objects.create(
+                        user=user,
+                        path=request.path[:500],
+                        method=request.method,
+                        status_code=response.status_code,
+                        ip_address=self._get_ip(request),
+                        user_agent=request.META.get("HTTP_USER_AGENT", "")[:255],
+                    )
+                except Exception:
+                    pass
+        return response
