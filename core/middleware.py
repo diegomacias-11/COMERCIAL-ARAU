@@ -6,7 +6,7 @@ from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 from django.utils.http import urlencode
 
-from .models import UserSessionActivity, UserActionLog
+from .models import UserSessionActivity
 
 
 class GroupPermissionMiddleware(MiddlewareMixin):
@@ -170,9 +170,8 @@ class LoginRequiredMiddleware(MiddlewareMixin):
 
 class ActivityLogMiddleware(MiddlewareMixin):
     """
-    Registra últimas sesiones y acciones (solo usuarios autenticados).
+    Registra últimas sesiones (solo usuarios autenticados).
     - UserSessionActivity: mantiene last_seen por session_key.
-    - UserActionLog: registra métodos no seguros (POST/PUT/PATCH/DELETE).
     """
 
     def _get_ip(self, request):
@@ -194,16 +193,4 @@ class ActivityLogMiddleware(MiddlewareMixin):
                         "ip_address": self._get_ip(request),
                     },
                 )
-            if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
-                try:
-                    UserActionLog.objects.create(
-                        user=user,
-                        path=request.path[:500],
-                        method=request.method,
-                        status_code=response.status_code,
-                        ip_address=self._get_ip(request),
-                        user_agent=request.META.get("HTTP_USER_AGENT", "")[:255],
-                    )
-                except Exception:
-                    pass
         return response
