@@ -34,7 +34,7 @@ def actividades_lista(request):
     estatus_sel = request.GET.get("estatus") or ""
 
     if vista == "kanban":
-        qs = qs.exclude(estatus__in=["Entregada a tiempo", "Se entregó tarde"])
+        qs = qs.filter(fecha_fin__isnull=True)
 
     if vista == "lista" and f_desde:
         qs = qs.filter(fecha_inicio__gte=f_desde)
