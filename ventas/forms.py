@@ -13,12 +13,18 @@ class VentaForm(forms.ModelForm):
             "cliente",
             "facturadora",
             "num_factura",
+            "fecha_pago",
+            "fecha_vigencia",
+            "fecha_arranque",
             "monto_venta",
             "comentarios",
             "estatus_pago",
         ]
         widgets = {
             "fecha": forms.DateInput(attrs={"type": "date"}),
+            "fecha_pago": forms.DateInput(attrs={"type": "date"}),
+            "fecha_vigencia": forms.DateInput(attrs={"type": "date"}),
+            "fecha_arranque": forms.DateInput(attrs={"type": "date"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -39,6 +45,10 @@ class VentaForm(forms.ModelForm):
                     self.fields[fname].required = False
             if self.instance.fecha is not None:
                 self.initial["fecha"] = self.instance.fecha.isoformat()
+            for fname in ("fecha_pago", "fecha_vigencia", "fecha_arranque"):
+                val = getattr(self.instance, fname, None)
+                if val and fname in self.fields:
+                    self.initial[fname] = val.isoformat()
 
         if self.mes and self.anio:
             first_day = f"{int(self.anio):04d}-{int(self.mes):02d}-01"

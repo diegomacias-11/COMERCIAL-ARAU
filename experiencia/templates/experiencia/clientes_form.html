@@ -1,0 +1,62 @@
+{% extends "form.html" %}
+
+{% block title %}Cliente Experiencia{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  <div class="form-grid">
+    <div class="form-col">
+      <label>Cliente</label>
+      <input type="text" value="{{ cliente_exp.cliente }}" disabled>
+
+      <label>Servicio</label>
+      <input type="text" value="{{ cliente_exp.servicio|default_if_none:'' }}" disabled>
+
+      <label>Giro</label>
+      <input type="text" value="{{ cliente_exp.giro|default_if_none:'' }}" disabled>
+
+      <label>Contacto</label>
+      <input type="text" value="{{ cliente_exp.contacto|default_if_none:'' }}" disabled>
+
+      <label for="{{ form.puesto.id_for_label }}">Puesto</label>
+      {{ form.puesto }}
+
+      <label>Teléfono</label>
+      <input type="text" value="{{ cliente_exp.telefono|default_if_none:'' }}" disabled>
+
+      <label>Correo</label>
+      <input type="text" value="{{ cliente_exp.correo|default_if_none:'' }}" disabled>
+
+      <label>Activo</label>
+      <input type="text" value="{% if cliente_exp.activo %}Sí{% else %}No{% endif %}" disabled>
+    </div>
+
+    <div class="form-col">
+      <label for="{{ form.nombre_comercial.id_for_label }}">Nombre comercial</label>
+      {{ form.nombre_comercial }}
+
+      <label for="{{ form.domicilio.id_for_label }}">Domicilio</label>
+      {{ form.domicilio }}
+
+      <label for="{{ form.fecha_contrato.id_for_label }}">Fecha de contrato</label>
+      {{ form.fecha_contrato }}
+
+      <label for="{{ form.periodicidad.id_for_label }}">Periodicidad</label>
+      {{ form.periodicidad }}
+
+      <label for="{{ form.chat_welcome.id_for_label }}">Chat welcome</label>
+      {{ form.chat_welcome }}
+
+      <label for="{{ form.meet.id_for_label }}">Meet</label>
+      {{ form.meet }}
+
+      <label for="{{ form.comentarios.id_for_label }}">Comentarios</label>
+      {{ form.comentarios }}
+    </div>
+  </div>
+{% endblock %}

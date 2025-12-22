@@ -62,3 +62,26 @@ EVALUACION_CHOICES = [
     ("Regular", "Regular"),
     ("Malo", "Malo"),
 ]
+
+EXPERIENCIA_PERIODICIDAD_CHOICES = [
+    ("1 mes", "1 mes"),
+    ("3 meses", "3 meses"),
+    ("6 meses", "6 meses"),
+    ("1 año", "1 año"),
+    ("2 años", "2 años"),
+    ("proyecto", "Proyecto"),
+    ("semanal", "Semanal"),
+    ("quincenal", "Quincenal"),
+    ("indefinido", "Indefinido"),
+]
+
+CHAT_WELCOME_CHOICES = [
+    ("si", "Sí"),
+    ("no", "No"),
+    ("proceso", "Proceso"),
+]
+
+FACTURADORA_CHOICES = [
+    ("Anmara", "Anmara"),
+    ("Morwell", "Morwell"),
+]

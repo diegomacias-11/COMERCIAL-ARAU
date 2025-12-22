@@ -44,6 +44,15 @@
       <label for="{{ form.num_factura.id_for_label }}">No. factura</label>
       {{ form.num_factura|default_if_none:"" }}
 
+      <label for="{{ form.fecha_pago.id_for_label }}">Fecha pago</label>
+      {{ form.fecha_pago|default_if_none:"" }}
+
+      <label for="{{ form.fecha_vigencia.id_for_label }}">Fecha vigencia</label>
+      {{ form.fecha_vigencia|default_if_none:"" }}
+
+      <label for="{{ form.fecha_arranque.id_for_label }}">Fecha arranque</label>
+      {{ form.fecha_arranque|default_if_none:"" }}
+
       <label for="{{ form.estatus_pago.id_for_label }}">Estatus pago</label>
       {{ form.estatus_pago|default_if_none:"" }}
     </div>

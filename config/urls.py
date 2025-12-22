@@ -29,6 +29,7 @@ urlpatterns = [
     path('', include('alianzas.urls')),
     path('', include('leads.urls')),
     path('', include('actividades_merca.urls')),
+    path('', include('experiencia.urls')),
     path('ventas/', include('ventas.urls')),
     path('comisiones/', include('comisiones.urls')),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),

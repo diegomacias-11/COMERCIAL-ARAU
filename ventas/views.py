@@ -31,7 +31,12 @@ def ventas_lista(request):
     if redir:
         return redir
 
-    ventas = Venta.objects.filter(fecha__month=mes, fecha__year=anio).order_by("fecha")
+    estatus_pago = request.GET.get("estatus_pago") or ""
+
+    ventas = Venta.objects.filter(fecha__month=mes, fecha__year=anio)
+    if estatus_pago:
+        ventas = ventas.filter(estatus_pago=estatus_pago)
+    ventas = ventas.order_by("fecha")
     meses_nombres = [
         "",
         "Enero",
@@ -55,6 +60,8 @@ def ventas_lista(request):
         "meses": list(range(1, 13)),
         "meses_choices": meses_choices,
         "mes_nombre": meses_nombres[mes],
+        "estatus_pago": estatus_pago,
+        "estatus_pago_choices": Venta.EstatusPago.choices,
     }
     return render(request, "ventas/ventas_lista.html", context)
 

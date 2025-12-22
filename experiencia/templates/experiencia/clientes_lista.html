@@ -1,13 +1,6 @@
 {% extends "lista.html" %}
 
-{% block title %}Clientes{% endblock %}
-
-{% block extra_head %}
-  <style>
-    .table-container { overflow-x: auto !important; }
-    .table { min-width: 1100px; }
-  </style>
-{% endblock %}
+{% block title %}Clientes (Experiencia){% endblock %}
 
 {% block filtros_left %}{% endblock %}
 
@@ -29,27 +22,30 @@
     </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
-      <a href="{% url 'clientes_lista' %}" class="btn-filter">Limpiar</a>
+      <a href="{% url 'clientes_experiencia_lista' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
 {% endblock %}
 
-{% block filtros_right %}
-  <a href="{% url 'agregar_cliente' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nuevo cliente</a>
-{% endblock %}
+{% block filtros_right %}{% endblock %}
 
 {% block tabla_head %}
   <tr>
     <th>Cliente</th>
     <th>Servicio</th>
     <th>Giro</th>
-    <th>Medio</th>
     <th>Contacto</th>
     <th>Teléfono</th>
     <th>Correo</th>
-    <th>Conexión</th>
     <th>Activo</th>
-    <th>Fecha registro</th>
+    <th>Nombre comercial</th>
+    <th>Domicilio</th>
+    <th>Puesto</th>
+    <th>Fecha contrato</th>
+    <th>Periodicidad</th>
+    <th>Chat welcome</th>
+    <th>Meet</th>
+    <th>Comentarios</th>
     <th>Acciones</th>
   </tr>
 {% endblock %}
@@ -57,23 +53,24 @@
 {% block tabla_body %}
   {% for c in clientes %}
     <tr>
-      <td>{{ c.cliente|default_if_none:"" }}</td>
+      <td>{{ c.cliente }}</td>
       <td>{{ c.servicio|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
-      <td>{{ c.medio|default_if_none:c.tipo|default_if_none:"" }}</td>
       <td>{{ c.contacto|default_if_none:"" }}</td>
       <td>{{ c.telefono|default_if_none:"" }}</td>
       <td>{{ c.correo|default_if_none:"" }}</td>
-      <td>{{ c.conexion|default_if_none:"" }}</td>
       <td>{% if c.activo %}Sí{% else %}No{% endif %}</td>
-      <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>
-      <td>
-        <a href="{% url 'editar_cliente' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
-      </td>
+      <td>{{ c.nombre_comercial|default_if_none:"" }}</td>
+      <td>{{ c.domicilio|default_if_none:"" }}</td>
+      <td>{{ c.puesto|default_if_none:"" }}</td>
+      <td>{{ c.fecha_contrato|date:"d/m/Y"|default_if_none:"" }}</td>
+      <td>{{ c.get_periodicidad_display|default_if_none:"" }}</td>
+      <td>{{ c.get_chat_welcome_display|default_if_none:"" }}</td>
+      <td>{% if c.meet %}Sí{% else %}No{% endif %}</td>
+      <td>{{ c.comentarios|default_if_none:"" }}</td>
+      <td><a class="btn-detalle" href="{% url 'editar_cliente_experiencia' c.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a></td>
     </tr>
   {% empty %}
-    <tr>
-      <td colspan="100%">Sin clientes registrados</td>
-    </tr>
+    <tr><td colspan="100%">Sin clientes de experiencia.</td></tr>
   {% endfor %}
 {% endblock %}

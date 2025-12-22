@@ -9,20 +9,35 @@
   <div class="ventas-filter-center">
     <div class="filter-title">{{ mes_nombre }} {{ anio }}</div>
     <form action="{% url 'ventas_lista' %}" method="get" class="filter-form-simple dispersiones-filter">
-      <label for="mes">Mes</label>
-      <select id="mes" name="mes">
-        {% if meses_choices %}
-          {% for m, nombre in meses_choices %}
-            <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ nombre }}</option>
+      <div class="filter-stack">
+        <label for="mes">Mes</label>
+        <select id="mes" name="mes">
+          {% if meses_choices %}
+            {% for m, nombre in meses_choices %}
+              <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          {% else %}
+            {% for m in meses %}
+              <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ m|stringformat:"02d" }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+
+      <div class="filter-stack">
+        <label for="anio">Año</label>
+        <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
+      </div>
+
+      <div class="filter-stack">
+        <label for="estatus_pago">Estatus de pago</label>
+        <select id="estatus_pago" name="estatus_pago">
+          <option value="">Todos</option>
+          {% for val, label in estatus_pago_choices %}
+            <option value="{{ val }}" {% if estatus_pago == val %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
-        {% else %}
-          {% for m in meses %}
-            <option value="{{ m }}" {% if mes == m|stringformat:'i' %}selected{% endif %}>{{ m|stringformat:"02d" }}</option>
-          {% endfor %}
-        {% endif %}
-      </select>
-      <label for="anio">Año</label>
-      <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" max="2100">
+        </select>
+      </div>
       <button type="submit" class="btn-filter">Filtrar</button>
     </form>
   </div>
@@ -42,6 +57,9 @@
     <th>No. factura</th>
     <th>Monto venta</th>
     <th>Comisión (%)</th>
+    <th>Fecha pago</th>
+    <th>Fecha vigencia</th>
+    <th>Fecha arranque</th>
     <th>Estatus pago</th>
     <th>Comentarios</th>
   </tr>
@@ -58,10 +76,13 @@
       <td>{{ d.num_factura|default_if_none:"" }}</td>
       <td>{{ d.monto_venta|currency }}</td>
       <td>{{ d.comision_porcentaje|floatformat:2 }}%</td>
+      <td>{{ d.fecha_pago|date:"d/m/Y"|default_if_none:"" }}</td>
+      <td>{{ d.fecha_vigencia|date:"d/m/Y"|default_if_none:"" }}</td>
+      <td>{{ d.fecha_arranque|date:"d/m/Y"|default_if_none:"" }}</td>
       <td>{{ d.estatus_pago }}</td>
       <td>{{ d.comentarios|default_if_none:"" }}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="10">Sin ventas en el periodo.</td></tr>
+    <tr><td colspan="13">Sin ventas en el periodo.</td></tr>
   {% endfor %}
 {% endblock %}

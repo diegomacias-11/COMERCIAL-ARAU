@@ -40,6 +40,7 @@ class Cliente(models.Model):
     comision_10 = models.DecimalField(max_digits=8, decimal_places=6, blank=True, null=True)
     total_comisiones = models.DecimalField(max_digits=10, decimal_places=6, default=0)
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         # Formato similar al usado en comercial.Cita

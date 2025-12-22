@@ -24,6 +24,7 @@ class ClienteForm(forms.ModelForm):
             "telefono",
             "correo",
             "conexion",
+            "activo",
             *[f"comisionista_{i}" for i in range(1, 11)],
             *[f"comision_{i}" for i in range(1, 11)],
         ]
@@ -62,6 +63,9 @@ class ClienteForm(forms.ModelForm):
             if val is not None:
                 cleaned[campo] = val / 100
         return cleaned
+
+    def clean_activo(self):
+        return self.cleaned_data.get("activo", True)
 
     @property
     def total_comision_porcentaje(self):

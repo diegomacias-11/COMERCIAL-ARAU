@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.db import models
 from django.utils import timezone
+from core.choices import FACTURADORA_CHOICES
 
 
 class Venta(models.Model):
@@ -13,13 +14,16 @@ class Venta(models.Model):
     fecha = models.DateField(default=timezone.localdate)
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE)
     servicio = models.CharField(max_length=50)
-    facturadora = models.CharField(max_length=100, blank=True, null=True)
+    facturadora = models.CharField(max_length=100, blank=True, null=True, choices=FACTURADORA_CHOICES)
     num_factura = models.CharField(max_length=100, blank=True, null=True)
     monto_venta = models.DecimalField(max_digits=12, decimal_places=2)
     comision_porcentaje = models.DecimalField(max_digits=7, decimal_places=4, editable=False)
     monto_comision = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
     comentarios = models.CharField(max_length=255, blank=True, null=True)
     estatus_pago = models.CharField(max_length=20, choices=EstatusPago.choices, default=EstatusPago.PENDIENTE)
+    fecha_pago = models.DateField(blank=True, null=True)
+    fecha_vigencia = models.DateField(blank=True, null=True)
+    fecha_arranque = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.cliente} - {self.facturadora} - {self.fecha}"

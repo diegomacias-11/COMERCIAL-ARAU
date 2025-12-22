@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <div class="nav-area{% if 'citas' in path or 'clientes' in path or 'reportes' in path %} is-active{% endif %}">
+    <div class="nav-area{% if 'citas' in path or 'reportes' in path or 'ventas' in path or 'clientes' in path and not 'experiencia' in path %} is-active{% endif %}">
       <button type="button" class="area-trigger" data-area="comercial" aria-expanded="false">
         Comercial
       </button>
@@ -26,24 +26,34 @@
         <a href="{% url 'citas_lista' %}" role="menuitem"
            class="{% if 'citas' in path %}is-active{% endif %}">Citas</a>
         <a href="{% url 'clientes_lista' %}" role="menuitem"
-           class="{% if 'clientes' in path %}is-active{% endif %}">Clientes</a>
+           class="{% if 'clientes' in path and 'experiencia' not in path %}is-active{% endif %}">Clientes</a>
+        <a href="{% url 'ventas_lista' %}" role="menuitem"
+           class="{% if 'ventas' in path %}is-active{% endif %}">Ventas</a>
         <a href="{% url 'reportes_dashboard' %}" role="menuitem"
            class="{% if 'reportes' in path %}is-active{% endif %}">Reporte</a>
       </div>
     </div>
 
-    <div class="nav-area{% if 'alianzas' in path or 'ventas' in path or 'comisiones' in path %} is-active{% endif %}">
+    <div class="nav-area{% if 'alianzas' in path or 'comisiones' in path %} is-active{% endif %}">
       <button type="button" class="area-trigger" data-area="operaciones" aria-expanded="false">
         Operaciones
       </button>
       <div class="area-dropdown" role="menu" aria-label="Operaciones">
         <a href="{% url 'alianzas_lista' %}" role="menuitem"
            class="{% if 'alianzas' in path %}is-active{% endif %}">Alianzas</a>
-        <a href="{% url 'ventas_lista' %}" role="menuitem"
-           class="{% if 'ventas' in path %}is-active{% endif %}">Ventas</a>
         <a href="{% url 'comisiones_lista' %}" role="menuitem"
            class="{% if 'comisiones' in path %}is-active{% endif %}">Comisiones</a>
         <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
+      </div>
+    </div>
+
+    <div class="nav-area{% if 'experiencia' in path %} is-active{% endif %}">
+      <button type="button" class="area-trigger" data-area="experiencia" aria-expanded="false">
+        Experiencia
+      </button>
+      <div class="area-dropdown" role="menu" aria-label="Experiencia">
+        <a href="{% url 'clientes_experiencia_lista' %}" role="menuitem"
+           class="{% if 'experiencia' in path %}is-active{% endif %}">Clientes</a>
       </div>
     </div>
   </nav>
@@ -65,7 +75,7 @@
       </button>
     </form>
   </div>
-  {% if 'actividades_merca' in path or 'leads' in path or 'citas' in path or 'clientes' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path %}
+  {% if 'actividades_merca' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path %}
   <div class="area-title-bar">
     {% if 'actividades_merca' in path %}
       <span class="area-title">Actividades</span>
@@ -73,6 +83,8 @@
       <span class="area-title">Leads</span>
     {% elif 'citas' in path %}
       <span class="area-title">Citas</span>
+    {% elif 'experiencia' in path %}
+      <span class="area-title">Experiencia</span>
     {% elif 'clientes' in path %}
       <span class="area-title">Clientes</span>
     {% elif 'reportes' in path %}
