@@ -99,6 +99,7 @@
   margin-bottom: 8px;
   background: #f8fbff;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  overflow-wrap: anywhere;
 }
 .kanban-card.status-on-time {
   background: #b8d9b3;
@@ -132,6 +133,7 @@
 .kanban-task {
   font-weight: 600;
   color: #1f2a3d;
+  overflow-wrap: anywhere;
 }
 .kanban-meta {
   font-size: 0.85rem;
