@@ -40,6 +40,7 @@
 
 {% block tabla_head %}
   <tr>
+    <th>Acciones</th>
     <th>Cliente</th>
     <th>Servicio</th>
     <th>Giro</th>
@@ -49,13 +50,15 @@
     <th>Correo</th>
     <th>Conexión</th>
     <th>Fecha registro</th>
-    <th>Acciones</th>
   </tr>
 {% endblock %}
 
 {% block tabla_body %}
   {% for c in clientes %}
     <tr>
+      <td>
+        <a href="{% url 'editar_cliente' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+      </td>
       <td>{{ c.cliente|default_if_none:"" }}</td>
       <td>{{ c.servicio|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
@@ -65,9 +68,6 @@
       <td>{{ c.correo|default_if_none:"" }}</td>
       <td>{{ c.conexion|default_if_none:"" }}</td>
       <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>
-      <td>
-        <a href="{% url 'editar_cliente' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
-      </td>
     </tr>
   {% empty %}
     <tr>

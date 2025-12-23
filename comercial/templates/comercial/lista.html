@@ -46,6 +46,7 @@
 
 {% block tabla_head %}
   <tr>
+    <th>Acciones</th>
     <th>Prospecto</th>
     <th>Medio</th>
     <th>Servicio</th>
@@ -55,13 +56,15 @@
     <th>Número cita</th>
     <th>Estatus seguimiento</th>
     <th>Lugar</th>
-    <th>Acciones</th>
   </tr>
 {% endblock %}
 
 {% block tabla_body %}
   {% for c in citas %}
     <tr>
+      <td>
+        <a href="{% url 'editar_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+      </td>
       <td >{{ c.prospecto|default_if_none:"" }}</td>
       <td>{{ c.medio|default_if_none:"" }}</td>
       <td>{{ c.servicio|default_if_none:"" }}</td>
@@ -71,9 +74,6 @@
       <td>{{ c.numero_cita|default_if_none:"" }}</td>
       <td>{{ c.estatus_seguimiento|default_if_none:"" }}</td>
       <td>{{ c.lugar|default_if_none:"" }}</td>
-      <td>
-        <a href="{% url 'editar_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
-      </td>
     </tr>
   {% empty %}
     <tr>

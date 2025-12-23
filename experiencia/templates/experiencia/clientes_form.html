@@ -9,6 +9,18 @@
 {% endblock %}
 
 {% block form_fields %}
+
+  {% if form.instance.pk %}
+    <div class="form-meta">
+      <strong>Fecha de registro:</strong>
+      {% if form.fecha_registro_display %}
+        {{ form.fecha_registro_display|date:"d/m/Y H:i" }}
+      {% elif form.instance.fecha_registro %}
+        {{ form.instance.fecha_registro|date:"d/m/Y H:i" }}
+      {% endif %}
+    </div>
+  {% endif %}
+
   <div class="form-grid">
     <div class="form-col">
       <label>Cliente</label>
