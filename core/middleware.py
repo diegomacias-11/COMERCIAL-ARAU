@@ -185,12 +185,20 @@ class ActivityLogMiddleware(MiddlewareMixin):
         if user and user.is_authenticated:
             session_key = getattr(request, "session", None) and request.session.session_key
             if session_key:
-                UserSessionActivity.objects.update_or_create(
-                    session_key=session_key,
+                activity, created = UserSessionActivity.objects.get_or_create(
+                    user=user,
                     defaults={
-                        "user": user,
+                        "session_key": session_key,
                         "user_agent": request.META.get("HTTP_USER_AGENT", "")[:255],
                         "ip_address": self._get_ip(request),
                     },
                 )
+                if not created:
+                    # Mantener solo 1 registro por usuario; actualiza a la última sesión
+                    activity.session_key = session_key
+                    activity.user_agent = request.META.get("HTTP_USER_AGENT", "")[:255]
+                    activity.ip_address = self._get_ip(request)
+                    activity.save(update_fields=["session_key", "user_agent", "ip_address", "last_seen"])
+                    # Limpia posibles duplicados por sesión anterior
+                    UserSessionActivity.objects.filter(user=user).exclude(pk=activity.pk).delete()
         return response

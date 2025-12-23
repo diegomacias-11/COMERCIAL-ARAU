@@ -18,4 +18,10 @@ class UserSessionActivity(models.Model):
         verbose_name_plural = "Actividades de sesión"
 
     def __str__(self):
-        return f"{self.user} - {self.last_seen}"
+        full_name = ""
+        try:
+            full_name = (self.user.get_full_name() or "").strip()
+        except Exception:
+            full_name = ""
+        display = full_name if full_name else getattr(self.user, "username", str(self.user))
+        return f"{display} - {self.last_seen}"
