@@ -44,10 +44,10 @@ def actividades_lista(request):
         qs = qs.filter(fecha_inicio__lte=f_hasta)
     if cliente_sel:
         qs = qs.filter(cliente__iexact=cliente_sel)
-    if mercadologo_sel and mercadologo_sel != "Todos":
-        qs = qs.filter(mercadologo__iexact=mercadologo_sel)
-    if disenador_sel and disenador_sel != "Todos":
-        qs = qs.filter(disenador__iexact=disenador_sel)
+    if mercadologo_sel:
+        qs = qs.filter(mercadologo__in=[mercadologo_sel, "Todos"])
+    if disenador_sel:
+        qs = qs.filter(disenador__in=[disenador_sel, "Todos"])
 
     actividades = list(qs)
     # Recalcular estatus al vuelo para mantenerlo fresco
@@ -64,8 +64,8 @@ def actividades_lista(request):
         "actividades": actividades,
         "clientes_choices": _cliente_choices(),
         "estatus_choices": ESTATUS_CHOICES,
-        "mercadologo_choices": ActividadMerca._meta.get_field("mercadologo").choices,
-        "disenador_choices": ActividadMerca._meta.get_field("disenador").choices,
+        "mercadologo_choices": [(v, l) for v, l in ActividadMerca._meta.get_field("mercadologo").choices if v != "Todos"],
+        "disenador_choices": [(v, l) for v, l in ActividadMerca._meta.get_field("disenador").choices if v != "Todos"],
         "f_desde": request.GET.get("fecha_inicio", ""),
         "f_hasta": request.GET.get("fecha_fin", ""),
         "cliente_sel": cliente_sel,

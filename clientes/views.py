@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
+from core.choices import SERVICIO_CHOICES
 from .models import Cliente, Contacto
 from alianzas.models import Alianza
 
@@ -96,6 +97,7 @@ def clientes_lista(request):
     fecha_desde = request.GET.get("fecha_desde") or ""
     fecha_hasta = request.GET.get("fecha_hasta") or ""
     nombre = (request.GET.get("cliente") or "").strip()
+    servicio_sel = request.GET.get("servicio") or ""
 
     tz = timezone.get_current_timezone()
     if fecha_desde:
@@ -114,11 +116,15 @@ def clientes_lista(request):
             pass
     if nombre:
         clientes = clientes.filter(cliente__icontains=nombre)
+    if servicio_sel:
+        clientes = clientes.filter(servicio=servicio_sel)
     context = {
         "clientes": clientes,
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
         "cliente_nombre": nombre,
+        "servicio_sel": servicio_sel,
+        "servicio_choices": SERVICIO_CHOICES,
     }
     return render(request, "clientes/lista.html", context)
 

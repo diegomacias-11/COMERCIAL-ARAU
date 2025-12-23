@@ -27,6 +27,16 @@
       <label for="cliente">Cliente</label>
       <input type="text" id="cliente" name="cliente" value="{{ cliente_nombre }}" placeholder="Buscar cliente" />
     </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="servicio">Servicio</label>
+      <select id="servicio" name="servicio">
+        <option value="">Todos</option>
+        {% for val,label in servicio_choices %}
+          <option value="{{ val }}" {% if servicio_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
       <a href="{% url 'clientes_lista' %}" class="btn-filter">Limpiar</a>
