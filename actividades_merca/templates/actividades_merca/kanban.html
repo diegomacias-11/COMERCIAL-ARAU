@@ -18,6 +18,24 @@
         {% endfor %}
       </select>
     </div>
+    <div class="filter-block">
+      <label for="mercadologo">Mercadólogo</label>
+      <select id="mercadologo" name="mercadologo">
+        <option value="">Todos</option>
+        {% for val,label in mercadologo_choices %}
+          <option value="{{ val }}" {% if mercadologo_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-block">
+      <label for="disenador">Diseñador</label>
+      <select id="disenador" name="disenador">
+        <option value="">Todos</option>
+        {% for val,label in disenador_choices %}
+          <option value="{{ val }}" {% if disenador_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
       <a href="?vista=kanban" class="btn-filter">Limpiar</a>
