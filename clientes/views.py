@@ -1,10 +1,11 @@
 from django import forms
+from django.forms import inlineformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime, time
 
-from .models import Cliente
+from .models import Cliente, Contacto
 from alianzas.models import Alianza
 
 
@@ -117,6 +118,15 @@ def clientes_lista(request):
     return render(request, "clientes/lista.html", context)
 
 
+ContactoFormSet = inlineformset_factory(
+    Cliente,
+    Contacto,
+    fields=["nombre", "telefono", "correo", "puesto"],
+    extra=1,
+    can_delete=True,
+)
+
+
 def agregar_cliente(request):
     back_url = request.GET.get("next") or reverse("clientes_lista")
     if request.method == "POST":
@@ -128,7 +138,16 @@ def agregar_cliente(request):
     else:
         form = ClienteForm()
 
-    context = {"form": form, "back_url": back_url, "comisiones": _comision_pairs(form)}
+    contactos_url = None
+    if getattr(form.instance, "pk", None):
+        contactos_url = f"{reverse('contactos_cliente', args=[form.instance.pk])}?next={request.get_full_path()}"
+
+    context = {
+        "form": form,
+        "back_url": back_url,
+        "comisiones": _comision_pairs(form),
+        "contactos_url": contactos_url,
+    }
     return render(request, "clientes/form.html", context)
 
 
@@ -144,8 +163,41 @@ def editar_cliente(request, id: int):
     else:
         form = ClienteForm(instance=cliente)
 
-    context = {"form": form, "back_url": back_url, "comisiones": _comision_pairs(form)}
+    contactos_url = None
+    if getattr(form.instance, "pk", None):
+        contactos_url = f"{reverse('contactos_cliente', args=[form.instance.pk])}?next={request.get_full_path()}"
+
+    context = {
+        "form": form,
+        "back_url": back_url,
+        "comisiones": _comision_pairs(form),
+        "contactos_url": contactos_url,
+    }
     return render(request, "clientes/form.html", context)
+
+
+def contactos_cliente(request, id: int):
+    cliente = get_object_or_404(Cliente, pk=id)
+    back_url = request.GET.get("next") or reverse("editar_cliente", args=[id])
+    if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
+        formset = ContactoFormSet(request.POST, instance=cliente)
+        if formset.is_valid():
+            formset.save()
+            # Permanece en el directorio de contactos tras guardar
+            stay_url = reverse("contactos_cliente", args=[cliente.pk])
+            if back_url:
+                stay_url = f"{stay_url}?next={back_url}"
+            return redirect(stay_url)
+    else:
+        formset = ContactoFormSet(instance=cliente)
+
+    context = {
+        "cliente": cliente,
+        "formset": formset,
+        "back_url": back_url,
+    }
+    return render(request, "clientes/contactos.html", context)
 
 
 def eliminar_cliente(request, id: int):
@@ -153,3 +205,14 @@ def eliminar_cliente(request, id: int):
     cliente = get_object_or_404(Cliente, pk=id)
     cliente.delete()
     return redirect(back_url)
+
+
+def eliminar_contacto(request, id: int):
+    contacto = get_object_or_404(Contacto, pk=id)
+    back_url = request.POST.get("next") or request.GET.get("next") or reverse("contactos_cliente", args=[contacto.cliente_id])
+    cliente_id = contacto.cliente_id
+    contacto.delete()
+    # Siempre regresa al directorio de contactos de ese cliente (o al back_url si viene en next)
+    if back_url:
+        return redirect(back_url)
+    return redirect(reverse("contactos_cliente", args=[cliente_id]))

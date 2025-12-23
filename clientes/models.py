@@ -66,3 +66,25 @@ class Cliente(models.Model):
         ordering = ["-fecha_registro"]
         verbose_name = "Cliente"
         verbose_name_plural = "Clientes"
+
+
+class Contacto(models.Model):
+    cliente = models.ForeignKey(Cliente, related_name="contactos", on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=150, blank=True, null=True)
+    telefono = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        validators=[RegexValidator(r"^\d{10}$", "El teléfono debe tener exactamente 10 dígitos.")],
+    )
+    correo = models.EmailField("Correo", blank=True, null=True)
+    puesto = models.CharField(max_length=150, blank=True, null=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.nombre or f"Contacto de {self.cliente}"
+
+    class Meta:
+        ordering = ["-fecha_registro"]
+        verbose_name = "Contacto"
+        verbose_name_plural = "Contactos"

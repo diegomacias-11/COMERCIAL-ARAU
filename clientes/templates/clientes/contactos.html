@@ -1,0 +1,82 @@
+{% extends "form.html" %}
+
+{% block title %}Directorio de contactos{% endblock %}
+
+{% block form_container_classes %}contactos-form{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  <div class="form-meta">
+    <strong>Cliente:</strong> {{ cliente.cliente }}
+  </div>
+
+  {% if formset.non_form_errors %}
+    {% for err in formset.non_form_errors %}
+      <div class="error">{{ err }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {{ formset.management_form }}
+  <div id="contacto-forms">
+    {% for f in formset %}
+      <div class="contacto-form" data-form-index="{{ forloop.counter0 }}" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:12px;">
+        {{ f.id }}
+        <div style="flex:1; min-width:180px;">
+          <label for="{{ f.nombre.id_for_label }}">Nombre</label>
+          {{ f.nombre }}
+          {% if f.nombre.errors %}<div class="error">{{ f.nombre.errors }}</div>{% endif %}
+        </div>
+
+        <div style="flex:1; min-width:150px;">
+          <label for="{{ f.telefono.id_for_label }}">Teléfono</label>
+          {{ f.telefono }}
+          {% if f.telefono.errors %}<div class="error">{{ f.telefono.errors }}</div>{% endif %}
+        </div>
+
+        <div style="flex:1; min-width:200px;">
+          <label for="{{ f.correo.id_for_label }}">Correo</label>
+          {{ f.correo }}
+          {% if f.correo.errors %}<div class="error">{{ f.correo.errors }}</div>{% endif %}
+        </div>
+
+        <div style="flex:1; min-width:150px;">
+          <label for="{{ f.puesto.id_for_label }}">Puesto</label>
+          {{ f.puesto }}
+          {% if f.puesto.errors %}<div class="error">{{ f.puesto.errors }}</div>{% endif %}
+        </div>
+
+        {% if f.instance.pk %}
+          <div class="contacto-actions" style="display:flex; gap:8px; align-items:center;">
+            {{ f.DELETE.as_hidden }}
+            <input type="hidden" name="next" value="{{ back_url }}">
+            <button type="submit"
+                    class="btn-delete btn-small"
+                    formmethod="post"
+                    formaction="{% url 'eliminar_contacto' f.instance.pk %}">
+              Eliminar
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="contacto-actions-bar" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:10px;">
+    <button type="submit" class="btn-submit keep-visible">Guardar contactos</button>
+  </div>
+
+  <input type="hidden" name="next" value="{{ back_url }}" />
+{% endblock %}
+
+{% block extra_actions %}
+  <style>
+    /* Oculta el botón submit por defecto del template base en esta vista */
+    .contactos-form .btn-submit:not(.keep-visible) { display: none; }
+    .contacto-form input, .contacto-form select { width: 100%; }
+  </style>
+{% endblock %}

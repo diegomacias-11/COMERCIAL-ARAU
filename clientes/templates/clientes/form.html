@@ -46,7 +46,12 @@
     </div>
 
     <div class="form-col">
-      <label for="{{ form.contacto.id_for_label }}">{{ form.contacto.label }}</label>
+      <div class="label-with-action">
+        <label for="{{ form.contacto.id_for_label }}">{{ form.contacto.label }}</label>
+        {% if contactos_url %}
+          <a href="{{ contactos_url }}" class="btn-filter btn-small">Directorio</a>
+        {% endif %}
+      </div>
       {{ form.contacto }}
       {% if form.contacto.errors %}<div class="error">{{ form.contacto.errors }}</div>{% endif %}
 
@@ -97,29 +102,29 @@
   <script>
     (function() {
       function confirmarComision(event) {
-      const formEl = document.querySelector('.form-container form');
-      if (!formEl) return true;
-      const razon = (formEl.querySelector('#id_cliente')?.value || 'este cliente').trim();
-      const comisionInputs = formEl.querySelectorAll('input[name^="comision_"]');
-      let total = 0;
-      comisionInputs.forEach((input) => {
-        const val = parseFloat(input.value);
-        if (!isNaN(val)) {
-          total += val;
+        const formEl = document.querySelector('.form-container form');
+        if (!formEl) return true;
+        const razon = (formEl.querySelector('#id_cliente')?.value || 'este cliente').trim();
+        const comisionInputs = formEl.querySelectorAll('input[name^="comision_"]');
+        let total = 0;
+        comisionInputs.forEach((input) => {
+          const val = parseFloat(input.value);
+          if (!isNaN(val)) {
+            total += val;
+          }
+        });
+        if (total > 100) {
+          alert(`La suma de comisiones (${total.toFixed(2)}%) supera el 100%. Ajusta los porcentajes antes de guardar.`);
+          if (event) {
+            event.preventDefault();
+          }
+          return false;
         }
-      });
-      if (total > 100) {
-        alert(`La suma de comisiones (${total.toFixed(2)}%) supera el 100%. Ajusta los porcentajes antes de guardar.`);
-        if (event) {
+        const mensaje = `¿Estás seguro que deseas guardar el cliente "${razon}" con ${total.toFixed(2)}% de comisión?`;
+        const ok = confirm(mensaje);
+        if (!ok && event) {
           event.preventDefault();
         }
-        return false;
-      }
-      const mensaje = `¿Estás seguro que deseas guardar el cliente "${razon}" con ${total.toFixed(2)}% de comisión?`;
-      const ok = confirm(mensaje);
-      if (!ok && event) {
-        event.preventDefault();
-      }
         return ok;
       }
 
