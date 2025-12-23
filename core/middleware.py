@@ -160,6 +160,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
             (url_name in public_names)
             or path.startswith(settings.STATIC_URL)
             or path.startswith("/admin")
+            or path.startswith("/actividades_merca/solicitud/")
         ):
             return None
 
@@ -185,20 +186,21 @@ class ActivityLogMiddleware(MiddlewareMixin):
         if user and user.is_authenticated:
             session_key = getattr(request, "session", None) and request.session.session_key
             if session_key:
-                activity, created = UserSessionActivity.objects.get_or_create(
-                    user=user,
-                    defaults={
-                        "session_key": session_key,
-                        "user_agent": request.META.get("HTTP_USER_AGENT", "")[:255],
-                        "ip_address": self._get_ip(request),
-                    },
-                )
-                if not created:
-                    # Mantener solo 1 registro por usuario; actualiza a la última sesión
+                # Usa el registro más reciente del usuario (si existe) y elimina duplicados
+                qs = UserSessionActivity.objects.filter(user=user).order_by("-last_seen")
+                activity = qs.first()
+                if activity is None:
+                    UserSessionActivity.objects.create(
+                        user=user,
+                        session_key=session_key,
+                        user_agent=request.META.get("HTTP_USER_AGENT", "")[:255],
+                        ip_address=self._get_ip(request),
+                    )
+                else:
                     activity.session_key = session_key
                     activity.user_agent = request.META.get("HTTP_USER_AGENT", "")[:255]
                     activity.ip_address = self._get_ip(request)
                     activity.save(update_fields=["session_key", "user_agent", "ip_address", "last_seen"])
-                    # Limpia posibles duplicados por sesión anterior
+                    # elimina otros registros del mismo usuario
                     UserSessionActivity.objects.filter(user=user).exclude(pk=activity.pk).delete()
         return response

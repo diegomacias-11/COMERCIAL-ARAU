@@ -1,0 +1,78 @@
+{% extends "form.html" %}
+{% load static %}
+
+{% block title %}Solicitud de material{% endblock %}
+{% block form_container_classes %}solicitud-publica{% endblock %}
+
+{% block back_link %}{% endblock %}
+
+{% block form_fields %}
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="cliente">Cliente</label>
+      <select id="cliente" name="cliente" required>
+        <option value="">Selecciona</option>
+        {% for c in cliente_options %}
+          <option value="{{ c }}" {% if cliente == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.cliente %}<div class="error">{{ errors.cliente }}</div>{% endif %}
+
+      <label for="tipo">Tipo</label>
+      <input type="text" id="tipo" name="tipo" value="{{ tipo }}" maxlength="100" placeholder="Imágen, PDF, Presentación" required>
+      {% if errors.tipo %}<div class="error">{{ errors.tipo }}</div>{% endif %}
+
+      <label for="formato">Formato</label>
+      <input type="text" id="formato" name="formato" value="{{ formato }}" maxlength="100" placeholder="Whatsapp, Correo, Instagram" required>
+      {% if errors.formato %}<div class="error">{{ errors.formato }}</div>{% endif %}
+
+      <label for="mensaje">Mensaje</label>
+      <textarea id="mensaje" name="mensaje" maxlength="1000" rows="5" placeholder="Contenido del mensaje de la imagen" required>{{ mensaje }}</textarea>
+      {% if errors.mensaje %}<div class="error">{{ errors.mensaje }}</div>{% endif %}
+
+      <label for="fecha_entrega">Fecha de entrega</label>
+      <input type="date" id="fecha_entrega" name="fecha_entrega" value="{{ fecha_entrega }}" required>
+      {% if errors.fecha_entrega %}<div class="error">{{ errors.fecha_entrega }}</div>{% endif %}
+
+      <label for="quien">Quién solicita</label>
+      <input type="text" id="quien" name="quien" value="{{ quien }}" maxlength="150" required>
+      {% if errors.quien %}<div class="error">{{ errors.quien }}</div>{% endif %}
+
+      <label for="departamento">Departamento que solicita</label>
+      <input type="text" id="departamento" name="departamento" value="{{ departamento }}" maxlength="150" required>
+      {% if errors.departamento %}<div class="error">{{ errors.departamento }}</div>{% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_actions %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const defaultBtn = document.querySelector('.solicitud-publica .form-container form > button.btn-submit');
+      if (defaultBtn) {
+        defaultBtn.textContent = 'Enviar solicitud';
+        defaultBtn.classList.add('btn-primary');
+      }
+      {% if success %}
+      alert('El departamento de marketing de Grupo Arau ha recibido tu solicitud con éxito, espera la entrega en la fecha indicada.');
+      {% endif %}
+    });
+  </script>
+{% endblock %}
+{% block extra_head %}
+  <style>
+    /* Header minimal: solo logo centrado */
+    .main-header {
+      justify-content: center;
+      padding: 16px 0;
+    }
+    .main-header .main-nav,
+    .main-header .user-card,
+    .main-header .area-title-bar {
+      display: none !important;
+    }
+    .main-header .logo-title {
+      margin: 0;
+    }
+  </style>
+{% endblock %}

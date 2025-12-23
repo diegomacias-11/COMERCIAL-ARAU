@@ -74,6 +74,13 @@
 {% endblock %}
 
 {% block tabla_body %}
+  {% if show_unassigned_warning %}
+    <tr>
+      <td colspan="11" style="background:#ffe5e5; color:#8b0000; font-weight:bold;">
+        Hay actividades sin mercadólogo o diseñador asignado.
+      </td>
+    </tr>
+  {% endif %}
   {% for a in actividades %}
     <tr>
       <td>

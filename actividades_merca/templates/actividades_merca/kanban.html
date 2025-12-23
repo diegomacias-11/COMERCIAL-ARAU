@@ -22,6 +22,7 @@
       <label for="mercadologo">Mercadólogo</label>
       <select id="mercadologo" name="mercadologo">
         <option value="">Todos</option>
+        <option value="__none__" {% if mercadologo_sel == "__none__" %}selected{% endif %}>Sin asignar</option>
         {% for val,label in mercadologo_choices %}
           <option value="{{ val }}" {% if mercadologo_sel == val %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
@@ -31,6 +32,7 @@
       <label for="disenador">Diseñador</label>
       <select id="disenador" name="disenador">
         <option value="">Todos</option>
+        <option value="__none__" {% if disenador_sel == "__none__" %}selected{% endif %}>Sin asignar</option>
         {% for val,label in disenador_choices %}
           <option value="{{ val }}" {% if disenador_sel == val %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
@@ -48,6 +50,9 @@
 {% endblock %}
 
 {% block kanban_content %}
+  {% if show_unassigned_warning %}
+    <div class="alert warning" style="background:#ffe5e5; color:#8b0000; font-weight:bold; text-align:center;">Hay actividades sin mercadólogo o diseñador asignado.</div>
+  {% endif %}
   <div class="kanban-board">
     {% for bloque in kanban_data %}
       <div class="kanban-column">

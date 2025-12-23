@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, date
+from django.db.models import Q
 
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
 
 from .forms import _cliente_choices, ActividadMercaForm
 from .models import ActividadMerca
@@ -44,9 +46,13 @@ def actividades_lista(request):
         qs = qs.filter(fecha_inicio__lte=f_hasta)
     if cliente_sel:
         qs = qs.filter(cliente__iexact=cliente_sel)
-    if mercadologo_sel:
+    if mercadologo_sel == "__none__":
+        qs = qs.filter(Q(mercadologo__isnull=True) | Q(mercadologo=""))
+    elif mercadologo_sel:
         qs = qs.filter(mercadologo__in=[mercadologo_sel, "Todos"])
-    if disenador_sel:
+    if disenador_sel == "__none__":
+        qs = qs.filter(Q(disenador__isnull=True) | Q(disenador=""))
+    elif disenador_sel:
         qs = qs.filter(disenador__in=[disenador_sel, "Todos"])
 
     actividades = list(qs)
@@ -75,6 +81,11 @@ def actividades_lista(request):
         "vista": vista,
     }
 
+    context["show_unassigned_warning"] = any(
+        (not getattr(a, "mercadologo")) or (not getattr(a, "disenador"))
+        for a in actividades
+    )
+
     if vista == "kanban":
         # Agrupar por cliente y dentro por área
         grouped = []
@@ -102,6 +113,99 @@ def actividades_lista(request):
         return render(request, "actividades_merca/kanban.html", context)
 
     return render(request, "actividades_merca/lista.html", context)
+
+
+def solicitud_publica(request):
+    cliente_options = ["ENROK", "ARAU", "HUNTERLOOP"]
+    errors = {}
+    success = False
+    initial = {
+        "cliente": request.POST.get("cliente", ""),
+        "tipo": request.POST.get("tipo", ""),
+        "formato": request.POST.get("formato", ""),
+        "mensaje": request.POST.get("mensaje", ""),
+        "fecha_entrega": request.POST.get("fecha_entrega", ""),
+        "quien": request.POST.get("quien", ""),
+        "departamento": request.POST.get("departamento", ""),
+    }
+
+    if request.method == "POST":
+        cliente = (request.POST.get("cliente") or "").strip().upper()
+        tipo = (request.POST.get("tipo") or "").strip()
+        formato = (request.POST.get("formato") or "").strip()
+        mensaje = (request.POST.get("mensaje") or "").strip()
+        fecha_entrega_raw = (request.POST.get("fecha_entrega") or "").strip()
+        quien = (request.POST.get("quien") or "").strip()
+        departamento = (request.POST.get("departamento") or "").strip()
+
+        # Validaciones
+        if cliente not in cliente_options:
+            errors["cliente"] = "Selecciona un cliente válido."
+        if not tipo:
+            errors["tipo"] = "Campo requerido."
+        if not formato:
+            errors["formato"] = "Campo requerido."
+        if not mensaje:
+            errors["mensaje"] = "Campo requerido."
+        if not fecha_entrega_raw:
+            errors["fecha_entrega"] = "Campo requerido."
+        if not quien:
+            errors["quien"] = "Campo requerido."
+        if not departamento:
+            errors["departamento"] = "Campo requerido."
+
+        fecha_entrega = None
+        if fecha_entrega_raw:
+            try:
+                fecha_entrega = datetime.strptime(fecha_entrega_raw, "%Y-%m-%d").date()
+            except ValueError:
+                errors["fecha_entrega"] = "Fecha inválida (YYYY-MM-DD)."
+
+        if not errors:
+            hoy = timezone.now().date()
+            dias = 0
+            if fecha_entrega and fecha_entrega > hoy:
+                dias = (fecha_entrega - hoy).days
+            # Construir tarea
+            tarea_parts = [
+                f"Tipo: {tipo}",
+                f"Formato: {formato}",
+                f"Mensaje: {mensaje}",
+                f"Quién solicita: {quien}",
+                f"Departamento: {departamento}",
+            ]
+            tarea_text = " | ".join(tarea_parts)
+            ActividadMerca.objects.create(
+                cliente=cliente,
+                area="Internas",
+                fecha_inicio=hoy,
+                tarea=tarea_text,
+                dias=dias,
+                mercadologo=None,
+                disenador=None,
+                fecha_fin=None,
+            )
+            success = True
+            initial = {
+            "cliente": "",
+            "tipo": "",
+            "formato": "",
+            "mensaje": "",
+            "fecha_entrega": "",
+            "quien": "",
+            "departamento": "",
+        }
+
+    return render(
+        request,
+        "actividades_merca/solicitud_publica.html",
+        {
+            "cliente_options": cliente_options,
+            "errors": errors,
+            "success": success,
+            **initial,
+        },
+    )
 
 
 def crear_actividad(request):

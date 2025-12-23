@@ -7,4 +7,5 @@ urlpatterns = [
     path("actividades_merca/nueva/", views.crear_actividad, name="actividades_merca_crear"),
     path("actividades_merca/<int:pk>/", views.editar_actividad, name="actividades_merca_editar"),
     path("actividades_merca/<int:pk>/eliminar/", views.eliminar_actividad, name="actividades_merca_eliminar"),
+    path("actividades_merca/solicitud/", views.solicitud_publica, name="actividades_merca_solicitud_publica"),
 ]
