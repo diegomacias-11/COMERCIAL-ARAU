@@ -82,7 +82,7 @@ def actividades_lista(request):
     }
 
     context["show_unassigned_warning"] = any(
-        (not getattr(a, "mercadologo")) or (not getattr(a, "disenador"))
+        (not getattr(a, "mercadologo")) and (not getattr(a, "disenador"))
         for a in actividades
     )
 
