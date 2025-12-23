@@ -85,3 +85,10 @@ FACTURADORA_CHOICES = [
     ("Anmara", "Anmara"),
     ("Morwell", "Morwell"),
 ]
+
+ESTATUS_CLIENTES_CHOICES = [
+    ("Activo", "Activo"),
+    ("Pausa", "Pausa"),
+    ("Baja", "Baja"),
+    ("Reingreso", "Reingreso"),
+]

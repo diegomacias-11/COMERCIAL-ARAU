@@ -31,7 +31,9 @@
 
 {% block tabla_head %}
   <tr>
+    <th>Acciones</th>
     <th>Cliente</th>
+    <th>Estatus</th>
     <th>Servicio</th>
     <th>Giro</th>
     <th>Contacto</th>
@@ -45,14 +47,15 @@
     <th>Chat welcome</th>
     <th>Meet</th>
     <th>Comentarios</th>
-    <th>Acciones</th>
   </tr>
 {% endblock %}
 
 {% block tabla_body %}
   {% for c in clientes %}
     <tr>
+      <td><a class="btn-detalle" href="{% url 'editar_cliente_experiencia' c.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a></td>
       <td>{{ c.cliente }}</td>
+      <td>{{ c.estatus|default_if_none:"" }}</td>
       <td>{{ c.servicio|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
       <td>{{ c.contacto|default_if_none:"" }}</td>
@@ -66,7 +69,6 @@
       <td>{{ c.get_chat_welcome_display|default_if_none:"" }}</td>
       <td>{% if c.meet %}Sí{% else %}No{% endif %}</td>
       <td>{{ c.comentarios|default_if_none:"" }}</td>
-      <td><a class="btn-detalle" href="{% url 'editar_cliente_experiencia' c.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a></td>
     </tr>
   {% empty %}
     <tr><td colspan="100%">Sin clientes de experiencia.</td></tr>

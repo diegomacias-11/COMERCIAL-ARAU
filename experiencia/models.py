@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.choices import EXPERIENCIA_PERIODICIDAD_CHOICES, CHAT_WELCOME_CHOICES
+from core.choices import EXPERIENCIA_PERIODICIDAD_CHOICES, CHAT_WELCOME_CHOICES, ESTATUS_CLIENTES_CHOICES
 
 
 class ExperienciaCliente(models.Model):
@@ -25,10 +25,9 @@ class ExperienciaCliente(models.Model):
     )
     meet = models.BooleanField(default=False)
     comentarios = models.TextField(blank=True, null=True)
+    estatus = models.CharField(max_length=20, choices=ESTATUS_CLIENTES_CHOICES, blank=True, null=True)
 
     fecha_registro = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
-
     class Meta:
         verbose_name = "Cliente Experiencia"
         verbose_name_plural = "Clientes Experiencia"

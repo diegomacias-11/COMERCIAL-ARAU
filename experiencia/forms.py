@@ -8,6 +8,7 @@ class ExperienciaClienteForm(forms.ModelForm):
         model = ExperienciaCliente
         fields = [
             "nombre_comercial",
+            "estatus",
             "domicilio",
             "puesto",
             "fecha_contrato",
