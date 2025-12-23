@@ -10,7 +10,6 @@ class ExperienciaClienteForm(forms.ModelForm):
             "nombre_comercial",
             "estatus",
             "domicilio",
-            "puesto",
             "fecha_contrato",
             "periodicidad",
             "chat_welcome",

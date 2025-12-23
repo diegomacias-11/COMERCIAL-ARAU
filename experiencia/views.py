@@ -1,6 +1,7 @@
 from datetime import datetime, time
 
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import ExperienciaCliente
@@ -39,6 +40,9 @@ def clientes_experiencia_lista(request):
 def editar_cliente_experiencia(request, pk):
     cliente_exp = get_object_or_404(ExperienciaCliente, pk=pk)
     back_url = request.GET.get("next") or request.META.get("HTTP_REFERER") or "/experiencia/clientes/"
+    contactos_url = None
+    if cliente_exp.cliente_id:
+        contactos_url = f"{reverse('contactos_cliente', args=[cliente_exp.cliente_id])}?next={request.get_full_path()}"
     if request.method == "POST":
         form = ExperienciaClienteForm(request.POST, instance=cliente_exp)
         if form.is_valid():
@@ -49,5 +53,5 @@ def editar_cliente_experiencia(request, pk):
     return render(
         request,
         "experiencia/clientes_form.html",
-        {"form": form, "cliente_exp": cliente_exp, "back_url": back_url},
+        {"form": form, "cliente_exp": cliente_exp, "back_url": back_url, "contactos_url": contactos_url},
     )

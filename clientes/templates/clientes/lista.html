@@ -1,4 +1,4 @@
-{% extends "lista.html" %}
+<!--  -->{% extends "lista.html" %}
 
 {% block title %}Clientes{% endblock %}
 
@@ -45,10 +45,7 @@
     <th>Servicio</th>
     <th>Giro</th>
     <th>Medio</th>
-    <th>Contacto</th>
-    <th>Teléfono</th>
-    <th>Correo</th>
-    <th>Conexión</th>
+    <th>ConexiИn</th>
     <th>Fecha registro</th>
   </tr>
 {% endblock %}
@@ -63,9 +60,6 @@
       <td>{{ c.servicio|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
       <td>{{ c.medio|default_if_none:c.tipo|default_if_none:"" }}</td>
-      <td>{{ c.contacto|default_if_none:"" }}</td>
-      <td>{{ c.telefono|default_if_none:"" }}</td>
-      <td>{{ c.correo|default_if_none:"" }}</td>
       <td>{{ c.conexion|default_if_none:"" }}</td>
       <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>
     </tr>

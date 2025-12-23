@@ -46,26 +46,18 @@
     </div>
 
     <div class="form-col">
-      <div class="label-with-action">
-        <label for="{{ form.contacto.id_for_label }}">{{ form.contacto.label }}</label>
-        {% if contactos_url %}
-          <a href="{{ contactos_url }}" class="btn-filter btn-small">Directorio</a>
-        {% endif %}
-      </div>
-      {{ form.contacto }}
-      {% if form.contacto.errors %}<div class="error">{{ form.contacto.errors }}</div>{% endif %}
-
-      <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
-      {{ form.telefono }}
-      {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
-
-      <label for="{{ form.correo.id_for_label }}">{{ form.correo.label }}</label>
-      {{ form.correo }}
-      {% if form.correo.errors %}<div class="error">{{ form.correo.errors }}</div>{% endif %}
-
       <label for="{{ form.conexion.id_for_label }}">{{ form.conexion.label }}</label>
       {{ form.conexion }}
       {% if form.conexion.errors %}<div class="error">{{ form.conexion.errors }}</div>{% endif %}
+
+      {% if contactos_url %}
+        <div style="margin-top: 10px; text-align: center;">
+          <label>Contacto</label>
+          <div>
+            <a href="{{ contactos_url }}" class="btn-filter btn-small">Directorio</a>
+          </div>
+        </div>
+      {% endif %}
     </div>
 
     <div class="form-col">

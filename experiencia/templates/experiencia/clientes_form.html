@@ -34,19 +34,14 @@
 
       <label>Giro</label>
       <input type="text" value="{{ cliente_exp.giro|default_if_none:'' }}" disabled>
-
-      <label>Contacto</label>
-      <input type="text" value="{{ cliente_exp.contacto|default_if_none:'' }}" disabled>
-
-      <label for="{{ form.puesto.id_for_label }}">Puesto</label>
-      {{ form.puesto }}
-
-      <label>Teléfono</label>
-      <input type="text" value="{{ cliente_exp.telefono|default_if_none:'' }}" disabled>
-
-      <label>Correo</label>
-      <input type="text" value="{{ cliente_exp.correo|default_if_none:'' }}" disabled>
-
+      {% if contactos_url %}
+        <div style="margin-top: 10px; text-align: center;">
+          <label>Contacto</label>
+          <div>
+            <a href="{{ contactos_url }}" class="btn-filter btn-small">Directorio</a>
+          </div>
+        </div>
+      {% endif %}
     </div>
 
     <div class="form-col">

@@ -1,9 +1,11 @@
+from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime, time
+
 from django import forms
 from django.forms import inlineformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from datetime import datetime, time
 
 from .models import Cliente, Contacto
 from alianzas.models import Alianza
@@ -21,9 +23,6 @@ class ClienteForm(forms.ModelForm):
             "giro",
             "tipo",
             "medio",
-            "contacto",
-            "telefono",
-            "correo",
             "conexion",
             *[f"comisionista_{i}" for i in range(1, 11)],
             *[f"comision_{i}" for i in range(1, 11)],
@@ -41,13 +40,13 @@ class ClienteForm(forms.ModelForm):
         for campo in self.comisionista_campos:
             self.fields[campo].queryset = alianza_qs
             self.fields[campo].label = f"Comisionista {campo.split('_')[-1]}"
-        # Mostrar valores porcentuales como enteros
+        # Mostrar valores porcentuales como enteros (precisión con Decimal)
         for campo in self.comision_campos:
             self.fields[campo].widget = forms.NumberInput(attrs={"step": "0.01", "min": "0"})
             self.fields[campo].label = f"Comisión {campo.split('_')[-1]} (%)"
             if self.initial.get(campo) is not None:
                 try:
-                    self.initial[campo] = float(self.initial[campo]) * 100
+                    self.initial[campo] = (Decimal(self.initial[campo]) * Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 except Exception:
                     pass
 
@@ -57,11 +56,14 @@ class ClienteForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        # Convertir porcentajes enteros a decimales (10 -> 0.10)
+        # Convertir porcentajes enteros a decimales (10 -> 0.10) con Decimal
         for campo in self.comision_campos:
             val = cleaned.get(campo)
             if val is not None:
-                cleaned[campo] = val / 100
+                try:
+                    cleaned[campo] = (Decimal(str(val)) / Decimal("100")).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+                except Exception:
+                    cleaned[campo] = val
         return cleaned
 
     @property
@@ -72,7 +74,10 @@ class ClienteForm(forms.ModelForm):
             val = data.get(campo)
             if val is None:
                 continue
-            total += val * 100  # vuelve a porcentaje para mostrar
+            try:
+                total += float(Decimal(val) * Decimal("100"))
+            except Exception:
+                total += val * 100  # fallback si val ya es float
         return total
 
 

@@ -36,12 +36,8 @@
     <th>Estatus</th>
     <th>Servicio</th>
     <th>Giro</th>
-    <th>Contacto</th>
-    <th>Teléfono</th>
-    <th>Correo</th>
     <th>Nombre comercial</th>
     <th>Domicilio</th>
-    <th>Puesto</th>
     <th>Fecha contrato</th>
     <th>Periodicidad</th>
     <th>Chat welcome</th>
@@ -58,12 +54,8 @@
       <td>{{ c.estatus|default_if_none:"" }}</td>
       <td>{{ c.servicio|default_if_none:"" }}</td>
       <td>{{ c.giro|default_if_none:"" }}</td>
-      <td>{{ c.contacto|default_if_none:"" }}</td>
-      <td>{{ c.telefono|default_if_none:"" }}</td>
-      <td>{{ c.correo|default_if_none:"" }}</td>
       <td>{{ c.nombre_comercial|default_if_none:"" }}</td>
       <td>{{ c.domicilio|default_if_none:"" }}</td>
-      <td>{{ c.puesto|default_if_none:"" }}</td>
       <td>{{ c.fecha_contrato|date:"d/m/Y"|default_if_none:"" }}</td>
       <td>{{ c.get_periodicidad_display|default_if_none:"" }}</td>
       <td>{{ c.get_chat_welcome_display|default_if_none:"" }}</td>

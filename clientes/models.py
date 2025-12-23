@@ -9,14 +9,6 @@ class Cliente(models.Model):
     giro = models.CharField(max_length=150, blank=True, null=True)
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES, blank=True, null=True)
     medio = models.CharField("Medio", max_length=100, choices=MEDIO_CHOICES, blank=True, null=True)
-    contacto = models.CharField(max_length=150, blank=True, null=True)
-    telefono = models.CharField(
-        max_length=10,
-        blank=True,
-        null=True,
-        validators=[RegexValidator(r"^\d{10}$", "El teléfono debe tener exactamente 10 dígitos.")],
-    )
-    correo = models.EmailField("Correo", blank=True, null=True)
     conexion = models.CharField(max_length=150, blank=True, null=True)
     comisionista_1 = models.ForeignKey("alianzas.Alianza", related_name="clientes_com1", on_delete=models.SET_NULL, blank=True, null=True)
     comisionista_2 = models.ForeignKey("alianzas.Alianza", related_name="clientes_com2", on_delete=models.SET_NULL, blank=True, null=True)
@@ -42,13 +34,10 @@ class Cliente(models.Model):
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Formato similar al usado en comercial.Cita
         if self.cliente:
             self.cliente = self.cliente.upper()
         if self.giro:
             self.giro = self.giro.capitalize()
-        if self.contacto:
-            self.contacto = self.contacto.title()
         if self.conexion:
             self.conexion = self.conexion.title()
         # Recalcula el total de comisiones (suma de los decimales almacenados)

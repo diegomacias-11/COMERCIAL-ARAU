@@ -8,14 +8,10 @@ class ExperienciaCliente(models.Model):
     cliente = models.CharField(max_length=150)
     servicio = models.CharField(max_length=100, blank=True, null=True)
     giro = models.CharField(max_length=150, blank=True, null=True)
-    contacto = models.CharField(max_length=150, blank=True, null=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    correo = models.EmailField(blank=True, null=True)
 
     # Campos gestionados en experiencia
     nombre_comercial = models.CharField(max_length=200, blank=True, null=True)
     domicilio = models.CharField(max_length=255, blank=True, null=True)
-    puesto = models.CharField(max_length=150, blank=True, null=True)
     fecha_contrato = models.DateField(blank=True, null=True)
     periodicidad = models.CharField(
         max_length=20, choices=EXPERIENCIA_PERIODICIDAD_CHOICES, blank=True, null=True
