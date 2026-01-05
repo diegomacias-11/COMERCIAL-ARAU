@@ -108,7 +108,10 @@ def registrar_pago(request, comisionista_id: int = None):
     mes, anio, redir = _coerce_mes_anio(request)
     if redir and request.method != "POST":
         return redir
-    back_url = f"{reverse('comisiones_lista')}?mes={mes}&anio={anio}"
+    if comisionista_id:
+        back_url = f"{reverse('comisiones_detalle', args=[comisionista_id])}?mes={mes}&anio={anio}"
+    else:
+        back_url = f"{reverse('comisiones_lista')}?mes={mes}&anio={anio}"
     comisiones_qs = Comision.objects.filter(
         periodo_mes=mes,
         periodo_anio=anio,

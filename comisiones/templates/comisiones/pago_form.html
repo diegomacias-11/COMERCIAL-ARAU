@@ -6,6 +6,9 @@
 {% block back_link %}
   <section class="filter-container">
     <div class="filter-title">Registrar pago – {{ mes_nombre }} {{ anio }}</div>
+    {% if comisionista %}
+      <div class="fixed-center">{{ comisionista.nombre }}</div>
+    {% endif %}
     <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
   </section>
 {% endblock %}
@@ -23,10 +26,6 @@
 
   <div class="form-grid">
     <div class="form-col">
-      {% if comisionista %}
-        <div class="fixed-center">{{ comisionista.nombre }}</div>
-      {% endif %}
-
       <label for="{{ form.comision.id_for_label }}">Pago comisión</label>
       {{ form.comision }}
       {% if not form.comision.field.queryset %}
@@ -37,7 +36,8 @@
       {{ form.fecha_pago }}
 
       <label for="{{ form.monto.id_for_label }}">Monto</label>
-      <div class="input-currency">{{ form.monto }}</div>
+      <div class="input-currency" style="display:none">{{ form.monto }}</div>
+      <div class="fixed-center" id="monto_display"></div>
 
       <label for="{{ form.comentario.id_for_label }}">Comentario</label>
       {{ form.comentario|default_if_none:"" }}
@@ -47,15 +47,19 @@
     (function () {
       const select = document.getElementById("{{ form.comision.id_for_label }}");
       const montoInput = document.getElementById("{{ form.monto.id_for_label }}");
-      if (!select || !montoInput) return;
+      const montoDisplay = document.getElementById("monto_display");
+      if (!select || !montoInput || !montoDisplay) return;
       const amounts = {
         {% for c in form.fields.comision.queryset %}
           "{{ c.pk }}": "{{ c.monto }}",
         {% endfor %}
       };
+      const formatter = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
       function updateMonto() {
         const val = select.value;
-        montoInput.value = val && amounts[val] ? amounts[val] : "";
+        const raw = val && amounts[val] ? amounts[val] : "";
+        montoInput.value = raw;
+        montoDisplay.textContent = raw ? formatter.format(Number(raw)) : "";
       }
       select.addEventListener("change", updateMonto);
       updateMonto();
