@@ -13,6 +13,14 @@
 <body>
   {% include 'includes/header.html' %}
 
+  {% if messages %}
+    <section class="flash-messages">
+      {% for message in messages %}
+        <div class="flash-message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </section>
+  {% endif %}
+
   <main>
     {% block content %}{% endblock %}
   </main>
