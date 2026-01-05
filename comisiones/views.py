@@ -1,11 +1,15 @@
 from datetime import date
 
+from django.conf import settings
+from django.contrib import messages
 from django.db.models import Sum, Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.template.loader import render_to_string
 
 from .forms import PagoComisionForm
 from .models import Comision, PagoComision
+from core.google_email import send_google_mail, GoogleEmailError
 
 
 MESES_NOMBRES = [
@@ -218,3 +222,38 @@ def _detalle_context(comisionista_id, mes, anio):
         "total_pagos": total_pagos,
         "total_pendiente": total_pendiente,
     }
+
+
+def enviar_detalle_comisionista(request, comisionista_id):
+    mes, anio, redir = _coerce_mes_anio(request)
+    if redir:
+        return redir
+
+    context = _detalle_context(comisionista_id, mes, anio)
+    comisionista = context.get("comisionista")
+    if not comisionista:
+        messages.error(request, "No se encontraron comisiones para este comisionista.")
+        return redirect(reverse("comisiones_lista") + f"?mes={mes}&anio={anio}")
+
+    destinatario = getattr(comisionista, "correo", None)
+    if not destinatario:
+        messages.error(request, "El comisionista no tiene correo registrado.")
+        return redirect(reverse("comisiones_detalle", args=[comisionista_id]) + f"?mes={mes}&anio={anio}")
+
+    subject = f"Detalle de comisiones {context['mes_nombre']} {anio} - {comisionista.nombre}"
+    html_body = render_to_string("comisiones/email_reporte.html", context)
+
+    try:
+        send_google_mail(
+            to=destinatario,
+            subject=subject,
+            html_body=html_body,
+            bcc=settings.EMAIL_BCC_ALWAYS or None,
+        )
+        messages.success(request, f"Reporte enviado a {destinatario}.")
+    except GoogleEmailError as exc:
+        messages.error(request, f"No se pudo enviar el correo: {exc}")
+    except Exception as exc:  # pragma: no cover
+        messages.error(request, f"No se pudo enviar el correo: {exc}")
+
+    return redirect(reverse("comisiones_detalle", args=[comisionista_id]) + f"?mes={mes}&anio={anio}")

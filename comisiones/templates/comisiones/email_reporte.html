@@ -1,0 +1,103 @@
+{% load comisiones_extras %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; color: #1f2933; }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    h2 { margin-bottom: 4px; }
+    .muted { color: #66788a; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 8px; border: 1px solid #d9e2ec; text-align: left; font-size: 14px; }
+    th { background: #f0f4f8; }
+    .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
+    .card { padding: 10px; border: 1px solid #d9e2ec; border-radius: 6px; background: #f8fafc; }
+    .label { font-size: 12px; color: #52606d; text-transform: uppercase; letter-spacing: 0.5px; }
+    .value { font-size: 16px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Detalle de comisiones - {{ comisionista }}</h2>
+    <div class="muted">{{ mes_nombre }} {{ anio }}</div>
+
+    <div class="totals">
+      <div class="card">
+        <div class="label">Total periodo</div>
+        <div class="value">{{ total_periodo|currency }}</div>
+      </div>
+      <div class="card">
+        <div class="label">Liberado</div>
+        <div class="value">{{ total_liberado|currency }}</div>
+      </div>
+      <div class="card">
+        <div class="label">Pagos</div>
+        <div class="value">{{ total_pagos|currency }}</div>
+      </div>
+      <div class="card">
+        <div class="label">Pendiente</div>
+        <div class="value">{{ total_pendiente|currency }}</div>
+      </div>
+    </div>
+
+    <h3>Comisiones</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Servicio</th>
+          <th>Monto disp.</th>
+          <th>%</th>
+          <th>Monto comision</th>
+          <th>Estatus pago cliente</th>
+          <th>Pago comision</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in items %}
+        <tr>
+          <td>{{ c.fecha_dispersion|date:"d/m/Y" }}</td>
+          <td>{{ c.cliente.cliente }}</td>
+          <td>{{ c.servicio }}</td>
+          <td>{{ c.venta.monto_venta|currency }}</td>
+          <td>{{ c.porcentaje|pct:2 }}</td>
+          <td>{{ c.monto|currency }}</td>
+          <td>{{ c.estatus_pago_dispersion }}</td>
+          <td>
+            <span style="display:inline-block;width:14px;height:14px;border:1px solid #cbd2d9;border-radius:3px;background:#ffffff;"></span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">Sin registros.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Pagos</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente / Servicio</th>
+          <th>Fecha pago</th>
+          <th>Monto</th>
+          <th>Comentario</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pagos %}
+        <tr>
+          <td>-</td>
+          <td>{{ p.fecha_pago|date:"d/m/Y" }}</td>
+          <td>{{ p.monto|currency }}</td>
+          <td>{{ p.comentario|default_if_none:"" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Sin pagos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

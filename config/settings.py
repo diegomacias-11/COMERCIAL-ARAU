@@ -156,3 +156,13 @@ MESSAGE_TAGS = {
 }
 SESSION_COOKIE_AGE = 3600  # 1 hora
 SESSION_SAVE_EVERY_REQUEST = True  # renovar inactividad en cada request
+
+# ======================
+# CORREO (GMAIL API / OAUTH)
+# ======================
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
+GOOGLE_OAUTH_REFRESH_TOKEN = os.environ.get("GOOGLE_OAUTH_REFRESH_TOKEN", "")
+GOOGLE_GMAIL_SENDER = os.environ.get("GOOGLE_GMAIL_SENDER", "")
+_bcc_env = os.environ.get("EMAIL_BCC_ALWAYS", "")
+EMAIL_BCC_ALWAYS = [addr for addr in _bcc_env.split() if addr]

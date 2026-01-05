@@ -4,6 +4,7 @@
 {% block title %}Detalle de comisiones{% endblock %}
 
 {% block filtros %}
+  <div class="comisiones-detalle-header">
   <div class="filter-title">{{ comisionista|default_if_none:"" }} – {{ mes_nombre }} {{ anio }}</div>
   <div class="filter-cut"><div class="line"></div><div></div><div></div></div>
   <div class="metrics-row">
@@ -33,9 +34,11 @@
     </form>
     <div class="actions actions-bottom">
       {% if comisionista %}
+        <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_enviar_detalle' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Enviar reporte</a>
         <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_registrar_pago_by_id' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Registrar pago</a>
       {% endif %}
     </div>
+  </div>
   </div>
 {% endblock %}
 
