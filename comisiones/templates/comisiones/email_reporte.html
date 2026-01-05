@@ -48,17 +48,17 @@
           <th>Fecha</th>
           <th>Cliente</th>
           <th>Servicio</th>
-          <th>Monto disp.</th>
+          <th>Monto venta</th>
           <th>%</th>
-          <th>Monto comision</th>
+          <th>Monto comisión</th>
           <th>Estatus pago cliente</th>
-          <th>Pago comision</th>
+          <th>Pago comisión</th>
         </tr>
       </thead>
       <tbody>
         {% for c in items %}
         <tr>
-          <td>{{ c.fecha_dispersion|date:"d/m/Y" }}</td>
+          <td style="color:#003b71">{{ c.fecha_dispersion|date:"d/m/Y" }}</td>
           <td>{{ c.cliente.cliente }}</td>
           <td>{{ c.servicio }}</td>
           <td>{{ c.venta.monto_venta|currency }}</td>
@@ -66,7 +66,11 @@
           <td>{{ c.monto|currency }}</td>
           <td>{{ c.estatus_pago_dispersion }}</td>
           <td>
-            <span style="display:inline-block;width:14px;height:14px;border:1px solid #cbd2d9;border-radius:3px;background:#ffffff;"></span>
+            {% if c.pago_comision %}
+              <span style="display:inline-block;width:14px;height:14px;border:1px solid #8bc1c9;border-radius:3px;background:#59b9c7;"></span>
+            {% else %}
+              <span style="display:inline-block;width:14px;height:14px;border:1px solid #cbd2d9;border-radius:3px;background:#ffffff;"></span>
+            {% endif %}
           </td>
         </tr>
         {% empty %}
@@ -79,19 +83,19 @@
     <table>
       <thead>
         <tr>
-          <th>Cliente / Servicio</th>
           <th>Fecha pago</th>
           <th>Monto</th>
           <th>Comentario</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for p in pagos %}
         <tr>
-          <td>-</td>
-          <td>{{ p.fecha_pago|date:"d/m/Y" }}</td>
+          <td style="color:#003b71">{{ p.fecha_pago|date:"d/m/Y" }}</td>
           <td>{{ p.monto|currency }}</td>
           <td>{{ p.comentario|default_if_none:"" }}</td>
+          <td></td>
         </tr>
         {% empty %}
         <tr><td colspan="4">Sin pagos registrados.</td></tr>

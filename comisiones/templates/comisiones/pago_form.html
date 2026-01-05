@@ -23,12 +23,14 @@
 
   <div class="form-grid">
     <div class="form-col">
-      <label for="{{ form.comisionista.id_for_label }}">Comisionista</label>
       {% if comisionista %}
         <div class="fixed-center">{{ comisionista.nombre }}</div>
-        <input type="hidden" name="comisionista" value="{{ comisionista.id }}">
-      {% else %}
-        {{ form.comisionista }}
+      {% endif %}
+
+      <label for="{{ form.comision.id_for_label }}">Pago comisión</label>
+      {{ form.comision }}
+      {% if not form.comision.field.queryset %}
+        <div class="fixed-center">No hay comisiones pendientes para este periodo.</div>
       {% endif %}
 
       <label for="{{ form.fecha_pago.id_for_label }}">Fecha de pago</label>
@@ -41,4 +43,22 @@
       {{ form.comentario|default_if_none:"" }}
     </div>
   </div>
+  <script>
+    (function () {
+      const select = document.getElementById("{{ form.comision.id_for_label }}");
+      const montoInput = document.getElementById("{{ form.monto.id_for_label }}");
+      if (!select || !montoInput) return;
+      const amounts = {
+        {% for c in form.fields.comision.queryset %}
+          "{{ c.pk }}": "{{ c.monto }}",
+        {% endfor %}
+      };
+      function updateMonto() {
+        const val = select.value;
+        montoInput.value = val && amounts[val] ? amounts[val] : "";
+      }
+      select.addEventListener("change", updateMonto);
+      updateMonto();
+    })();
+  </script>
 {% endblock %}

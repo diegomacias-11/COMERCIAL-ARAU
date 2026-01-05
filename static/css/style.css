@@ -1788,6 +1788,14 @@ body.reportes-no-scroll { overflow: hidden; }
   font-weight: 700;
   color: #2b313f;
 }
+.comisiones-check {
+  accent-color: #59b9c7;
+  pointer-events: none;
+  cursor: default;
+}
+.date-cell {
+  color: #003b71;
+}
 .filter-cut {
   width: 100%;
   display: grid;

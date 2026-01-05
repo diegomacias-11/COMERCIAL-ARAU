@@ -14,6 +14,7 @@ class Comision(models.Model):
     periodo_anio = models.IntegerField()
     liberable_desde = models.DateField()
     liberada = models.BooleanField(default=False)
+    pago_comision = models.BooleanField(default=False)
     estatus_pago_dispersion = models.CharField(max_length=50)
     fecha_dispersion = models.DateField()
     creado = models.DateTimeField(auto_now_add=True)
@@ -23,6 +24,7 @@ class Comision(models.Model):
 
 
 class PagoComision(models.Model):
+    comision = models.ForeignKey("comisiones.Comision", on_delete=models.PROTECT, related_name="pagos", null=True, blank=True)
     comisionista = models.ForeignKey("alianzas.Alianza", on_delete=models.CASCADE, related_name="pagos_comision")
     periodo_mes = models.IntegerField()
     periodo_anio = models.IntegerField()

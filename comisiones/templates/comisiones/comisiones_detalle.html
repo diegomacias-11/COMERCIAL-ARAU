@@ -60,21 +60,25 @@
                   <th>%</th>
                   <th>Monto comisión</th>
                   <th>Estatus pago cliente</th>
+                  <th>Pago comisión</th>
                 </tr>
               </thead>
               <tbody>
                 {% for c in items %}
                   <tr>
-                    <td>{{ c.fecha_dispersion|date:"d/m/Y" }}</td>
+                    <td class="date-cell">{{ c.fecha_dispersion|date:"d/m/Y" }}</td>
                     <td>{{ c.cliente.cliente }}</td>
                     <td>{{ c.servicio }}</td>
                     <td>{{ c.venta.monto_venta|currency }}</td>
                     <td>{{ c.porcentaje|pct:2 }}</td>
                     <td>{{ c.monto|currency }}</td>
                     <td>{{ c.estatus_pago_dispersion }}</td>
+                    <td>
+                      <input class="comisiones-check" type="checkbox" {% if c.pago_comision %}checked{% endif %}>
+                    </td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="7">Sin registros.</td></tr>
+                  <tr><td colspan="8">Sin registros.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -86,6 +90,7 @@
             <table class="table">
               <thead>
                 <tr>
+                  <th>Cliente / Servicio</th>
                   <th>Fecha pago</th>
                   <th>Monto</th>
                   <th>Comentario</th>
@@ -95,7 +100,8 @@
               <tbody>
                 {% for p in pagos %}
                 <tr>
-                  <td>{{ p.fecha_pago|date:"d/m/Y" }}</td>
+                  <td>{% if p.comision %}{{ p.comision.cliente.cliente }} - {{ p.comision.servicio }}{% endif %}</td>
+                  <td class="date-cell">{{ p.fecha_pago|date:"d/m/Y" }}</td>
                   <td>{{ p.monto|currency }}</td>
                   <td>{{ p.comentario|default_if_none:"" }}</td>
                   <td>
@@ -103,7 +109,7 @@
                   </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4">Sin pagos registrados.</td></tr>
+                <tr><td colspan="5">Sin pagos registrados.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
