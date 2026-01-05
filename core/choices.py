@@ -44,7 +44,7 @@ AREA_CHOICES = [
 ]
 
 MERCADOLOGO_CHOICES = [
-    ("Alan S.", "Alan S."),
+    ("Aldo S.", "Aldo S."),
     ("Paty L.", "Paty L."),
     ("Todos", "Todos"),
 ]
