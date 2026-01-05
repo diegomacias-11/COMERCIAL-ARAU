@@ -112,6 +112,11 @@ def registrar_pago(request, comisionista_id: int = None):
         back_url = f"{reverse('comisiones_detalle', args=[comisionista_id])}?mes={mes}&anio={anio}"
     else:
         back_url = f"{reverse('comisiones_lista')}?mes={mes}&anio={anio}"
+    comisionista_fixed = None
+    if comisionista_id:
+        from alianzas.models import Alianza
+
+        comisionista_fixed = Alianza.objects.filter(id=comisionista_id).first()
     comisiones_qs = Comision.objects.filter(
         periodo_mes=mes,
         periodo_anio=anio,
@@ -136,9 +141,9 @@ def registrar_pago(request, comisionista_id: int = None):
             return redirect(reverse("comisiones_detalle", args=[pago.comisionista_id]) + f"?mes={mes}&anio={anio}")
     else:
         form = PagoComisionForm()
-        comisionista_fixed = None
         if comisionista_id:
-            comisionista_fixed = comisiones_qs.select_related("comisionista").first()
+            if not comisionista_fixed:
+                comisionista_fixed = comisiones_qs.select_related("comisionista").first()
         form = PagoComisionForm(comisiones_qs=comisiones_qs)
     return render(
         request,

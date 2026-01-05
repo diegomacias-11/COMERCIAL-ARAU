@@ -6,9 +6,6 @@
 {% block back_link %}
   <section class="filter-container">
     <div class="filter-title">Registrar pago – {{ mes_nombre }} {{ anio }}</div>
-    {% if comisionista %}
-      <div class="fixed-center">{{ comisionista.nombre }}</div>
-    {% endif %}
     <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
   </section>
 {% endblock %}
@@ -26,6 +23,10 @@
 
   <div class="form-grid">
     <div class="form-col">
+      {% if comisionista %}
+        <div class="fixed-center">{{ comisionista.nombre }}</div>
+      {% endif %}
+
       <label for="{{ form.comision.id_for_label }}">Pago comisión</label>
       {{ form.comision }}
       {% if not form.comision.field.queryset %}
@@ -37,7 +38,9 @@
 
       <label for="{{ form.monto.id_for_label }}">Monto</label>
       <div class="input-currency" style="display:none">{{ form.monto }}</div>
-      <div class="fixed-center" id="monto_display"></div>
+      <div class="input-currency">
+        <input type="text" id="monto_display" readonly>
+      </div>
 
       <label for="{{ form.comentario.id_for_label }}">Comentario</label>
       {{ form.comentario|default_if_none:"" }}
@@ -59,7 +62,7 @@
         const val = select.value;
         const raw = val && amounts[val] ? amounts[val] : "";
         montoInput.value = raw;
-        montoDisplay.textContent = raw ? formatter.format(Number(raw)) : "";
+        montoDisplay.value = raw ? formatter.format(Number(raw)) : "";
       }
       select.addEventListener("change", updateMonto);
       updateMonto();
