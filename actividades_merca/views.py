@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
 from .forms import _cliente_choices, ActividadMercaForm
-from .models import ActividadMerca
+from .models import ActividadMerca, _business_days_between
 
 
 ESTATUS_CHOICES = [
@@ -93,7 +93,8 @@ def actividades_lista(request):
         for act in actividades:
             try:
                 compromiso = act.fecha_compromiso
-                remaining = (compromiso - datetime.today().date()).days if compromiso else None
+                today = timezone.now().date()
+                remaining = _business_days_between(today, compromiso) if compromiso else None
                 act.dias_restantes = remaining if remaining is not None else ""
             except Exception:
                 act.dias_restantes = ""
@@ -165,7 +166,7 @@ def solicitud_publica(request):
             hoy = timezone.now().date()
             dias = 0
             if fecha_entrega and fecha_entrega > hoy:
-                dias = (fecha_entrega - hoy).days
+                dias = _business_days_between(hoy, fecha_entrega) or 0
             # Construir tarea
             tarea_parts = [
                 f"Tipo: {tipo}",

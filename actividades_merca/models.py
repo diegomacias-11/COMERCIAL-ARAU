@@ -30,6 +30,22 @@ def _add_business_days(start: date, days: int | None) -> date | None:
     return current
 
 
+def _business_days_between(start: date | None, end: date | None) -> int | None:
+    """Cuenta dias habiles entre fechas (excluye fines de semana y el dia inicial)."""
+    if start is None or end is None:
+        return None
+    if start == end:
+        return 0
+    step = 1 if end > start else -1
+    current = start
+    count = 0
+    while current != end:
+        current += timedelta(days=step)
+        if current.weekday() < 5:
+            count += 1
+    return count if step == 1 else -count
+
+
 class ActividadMerca(models.Model):
     cliente = models.CharField(max_length=200)
     area = models.CharField(max_length=100, choices=AREA_CHOICES)
