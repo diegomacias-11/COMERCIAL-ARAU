@@ -30,6 +30,12 @@ class ActividadExpForm(forms.ModelForm):
             "tarea": forms.Textarea(attrs={"rows": 2}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ("tipo", "area", "estilo", "comunicado_aviso"):
+            if name in self.fields:
+                self.fields[name].empty_label = "----"
+
 
 def actividades_exp_lista(request):
     qs = ActividadExp.objects.all().order_by("-fecha_solicitud_exp", "-creado")

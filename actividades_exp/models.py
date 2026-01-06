@@ -9,14 +9,14 @@ from core.choices import (
 
 
 class ActividadExp(models.Model):
-    tarea = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_TIPO_CHOICES)
-    area = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_AREA_CHOICES)
-    estilo = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_ESTILO_CHOICES)
+    tarea = models.CharField(max_length=200, blank=True, null=True)
+    tipo = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_TIPO_CHOICES, blank=True, null=True)
+    area = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_AREA_CHOICES, blank=True, null=True)
+    estilo = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_ESTILO_CHOICES, blank=True, null=True)
     fecha_solicitud_exp = models.DateField(blank=True, null=True)
     fecha_solicitud_mkt = models.DateField(blank=True, null=True)
     fecha_entrega_mkt = models.DateField(blank=True, null=True)
-    comunicado_aviso = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_COMUNICADO_CHOICES)
+    comunicado_aviso = models.CharField(max_length=50, choices=ACTIVIDADES_EXP_COMUNICADO_CHOICES, blank=True, null=True)
     url = models.URLField(blank=True, null=True)
     estatus_envio = models.BooleanField(default=False)
     fecha_envio = models.DateField(blank=True, null=True)
