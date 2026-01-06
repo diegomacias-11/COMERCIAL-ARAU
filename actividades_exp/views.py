@@ -41,11 +41,14 @@ def actividades_exp_lista(request):
     qs = ActividadExp.objects.all().order_by("-fecha_solicitud_exp", "-creado")
     tipo_sel = request.GET.get("tipo") or ""
     area_sel = request.GET.get("area") or ""
+    estatus_envio_sel = request.GET.get("estatus_envio") or ""
 
     if tipo_sel:
         qs = qs.filter(tipo=tipo_sel)
     if area_sel:
         qs = qs.filter(area=area_sel)
+    if estatus_envio_sel in {"si", "no"}:
+        qs = qs.filter(estatus_envio=(estatus_envio_sel == "si"))
 
     context = {
         "actividades": list(qs),
@@ -53,6 +56,7 @@ def actividades_exp_lista(request):
         "area_choices": ACTIVIDADES_EXP_AREA_CHOICES,
         "tipo_sel": tipo_sel,
         "area_sel": area_sel,
+        "estatus_envio_sel": estatus_envio_sel,
     }
     return render(request, "actividades_exp/lista.html", context)
 
@@ -61,11 +65,14 @@ def actividades_exp_kanban(request):
     qs = ActividadExp.objects.all().order_by("-fecha_solicitud_exp", "-creado")
     tipo_sel = request.GET.get("tipo") or ""
     area_sel = request.GET.get("area") or ""
+    estatus_envio_sel = request.GET.get("estatus_envio") or ""
 
     if tipo_sel:
         qs = qs.filter(tipo=tipo_sel)
     if area_sel:
         qs = qs.filter(area=area_sel)
+    if estatus_envio_sel in {"si", "no"}:
+        qs = qs.filter(estatus_envio=(estatus_envio_sel == "si"))
 
     grouped = []
     by_area = {}
@@ -88,6 +95,7 @@ def actividades_exp_kanban(request):
         "area_choices": ACTIVIDADES_EXP_AREA_CHOICES,
         "tipo_sel": tipo_sel,
         "area_sel": area_sel,
+        "estatus_envio_sel": estatus_envio_sel,
     }
     return render(request, "actividades_exp/kanban.html", context)
 

@@ -17,6 +17,7 @@
         {% endfor %}
       </select>
     </div>
+    <span class="filter-separator"></span>
     <div class="filter-block">
       <label for="area">Área</label>
       <select id="area" name="area">
@@ -24,6 +25,15 @@
         {% for val, label in area_choices %}
           <option value="{{ val }}" {% if area_sel == val %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
+      </select>
+    </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="estatus_envio">Estatus de envío</label>
+      <select id="estatus_envio" name="estatus_envio">
+        <option value="">Todos</option>
+        <option value="si" {% if estatus_envio_sel == "si" %}selected{% endif %}>Enviado</option>
+        <option value="no" {% if estatus_envio_sel == "no" %}selected{% endif %}>No enviado</option>
       </select>
     </div>
     <div class="filter-actions">

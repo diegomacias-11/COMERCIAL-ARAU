@@ -25,5 +25,53 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+
+  <div id="table-scroll-bottom" class="table-scroll-bottom" aria-hidden="true">
+    <div class="table-scroll-inner"></div>
+  </div>
+
+  <script>
+    (function () {
+      const bottom = document.getElementById("table-scroll-bottom");
+      const inner = bottom ? bottom.querySelector(".table-scroll-inner") : null;
+      if (!bottom || !inner) return;
+      let activeContainer = null;
+
+      function updateWidth(container) {
+        const table = container.querySelector("table");
+        if (!table) return;
+        inner.style.width = `${table.scrollWidth}px`;
+      }
+
+      function setActive(container) {
+        activeContainer = container;
+        updateWidth(container);
+        bottom.scrollLeft = container.scrollLeft;
+      }
+
+      function onContainerScroll(e) {
+        if (activeContainer !== e.currentTarget) return;
+        bottom.scrollLeft = activeContainer.scrollLeft;
+      }
+
+      function onBottomScroll() {
+        if (!activeContainer) return;
+        activeContainer.scrollLeft = bottom.scrollLeft;
+      }
+
+      const containers = Array.from(document.querySelectorAll(".table-container"));
+      containers.forEach((c) => {
+        c.addEventListener("mouseenter", () => setActive(c));
+        c.addEventListener("scroll", onContainerScroll);
+      });
+      bottom.addEventListener("scroll", onBottomScroll);
+      if (containers[0]) {
+        setActive(containers[0]);
+      }
+      window.addEventListener("resize", () => {
+        if (activeContainer) updateWidth(activeContainer);
+      });
+    })();
+  </script>
 </body>
 </html>

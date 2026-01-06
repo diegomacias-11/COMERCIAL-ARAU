@@ -748,6 +748,34 @@ body.reportes-no-scroll { overflow: hidden; }
   scrollbar-width: thin;
   scrollbar-color: #808b98 transparent;
 }
+.table-scroll-bottom {
+  position: fixed;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.35rem;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 30;
+  scrollbar-width: thin;
+  scrollbar-color: #808b98 transparent;
+}
+.table-scroll-inner {
+  height: 1px;
+}
+.table-scroll-bottom::-webkit-scrollbar {
+  height: 14px;
+}
+.table-scroll-bottom::-webkit-scrollbar-thumb {
+  background: #808b98;
+  border-radius: 6px;
+}
+.table-scroll-bottom::-webkit-scrollbar-thumb:hover {
+  background: #294369;
+}
 
 .table-container::-webkit-scrollbar {
   width: 10px;   /* vertical */
@@ -787,6 +815,9 @@ body.reportes-no-scroll { overflow: hidden; }
   font-weight: 600;
   font-style: normal;
   font-size: 0.85rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .table td {
@@ -1640,6 +1671,22 @@ body.reportes-no-scroll { overflow: hidden; }
 }
 .filter-form-simple.kanban-filter {
   justify-content: center !important;
+}
+.filter-form-simple.kanban-filter .filter-block {
+  position: relative;
+}
+.filter-form-simple.kanban-filter .filter-block + .filter-block {
+  padding-left: 0.6rem;
+  margin-left: 0.6rem;
+}
+.filter-form-simple.kanban-filter .filter-block + .filter-block::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(43, 49, 63, 0), rgba(43, 49, 63, 0.9), rgba(43, 49, 63, 0));
 }
 .filter-bar {
   display: flex;
