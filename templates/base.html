@@ -13,13 +13,14 @@
 <body>
   {% include 'includes/header.html' %}
 
-  {% if messages %}
-    <section class="flash-messages">
+  <section class="avisos-zone">
+    {% if messages %}
       {% for message in messages %}
-        <div class="flash-message {{ message.tags }}">{{ message }}</div>
+        <div class="aviso {% if message.tags %}aviso-{{ message.tags }}{% endif %}">{{ message }}</div>
       {% endfor %}
-    </section>
-  {% endif %}
+    {% endif %}
+    {% block avisos %}{% endblock %}
+  </section>
 
   <main>
     {% block content %}{% endblock %}

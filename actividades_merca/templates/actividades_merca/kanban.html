@@ -49,10 +49,13 @@
   <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
-{% block kanban_content %}
+{% block avisos %}
   {% if show_unassigned_warning %}
-    <div class="alert warning" style="background:#ffe5e5; color:#8b0000; font-weight:bold; text-align:center;">Hay actividades sin mercadólogo o diseñador asignado.</div>
+    <div class="aviso aviso-warning">Hay actividades sin mercadólogo o diseñador asignado.</div>
   {% endif %}
+{% endblock %}
+
+{% block kanban_content %}
   <div class="kanban-board">
     {% for bloque in kanban_data %}
       <div class="kanban-column">

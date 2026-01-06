@@ -57,6 +57,12 @@
   <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
+{% block avisos %}
+  {% if show_unassigned_warning %}
+    <div class="aviso aviso-warning">Hay actividades sin mercadólogo o diseñador asignado.</div>
+  {% endif %}
+{% endblock %}
+
 {% block tabla_head %}
   <tr>
     <th>Acciones</th>
@@ -74,13 +80,6 @@
 {% endblock %}
 
 {% block tabla_body %}
-  {% if show_unassigned_warning %}
-    <tr>
-      <td colspan="11" style="background:#ffe5e5; color:#8b0000; font-weight:bold;">
-        Hay actividades sin mercadólogo o diseñador asignado.
-      </td>
-    </tr>
-  {% endif %}
   {% for a in actividades %}
     <tr>
       <td>
