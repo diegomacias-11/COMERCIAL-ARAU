@@ -35,10 +35,20 @@ except Exception:
 
 @admin.register(UserSessionActivity)
 class UserSessionActivityAdmin(admin.ModelAdmin):
-    list_display = ("user", "session_key", "last_seen_local", "ip_address", "user_agent")
+    list_display = ("user_display", "session_key", "last_seen_local", "ip_address", "user_agent")
     list_filter = ("user",)
-    search_fields = ("user__username", "session_key", "ip_address", "user_agent")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "session_key", "ip_address", "user_agent")
     ordering = ("-last_seen",)
+
+    def user_display(self, obj):
+        full_name = ""
+        try:
+            full_name = (obj.user.get_full_name() or "").strip()
+        except Exception:
+            full_name = ""
+        return full_name if full_name else getattr(obj.user, "username", str(obj.user))
+
+    user_display.short_description = "Usuario"
 
     def last_seen_local(self, obj):
         return localtime(obj.last_seen, timezone.get_current_timezone())
