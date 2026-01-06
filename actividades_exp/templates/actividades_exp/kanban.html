@@ -27,15 +27,6 @@
         {% endfor %}
       </select>
     </div>
-    <span class="filter-separator"></span>
-    <div class="filter-block">
-      <label for="estatus_envio">Estatus de envío</label>
-      <select id="estatus_envio" name="estatus_envio">
-        <option value="">Todos</option>
-        <option value="si" {% if estatus_envio_sel == "si" %}selected{% endif %}>Enviado</option>
-        <option value="no" {% if estatus_envio_sel == "no" %}selected{% endif %}>No enviado</option>
-      </select>
-    </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
       <a href="{% url 'actividades_exp_kanban' %}" class="btn-filter">Limpiar</a>
