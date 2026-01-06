@@ -1,7 +1,15 @@
 from datetime import datetime, date
+from io import BytesIO
 from django.db.models import Q
-
 from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from PyPDF2 import PdfReader, PdfWriter
+import copy
+from django.conf import settings
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
@@ -26,10 +34,9 @@ def _parse_date(val: str | None):
         return None
 
 
-def actividades_lista(request):
+def _filtered_actividades(request, vista: str):
     qs = ActividadMerca.objects.all().order_by("-fecha_inicio")
 
-    vista = (request.GET.get("vista") or "lista").lower()
     f_desde = _parse_date(request.GET.get("fecha_inicio"))
     f_hasta = _parse_date(request.GET.get("fecha_fin"))
     cliente_sel = request.GET.get("cliente") or ""
@@ -56,7 +63,6 @@ def actividades_lista(request):
         qs = qs.filter(disenador__in=[disenador_sel, "Todos"])
 
     actividades = list(qs)
-    # Recalcular estatus al vuelo para mantenerlo fresco
     for act in actividades:
         nuevo = act.calcular_estatus()
         if nuevo != act.estatus:
@@ -65,6 +71,27 @@ def actividades_lista(request):
 
     if estatus_sel:
         actividades = [a for a in actividades if a.estatus == estatus_sel]
+
+    filtros = {
+        "f_desde": f_desde,
+        "f_hasta": f_hasta,
+        "cliente_sel": cliente_sel,
+        "estatus_sel": estatus_sel,
+        "mercadologo_sel": mercadologo_sel,
+        "disenador_sel": disenador_sel,
+    }
+    return actividades, filtros
+
+
+def actividades_lista(request):
+    vista = (request.GET.get("vista") or "lista").lower()
+    actividades, filtros = _filtered_actividades(request, vista)
+    f_desde = filtros["f_desde"]
+    f_hasta = filtros["f_hasta"]
+    cliente_sel = filtros["cliente_sel"]
+    estatus_sel = filtros["estatus_sel"]
+    mercadologo_sel = filtros["mercadologo_sel"]
+    disenador_sel = filtros["disenador_sel"]
 
     context = {
         "actividades": actividades,
@@ -114,6 +141,129 @@ def actividades_lista(request):
         return render(request, "actividades_merca/kanban.html", context)
 
     return render(request, "actividades_merca/lista.html", context)
+
+
+def reporte_actividades(request):
+    actividades, filtros = _filtered_actividades(request, "lista")
+    f_desde = filtros["f_desde"]
+    f_hasta = filtros["f_hasta"]
+    cliente_sel = filtros["cliente_sel"] or "Todos"
+
+    title_text = f"Reporte de actividades - Cliente: {cliente_sel}"
+    if f_desde or f_hasta:
+        desde_txt = f_desde.strftime("%d/%m/%Y") if f_desde else "—"
+        hasta_txt = f_hasta.strftime("%d/%m/%Y") if f_hasta else "—"
+        subtitle_text = f"Fechas: {desde_txt} a {hasta_txt}"
+    else:
+        subtitle_text = "Fechas: —"
+
+    template_path = settings.BASE_DIR / "static" / "img" / "MEMBRETE.pdf"
+    pagesize = landscape(letter)
+    if template_path.exists():
+        try:
+            template_reader = PdfReader(str(template_path))
+            template_page = template_reader.pages[0]
+            pagesize = (float(template_page.mediabox.width), float(template_page.mediabox.height))
+        except Exception:
+            template_reader = None
+            template_page = None
+    else:
+        template_reader = None
+        template_page = None
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=pagesize,
+        leftMargin=18,
+        rightMargin=18,
+        topMargin=85.04,
+        bottomMargin=85.04,
+    )
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    title_style.alignment = 1
+    subtitle_style = styles["Heading2"]
+    subtitle_style.alignment = 1
+    body_style = styles["BodyText"]
+    body_style.fontSize = 8
+    body_style.leading = 10
+
+    elements = [
+        Paragraph(title_text, title_style),
+        Paragraph(subtitle_text, subtitle_style),
+        Spacer(1, 12),
+    ]
+
+    table_data = [
+        [
+            "Cliente",
+            "Área",
+            "Fecha inicio",
+            "Tarea",
+        ]
+    ]
+    for a in actividades:
+        table_data.append(
+            [
+                Paragraph(a.cliente or "", body_style),
+                Paragraph(a.area or "", body_style),
+                a.fecha_inicio.strftime("%d/%m/%Y") if a.fecha_inicio else "",
+                Paragraph(a.tarea or "", body_style),
+            ]
+        )
+
+    page_width = pagesize[0]
+    available_width = page_width - doc.leftMargin - doc.rightMargin
+    col_widths = [
+        available_width * 0.2,
+        available_width * 0.15,
+        available_width * 0.15,
+        available_width * 0.5,
+    ]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    header_bg = colors.Color(0.90, 0.93, 0.96, alpha=0.3)
+    row_bg = colors.Color(0.97, 0.98, 0.99, alpha=0.3)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), header_bg),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#1f2a3d")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#aebed2")),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 9),
+                ("FONTSIZE", (0, 1), (-1, -1), 8),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("WORDWRAP", (0, 0), (-1, -1), True),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.Color(1, 1, 1, alpha=0.0), row_bg]),
+            ]
+        )
+    )
+    elements.append(table)
+    doc.build(elements)
+
+    content_pdf = buffer.getvalue()
+    buffer.close()
+
+    if template_reader and template_page:
+        content_reader = PdfReader(BytesIO(content_pdf))
+        writer = PdfWriter()
+        for page in content_reader.pages:
+            base = copy.copy(template_page)
+            if base.mediabox != page.mediabox:
+                base.mediabox = page.mediabox
+            base.merge_page(page)
+            writer.add_page(base)
+        output = BytesIO()
+        writer.write(output)
+        pdf = output.getvalue()
+        output.close()
+    else:
+        pdf = content_pdf
+
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="reporte_actividades.pdf"'
+    return response
 
 
 def solicitud_publica(request):

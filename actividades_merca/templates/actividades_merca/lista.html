@@ -54,6 +54,7 @@
 {% endblock %}
 
 {% block filtros_right %}
+  <a href="{% url 'actividades_merca_reporte' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-primary btn-primary-inline btn-report" target="_blank" rel="noopener">Generar reporte</a>
   <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
