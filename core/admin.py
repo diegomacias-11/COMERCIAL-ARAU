@@ -35,9 +35,9 @@ except Exception:
 
 @admin.register(UserSessionActivity)
 class UserSessionActivityAdmin(admin.ModelAdmin):
-    list_display = ("user_display", "session_key", "last_seen_local", "ip_address", "user_agent")
+    list_display = ("user_display", "last_action", "last_seen_local", "ip_address")
     list_filter = ("user",)
-    search_fields = ("user__username", "user__first_name", "user__last_name", "session_key", "ip_address", "user_agent")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "last_action", "last_path", "ip_address")
     ordering = ("-last_seen",)
 
     def user_display(self, obj):

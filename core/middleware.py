@@ -181,11 +181,64 @@ class ActivityLogMiddleware(MiddlewareMixin):
             return forwarded.split(",")[0].strip()
         return request.META.get("REMOTE_ADDR")
 
+    def _last_action_label(self, request) -> str:
+        resolver = getattr(request, "resolver_match", None)
+        url_name = resolver.url_name if resolver else None
+        if not url_name:
+            return f"Visitó {request.path}"
+        parts = [p for p in url_name.replace("-", "_").split("_") if p]
+        label_map = {
+            "actividades": "Actividades",
+            "merca": "Actividades",
+            "actividades_merca": "Actividades",
+            "comisiones": "Comisiones",
+            "comision": "Comisiones",
+            "pagocomision": "Pago comisión",
+            "pago": "Pago comisión",
+            "ventas": "Ventas",
+            "venta": "Ventas",
+            "clientes": "Clientes",
+            "cliente": "Clientes",
+            "alianzas": "Alianzas",
+            "alianza": "Alianzas",
+            "leads": "Leads",
+            "lead": "Leads",
+            "citas": "Citas",
+            "cita": "Citas",
+            "reportes": "Reportes",
+            "reporte": "Reportes",
+            "experiencia": "Experiencia",
+            "contactos": "Contactos",
+            "contacto": "Contactos",
+        }
+        name = ""
+        for part in parts:
+            if part in label_map:
+                name = label_map[part]
+                break
+        if not name:
+            name = url_name.replace("_", " ").strip()
+        lower = url_name.lower()
+        if lower.startswith(("agregar", "add", "crear", "create", "nuevo", "nueva")):
+            return f"Agregó {name}"
+        if lower.startswith(("editar", "update", "actualizar", "cambiar")):
+            return f"Editó {name}"
+        if lower.startswith(("eliminar", "delete", "borrar")):
+            return f"Eliminó {name}"
+        if lower.startswith(("detalle", "detail", "ver")):
+            return f"Vio {name}"
+        return f"Visitó {name}"
+
     def process_response(self, request, response):
         user = getattr(request, "user", None)
         if user and user.is_authenticated:
+            if request.path.startswith(settings.STATIC_URL):
+                return response
             session_key = getattr(request, "session", None) and request.session.session_key
             if session_key:
+                last_action = self._last_action_label(request)
+                last_path = request.path[:200]
+                last_method = request.method[:10]
                 # Usa el registro más reciente del usuario (si existe) y elimina duplicados
                 qs = UserSessionActivity.objects.filter(user=user).order_by("-last_seen")
                 activity = qs.first()
@@ -195,12 +248,18 @@ class ActivityLogMiddleware(MiddlewareMixin):
                         session_key=session_key,
                         user_agent=request.META.get("HTTP_USER_AGENT", "")[:255],
                         ip_address=self._get_ip(request),
+                        last_action=last_action,
+                        last_path=last_path,
+                        last_method=last_method,
                     )
                 else:
                     activity.session_key = session_key
                     activity.user_agent = request.META.get("HTTP_USER_AGENT", "")[:255]
                     activity.ip_address = self._get_ip(request)
-                    activity.save(update_fields=["session_key", "user_agent", "ip_address", "last_seen"])
+                    activity.last_action = last_action
+                    activity.last_path = last_path
+                    activity.last_method = last_method
+                    activity.save(update_fields=["session_key", "user_agent", "ip_address", "last_action", "last_path", "last_method", "last_seen"])
                     # elimina otros registros del mismo usuario
                     UserSessionActivity.objects.filter(user=user).exclude(pk=activity.pk).delete()
         return response

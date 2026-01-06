@@ -10,6 +10,9 @@ class UserSessionActivity(models.Model):
     session_key = models.CharField(max_length=64, db_index=True, unique=True)
     user_agent = models.CharField(max_length=255, blank=True, null=True)
     ip_address = models.CharField(max_length=64, blank=True, null=True)
+    last_action = models.CharField(max_length=200, blank=True, null=True)
+    last_path = models.CharField(max_length=200, blank=True, null=True)
+    last_method = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)
 
