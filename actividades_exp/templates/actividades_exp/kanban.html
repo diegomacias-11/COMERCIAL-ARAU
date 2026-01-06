@@ -1,0 +1,72 @@
+{% extends "kanban_base.html" %}
+
+{% block title %}Actividades Exp (Kanban){% endblock %}
+
+{% block filtros_left %}
+  <a class="btn-primary btn-primary-inline btn-view" href="{% url 'actividades_exp_lista' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
+{% endblock %}
+
+{% block filtros %}
+  <form method="get" class="filter-form-simple kanban-filter">
+    <div class="filter-block">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for val, label in tipo_choices %}
+          <option value="{{ val }}" {% if tipo_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-block">
+      <label for="area">Área</label>
+      <select id="area" name="area">
+        <option value="">Todos</option>
+        {% for val, label in area_choices %}
+          <option value="{{ val }}" {% if area_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'actividades_exp_kanban' %}" class="btn-filter">Limpiar</a>
+    </div>
+  </form>
+{% endblock %}
+
+{% block filtros_right %}
+  <a href="{% url 'actividades_exp_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+{% endblock %}
+
+{% block kanban_content %}
+  <div class="kanban-board">
+    {% for bloque in kanban_data %}
+      <div class="kanban-column">
+        <div class="kanban-column-title">{{ bloque.area }}</div>
+        {% for tipo in bloque.tipos %}
+          <div class="kanban-area">
+            <div class="kanban-area-title">{{ tipo.nombre }}</div>
+            {% if tipo.items %}
+              {% for act in tipo.items %}
+                <div class="kanban-card">
+                  <div class="kanban-card-header">
+                    <a href="{% url 'actividades_exp_editar' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+                  </div>
+                  <div class="kanban-card-body">
+                    <div class="kanban-task">{{ act.tarea }}</div>
+                    <div class="kanban-meta">
+                      Solicitud Exp {% if act.fecha_solicitud_exp %}{{ act.fecha_solicitud_exp|date:"d/m/y" }}{% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="kanban-empty">Sin tareas</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% empty %}
+      <div class="kanban-empty">Sin actividades</div>
+    {% endfor %}
+  </div>
+{% endblock %}

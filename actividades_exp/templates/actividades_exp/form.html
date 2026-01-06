@@ -1,0 +1,53 @@
+{% extends "form.html" %}
+
+{% block title %}{% if actividad %}Editar actividad{% else %}Nueva actividad{% endif %}{% endblock %}
+
+{% block back_link %}
+  <section class="filter-container">
+    <div class="filter-title">{% if actividad %}Editar actividad{% else %}Nueva actividad{% endif %}</div>
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </section>
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.tarea.id_for_label }}">Tarea</label>
+      {{ form.tarea }}
+
+      <label for="{{ form.tipo.id_for_label }}">Tipo</label>
+      {{ form.tipo }}
+
+      <label for="{{ form.area.id_for_label }}">Área</label>
+      {{ form.area }}
+
+      <label for="{{ form.estilo.id_for_label }}">Estilo</label>
+      {{ form.estilo }}
+
+      <label for="{{ form.fecha_solicitud_exp.id_for_label }}">Fecha solicitud Exp</label>
+      {{ form.fecha_solicitud_exp }}
+
+      <label for="{{ form.fecha_solicitud_mkt.id_for_label }}">Fecha solicitud Mkt</label>
+      {{ form.fecha_solicitud_mkt }}
+
+      <label for="{{ form.fecha_entrega_mkt.id_for_label }}">Fecha entrega Mkt</label>
+      {{ form.fecha_entrega_mkt }}
+
+      <label for="{{ form.comunicado_aviso.id_for_label }}">Comunicado/Aviso</label>
+      {{ form.comunicado_aviso }}
+
+      <label for="{{ form.url.id_for_label }}">URL</label>
+      {{ form.url }}
+
+      <label for="{{ form.estatus_envio.id_for_label }}">Estatus de envío</label>
+      {{ form.estatus_envio }}
+
+      <label for="{{ form.fecha_envio.id_for_label }}">Fecha de envío</label>
+      {{ form.fecha_envio }}
+
+      <label for="{{ form.notas.id_for_label }}">Notas</label>
+      {{ form.notas }}
+    </div>
+  </div>
+{% endblock %}

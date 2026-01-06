@@ -17,9 +17,12 @@ Si un modelo ya está registrado (por un ModelAdmin personalizado), se omite.
 
 # Saltar modelos que no queremos mostrar
 _SKIP_MODELS = {ContentType, Session, LogEntry}
+_SKIP_LABELS = {"actividades_exp.ActividadExp"}
 
 for model in apps.get_models():
     if model in _SKIP_MODELS:
+        continue
+    if model._meta.label in _SKIP_LABELS:
         continue
     try:
         admin.site.register(model)

@@ -92,3 +92,31 @@ ESTATUS_CLIENTES_CHOICES = [
     ("Baja", "Baja"),
     ("Reingreso", "Reingreso"),
 ]
+
+ACTIVIDADES_EXP_TIPO_CHOICES = [
+    ("Cliente Arau", "Cliente Arau"),
+    ("Colaboradores", "Colaboradores"),
+]
+
+ACTIVIDADES_EXP_AREA_CHOICES = [
+    ("Experiencia", "Experiencia"),
+    ("Mercadotecnia", "Mercadotecnia"),
+    ("Administración", "Administración"),
+    ("Operaciones", "Operaciones"),
+    ("Contabilidad", "Contabilidad"),
+    ("Comercial", "Comercial"),
+    ("Reclutamiento", "Reclutamiento"),
+    ("Legal", "Legal"),
+    ("Fiscal", "Fiscal"),
+    ("Enrok", "Enrok"),
+]
+
+ACTIVIDADES_EXP_ESTILO_CHOICES = [
+    ("Texto", "Texto"),
+    ("Imagen", "Imagen"),
+]
+
+ACTIVIDADES_EXP_COMUNICADO_CHOICES = [
+    ("Programado", "Programado"),
+    ("Especial", "Especial"),
+]

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'comisiones',
     'leads',
     'actividades_merca',
+    'actividades_exp',
     'experiencia',
 ]
 

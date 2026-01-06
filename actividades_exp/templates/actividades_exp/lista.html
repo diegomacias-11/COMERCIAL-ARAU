@@ -1,0 +1,88 @@
+{% extends "lista.html" %}
+
+{% block title %}Actividades Exp{% endblock %}
+
+{% block filtros %}
+  <form action="{% url 'actividades_exp_lista' %}" method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for val, label in tipo_choices %}
+          <option value="{{ val }}" {% if tipo_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <span class="filter-separator"></span>
+
+    <div class="filter-block">
+      <label for="area">Área</label>
+      <select id="area" name="area">
+        <option value="">Todos</option>
+        {% for val, label in area_choices %}
+          <option value="{{ val }}" {% if area_sel == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'actividades_exp_lista' %}" class="btn-filter">Limpiar</a>
+    </div>
+  </form>
+{% endblock %}
+
+{% block filtros_left %}
+  <a class="btn-primary btn-primary-inline" href="{% url 'actividades_exp_kanban' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
+{% endblock %}
+
+{% block filtros_right %}
+  <a href="{% url 'actividades_exp_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th>Acciones</th>
+    <th>Tarea</th>
+    <th>Tipo</th>
+    <th>Área</th>
+    <th>Fecha solicitud Exp</th>
+    <th>Fecha solicitud Mkt</th>
+    <th>Fecha entrega Mkt</th>
+    <th>Comunicado/Aviso</th>
+    <th>URL</th>
+    <th>Estatus de envío</th>
+    <th>Fecha de envío</th>
+    <th>Notas</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for a in actividades %}
+    <tr>
+      <td>
+        <a class="btn-detalle" href="{% url 'actividades_exp_editar' a.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
+      </td>
+      <td>{{ a.tarea }}</td>
+      <td>{{ a.tipo }}</td>
+      <td>{{ a.area }}</td>
+      <td>{% if a.fecha_solicitud_exp %}{{ a.fecha_solicitud_exp|date:"d/m/Y" }}{% endif %}</td>
+      <td>{% if a.fecha_solicitud_mkt %}{{ a.fecha_solicitud_mkt|date:"d/m/Y" }}{% endif %}</td>
+      <td>{% if a.fecha_entrega_mkt %}{{ a.fecha_entrega_mkt|date:"d/m/Y" }}{% endif %}</td>
+      <td>{{ a.comunicado_aviso }}</td>
+      <td>
+        {% if a.url %}
+          <a href="{{ a.url }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
+      <td>
+        <input type="checkbox" class="comisiones-check" {% if a.estatus_envio %}checked{% endif %}>
+      </td>
+      <td>{% if a.fecha_envio %}{{ a.fecha_envio|date:"d/m/Y" }}{% endif %}</td>
+      <td>{{ a.notas }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="12">Sin actividades registradas.</td></tr>
+  {% endfor %}
+{% endblock %}

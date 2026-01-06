@@ -47,11 +47,13 @@
       </div>
     </div>
 
-    <div class="nav-area{% if 'experiencia' in path %} is-active{% endif %}">
+    <div class="nav-area{% if 'experiencia' in path or 'actividades_exp' in path %} is-active{% endif %}">
       <button type="button" class="area-trigger" data-area="experiencia" aria-expanded="false">
         Experiencia
       </button>
       <div class="area-dropdown" role="menu" aria-label="Experiencia">
+        <a href="{% url 'actividades_exp_lista' %}" role="menuitem"
+           class="{% if 'actividades_exp' in path %}is-active{% endif %}">Actividades</a>
         <a href="{% url 'clientes_experiencia_lista' %}" role="menuitem"
            class="{% if 'experiencia' in path %}is-active{% endif %}">Clientes</a>
       </div>
@@ -75,7 +77,7 @@
       </button>
     </form>
   </div>
-  {% if 'actividades_merca' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path %}
+  {% if 'actividades_merca' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path %}
   <div class="area-title-bar">
     {% if 'actividades_merca' in path %}
       <span class="area-title">Actividades</span>
@@ -85,6 +87,8 @@
       <span class="area-title">Citas</span>
     {% elif 'experiencia' in path %}
       <span class="area-title">Experiencia</span>
+    {% elif 'actividades_exp' in path %}
+      <span class="area-title">Actividades Exp</span>
     {% elif 'clientes' in path %}
       <span class="area-title">Clientes</span>
     {% elif 'reportes' in path %}
