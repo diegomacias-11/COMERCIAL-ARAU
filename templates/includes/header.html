@@ -10,9 +10,9 @@
         Marketing
       </button>
       <div class="area-dropdown" role="menu" aria-label="Marketing">
-        <a href="{% url 'actividades_merca_lista' %}" role="menuitem"
+        <a href="{% url 'actividades_merca_actividad_list' %}" role="menuitem"
            class="{% if 'actividades_merca' in path %}is-active{% endif %}">Actividades</a>
-        <a href="{% url 'leads_lista' %}" role="menuitem"
+        <a href="{% url 'leads_metalead_list' %}" role="menuitem"
            class="{% if 'leads' in path %}is-active{% endif %}">Leads</a>
         <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
       </div>
@@ -23,13 +23,13 @@
         Comercial
       </button>
       <div class="area-dropdown" role="menu" aria-label="Comercial">
-        <a href="{% url 'citas_lista' %}" role="menuitem"
+        <a href="{% url 'comercial_cita_list' %}" role="menuitem"
            class="{% if 'citas' in path %}is-active{% endif %}">Citas</a>
-        <a href="{% url 'clientes_lista' %}" role="menuitem"
+        <a href="{% url 'clientes_cliente_list' %}" role="menuitem"
            class="{% if 'clientes' in path and 'experiencia' not in path %}is-active{% endif %}">Clientes</a>
-        <a href="{% url 'ventas_lista' %}" role="menuitem"
+        <a href="{% url 'ventas_venta_list' %}" role="menuitem"
            class="{% if 'ventas' in path %}is-active{% endif %}">Ventas</a>
-        <a href="{% url 'reportes_dashboard' %}" role="menuitem"
+        <a href="{% url 'comercial_reportes_dashboard' %}" role="menuitem"
            class="{% if 'reportes' in path %}is-active{% endif %}">Reporte</a>
       </div>
     </div>
@@ -39,9 +39,9 @@
         Operaciones
       </button>
       <div class="area-dropdown" role="menu" aria-label="Operaciones">
-        <a href="{% url 'alianzas_lista' %}" role="menuitem"
+        <a href="{% url 'alianzas_alianza_list' %}" role="menuitem"
            class="{% if 'alianzas' in path %}is-active{% endif %}">Alianzas</a>
-        <a href="{% url 'comisiones_lista' %}" role="menuitem"
+        <a href="{% url 'comisiones_comision_list' %}" role="menuitem"
            class="{% if 'comisiones' in path %}is-active{% endif %}">Comisiones</a>
         <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
       </div>
@@ -52,9 +52,9 @@
         Experiencia
       </button>
       <div class="area-dropdown" role="menu" aria-label="Experiencia">
-        <a href="{% url 'actividades_exp_lista' %}" role="menuitem"
+        <a href="{% url 'actividades_exp_actividadexp_list' %}" role="menuitem"
            class="{% if 'actividades_exp' in path %}is-active{% endif %}">Actividades</a>
-        <a href="{% url 'clientes_experiencia_lista' %}" role="menuitem"
+        <a href="{% url 'experiencia_experienciacliente_list' %}" role="menuitem"
            class="{% if 'experiencia' in path %}is-active{% endif %}">Clientes</a>
       </div>
     </div>

@@ -38,10 +38,10 @@
     </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
-      <a href="{% url 'citas_lista' %}" class="btn-filter">Limpiar</a>
+      <a href="{% url 'comercial_cita_list' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
-  <a href="{% url 'agregar_cita' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva cita</a>
+  <a href="{% url 'comercial_cita_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva cita</a>
 {% endblock %}
 
 {% block tabla_head %}
@@ -63,7 +63,7 @@
   {% for c in citas %}
     <tr>
       <td>
-        <a href="{% url 'editar_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+        <a href="{% url 'comercial_cita_update' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
       </td>
       <td >{{ c.prospecto|default_if_none:"" }}</td>
       <td>{{ c.medio|default_if_none:"" }}</td>
@@ -81,7 +81,6 @@
     </tr>
   {% endfor %}
 {% endblock %}
-
 
 
 

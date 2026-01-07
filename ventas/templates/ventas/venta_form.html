@@ -63,7 +63,7 @@
   {% if venta %}
     <button type="submit"
             class="btn-delete"
-            formaction="{% url 'ventas_eliminar' venta.id %}"
+            formaction="{% url 'ventas_venta_delete' venta.id %}"
             formmethod="post"
             onclick="return confirm('¿Eliminar esta venta?');">
       Eliminar

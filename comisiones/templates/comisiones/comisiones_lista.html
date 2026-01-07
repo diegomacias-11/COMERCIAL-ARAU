@@ -26,7 +26,7 @@
         <div class="metric-value">{{ total_pendiente|currency }}</div>
       </div>
     </div>
-    <form action="{% url 'comisiones_lista' %}" method="get" class="filter-form-simple comisiones-filter">
+    <form action="{% url 'comisiones_comision_list' %}" method="get" class="filter-form-simple comisiones-filter">
       <label for="mes">Mes</label>
       <select id="mes" name="mes">
         {% if meses_choices %}
@@ -63,7 +63,7 @@
   {% for r in resumen %}
     <tr>
       <td class="sticky-1 col-actions">
-        <a class="btn-detalle" href="{% url 'comisiones_detalle' r.comisionista_id %}?mes={{ mes }}&anio={{ anio }}">Detalle</a>
+        <a class="btn-detalle" href="{% url 'comisiones_comisionista_detail' r.comisionista_id %}?mes={{ mes }}&anio={{ anio }}">Detalle</a>
       </td>
       <td class="sticky-2">{{ r.comisionista__nombre }}</td>
       <td>{{ r.total|default_if_none:"0"|currency }}</td>

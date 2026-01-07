@@ -42,7 +42,7 @@ def editar_cliente_experiencia(request, pk):
     back_url = request.GET.get("next") or request.META.get("HTTP_REFERER") or "/experiencia/clientes/"
     contactos_url = None
     if cliente_exp.cliente_id:
-        contactos_url = f"{reverse('contactos_cliente', args=[cliente_exp.cliente_id])}?next={request.get_full_path()}"
+        contactos_url = f"{reverse('clientes_contacto_list', args=[cliente_exp.cliente_id])}?next={request.get_full_path()}"
     if request.method == "POST":
         form = ExperienciaClienteForm(request.POST, instance=cliente_exp)
         if form.is_valid():

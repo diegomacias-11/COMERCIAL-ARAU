@@ -32,7 +32,7 @@ def alianzas_lista(request):
 
 
 def agregar_alianzas(request):
-    back_url = request.GET.get("next") or reverse("alianzas_lista")
+    back_url = request.GET.get("next") or reverse("alianzas_alianza_list")
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
         form = AlianzaForm(request.POST)
@@ -47,7 +47,7 @@ def agregar_alianzas(request):
 
 
 def editar_alianzas(request, id: int):
-    back_url = request.GET.get("next") or reverse("alianzas_lista")
+    back_url = request.GET.get("next") or reverse("alianzas_alianza_list")
     alianza = get_object_or_404(Alianza, pk=id)
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
@@ -63,7 +63,7 @@ def editar_alianzas(request, id: int):
 
 
 def eliminar_alianzas(request, id: int):
-    back_url = request.POST.get("next") or request.GET.get("next") or reverse("alianzas_lista")
+    back_url = request.POST.get("next") or request.GET.get("next") or reverse("alianzas_alianza_list")
     alianza = get_object_or_404(Alianza, pk=id)
     alianza.delete()
     return redirect(back_url)

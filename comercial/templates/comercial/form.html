@@ -23,7 +23,7 @@
   {% if form.instance.pk %}
     <div class="form-top-actions">
       <a class="btn-primary"
-         href="{% url 'agregar_cita' %}?copy_from={{ form.instance.pk }}&next={{ back_url|urlencode }}">
+         href="{% url 'comercial_cita_create' %}?copy_from={{ form.instance.pk }}&next={{ back_url|urlencode }}">
         Registrar siguiente cita
       </a>
     </div>
@@ -140,7 +140,7 @@
             class="btn-delete"
             formmethod="post"
             formnovalidate
-            formaction="{% url 'eliminar_cita' form.instance.pk %}">
+            formaction="{% url 'comercial_cita_delete' form.instance.pk %}">
       Eliminar
     </button>
   {% endif %}

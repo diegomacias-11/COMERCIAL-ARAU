@@ -132,7 +132,7 @@ def citas_lista(request):
 
 
 def agregar_cita(request):
-    back_url = request.GET.get("next") or reverse("citas_lista")
+    back_url = request.GET.get("next") or reverse("comercial_cita_list")
     copy_from = request.GET.get("copy_from")
     initial_data = {}
     if copy_from:
@@ -152,7 +152,7 @@ def agregar_cita(request):
 
 
 def editar_cita(request, id: int):
-    back_url = request.GET.get("next") or reverse("citas_lista")
+    back_url = request.GET.get("next") or reverse("comercial_cita_list")
     cita = get_object_or_404(Cita, pk=id)
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
@@ -168,7 +168,7 @@ def editar_cita(request, id: int):
 
 
 def eliminar_cita(request, id: int):
-    back_url = request.POST.get("next") or request.GET.get("next") or reverse("citas_lista")
+    back_url = request.POST.get("next") or request.GET.get("next") or reverse("comercial_cita_list")
     cita = get_object_or_404(Cita, pk=id)
     cita.delete()
     return redirect(back_url)

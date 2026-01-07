@@ -14,12 +14,12 @@ def root_redirect(request):
     group_name = (first_group.name.lower() if first_group else "").strip()
 
     if "experiencia" in group_name:
-        return redirect("clientes_experiencia_lista")
+        return redirect("experiencia_experienciacliente_list")
     if "marketing" in group_name:
-        return redirect("actividades_merca_lista")
+        return redirect("actividades_merca_actividad_list")
     if "operaciones" in group_name:
-        return redirect("alianzas_lista")
+        return redirect("alianzas_alianza_list")
     if "comercial" in group_name:
-        return redirect("citas_lista")
+        return redirect("comercial_cita_list")
 
-    return redirect("citas_lista")
+    return redirect("comercial_cita_list")

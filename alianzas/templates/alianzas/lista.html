@@ -10,10 +10,10 @@
     </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
-      <a href="{% url 'alianzas_lista' %}" class="btn-filter">Limpiar</a>
+      <a href="{% url 'alianzas_alianza_list' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
-  <a href="{% url 'agregar_alianzas' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva alianza</a>
+  <a href="{% url 'alianzas_alianza_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva alianza</a>
 {% endblock %}
 
 {% block tabla_head %}
@@ -29,7 +29,7 @@
   {% for a in alianzas %}
     <tr>
       <td>
-        <a href="{% url 'editar_alianzas' a.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+        <a href="{% url 'alianzas_alianza_update' a.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
       </td>
       <td>{{ a.nombre|default_if_none:"" }}</td>
       <td>{{ a.telefono|default_if_none:"" }}</td>

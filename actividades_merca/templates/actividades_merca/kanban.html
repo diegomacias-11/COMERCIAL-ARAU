@@ -46,7 +46,7 @@
 {% endblock %}
 
 {% block filtros_right %}
-  <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+  <a href="{% url 'actividades_merca_actividad_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
 {% block avisos %}
@@ -73,7 +73,7 @@
                            {% elif st == 'Se entregó tarde' %} status-late
                            {% endif %}">
                   <div class="kanban-card-header">
-                    <a href="{% url 'actividades_merca_editar' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+                    <a href="{% url 'actividades_merca_actividad_update' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
                     {% if st %}
                       <span class="status-pill">{{ st }}</span>
                     {% endif %}

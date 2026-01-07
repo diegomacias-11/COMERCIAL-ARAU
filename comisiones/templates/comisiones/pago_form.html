@@ -12,7 +12,7 @@
 
 {% block extra_actions %}
   {% if pago %}
-    <button type="submit" class="btn-delete" formaction="{% url 'comisiones_eliminar_pago' pago.id %}" formmethod="post" onclick="return confirm('¿Eliminar este pago?');">Eliminar</button>
+    <button type="submit" class="btn-delete" formaction="{% url 'comisiones_pagocomision_delete' pago.id %}" formmethod="post" onclick="return confirm('¿Eliminar este pago?');">Eliminar</button>
   {% endif %}
 {% endblock %}
 

@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block filtros %}
-  <form action="{% url 'actividades_merca_lista' %}" method="get" class="filter-form-simple">
+  <form action="{% url 'actividades_merca_actividad_list' %}" method="get" class="filter-form-simple">
     <input type="hidden" name="vista" value="lista">
 
     <div class="filter-block">
@@ -48,14 +48,14 @@
 
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
-      <a href="{% url 'actividades_merca_lista' %}" class="btn-filter">Limpiar</a>
+      <a href="{% url 'actividades_merca_actividad_list' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
 {% endblock %}
 
 {% block filtros_right %}
-  <a href="{% url 'actividades_merca_reporte' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-primary btn-primary-inline btn-report" target="_blank" rel="noopener">Generar reporte</a>
-  <a href="{% url 'actividades_merca_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+  <a href="{% url 'actividades_merca_actividad_report' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-primary btn-primary-inline btn-report" target="_blank" rel="noopener">Generar reporte</a>
+  <a href="{% url 'actividades_merca_actividad_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
 {% block avisos %}
@@ -84,7 +84,7 @@
   {% for a in actividades %}
     <tr>
       <td>
-        <a class="btn-detalle" href="{% url 'actividades_merca_editar' a.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
+        <a class="btn-detalle" href="{% url 'actividades_merca_actividad_update' a.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
       </td>
       {% with a.estatus as st %}
       <td class="status-pill

@@ -70,7 +70,7 @@ def agregar_venta(request):
     mes, anio, redir = _coerce_mes_anio(request)
     if redir and request.method != "POST":
         return redir
-    back_url = request.GET.get("next") or f"{reverse('ventas_lista')}?mes={mes}&anio={anio}"
+    back_url = request.GET.get("next") or f"{reverse('ventas_venta_list')}?mes={mes}&anio={anio}"
 
     if request.method == "POST":
         mes = int(request.POST.get("mes") or mes or datetime.now().month)
@@ -87,7 +87,7 @@ def agregar_venta(request):
 def editar_venta(request, id: int):
     venta = get_object_or_404(Venta, pk=id)
     mes, anio, _ = _coerce_mes_anio(request)
-    back_url = request.GET.get("next") or f"{reverse('ventas_lista')}?mes={mes}&anio={anio}"
+    back_url = request.GET.get("next") or f"{reverse('ventas_venta_list')}?mes={mes}&anio={anio}"
     if request.method == "POST":
         form = VentaForm(request.POST, instance=venta, mes=mes, anio=anio)
         if form.is_valid():
@@ -99,7 +99,7 @@ def editar_venta(request, id: int):
 
 
 def eliminar_venta(request, id: int):
-    back_url = request.POST.get("next") or request.GET.get("next") or reverse("ventas_lista")
+    back_url = request.POST.get("next") or request.GET.get("next") or reverse("ventas_venta_list")
     venta = get_object_or_404(Venta, pk=id)
     venta.delete()
     return redirect(back_url)

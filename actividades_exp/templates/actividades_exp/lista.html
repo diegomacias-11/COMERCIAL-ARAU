@@ -3,7 +3,7 @@
 {% block title %}Actividades Exp{% endblock %}
 
 {% block filtros %}
-  <form action="{% url 'actividades_exp_lista' %}" method="get" class="filter-form-simple">
+  <form action="{% url 'actividades_exp_actividadexp_list' %}" method="get" class="filter-form-simple">
     <div class="filter-block">
       <label for="tipo">Tipo</label>
       <select id="tipo" name="tipo">
@@ -39,17 +39,17 @@
 
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
-      <a href="{% url 'actividades_exp_lista' %}" class="btn-filter">Limpiar</a>
+      <a href="{% url 'actividades_exp_actividadexp_list' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
 {% endblock %}
 
 {% block filtros_left %}
-  <a class="btn-primary btn-primary-inline" href="{% url 'actividades_exp_kanban' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
+  <a class="btn-primary btn-primary-inline" href="{% url 'actividades_exp_actividadexp_kanban' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
 {% endblock %}
 
 {% block filtros_right %}
-  <a href="{% url 'actividades_exp_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+  <a href="{% url 'actividades_exp_actividadexp_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
 {% block tabla_head %}
@@ -73,7 +73,7 @@
   {% for a in actividades %}
     <tr>
       <td>
-        <a class="btn-detalle" href="{% url 'actividades_exp_editar' a.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
+        <a class="btn-detalle" href="{% url 'actividades_exp_actividadexp_update' a.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
       </td>
       <td>{{ a.tarea }}</td>
       <td>{{ a.tipo }}</td>

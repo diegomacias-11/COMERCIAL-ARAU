@@ -3,7 +3,7 @@
 {% block title %}Actividades Exp (Kanban){% endblock %}
 
 {% block filtros_left %}
-  <a class="btn-primary btn-primary-inline btn-view" href="{% url 'actividades_exp_lista' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
+  <a class="btn-primary btn-primary-inline btn-view" href="{% url 'actividades_exp_actividadexp_list' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
 {% endblock %}
 
 {% block filtros %}
@@ -29,13 +29,13 @@
     </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
-      <a href="{% url 'actividades_exp_kanban' %}" class="btn-filter">Limpiar</a>
+      <a href="{% url 'actividades_exp_actividadexp_kanban' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
 {% endblock %}
 
 {% block filtros_right %}
-  <a href="{% url 'actividades_exp_crear' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
+  <a href="{% url 'actividades_exp_actividadexp_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva actividad</a>
 {% endblock %}
 
 {% block kanban_content %}
@@ -50,7 +50,7 @@
               {% for act in tipo.items %}
                 <div class="kanban-card">
                   <div class="kanban-card-header">
-                    <a href="{% url 'actividades_exp_editar' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+                    <a href="{% url 'actividades_exp_actividadexp_update' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
                   </div>
                   <div class="kanban-card-body">
                     <div class="kanban-task">{{ act.tarea }}</div>

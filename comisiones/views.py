@@ -109,9 +109,9 @@ def registrar_pago(request, comisionista_id: int = None):
     if redir and request.method != "POST":
         return redir
     if comisionista_id:
-        back_url = f"{reverse('comisiones_detalle', args=[comisionista_id])}?mes={mes}&anio={anio}"
+        back_url = f"{reverse('comisiones_comisionista_detail', args=[comisionista_id])}?mes={mes}&anio={anio}"
     else:
-        back_url = f"{reverse('comisiones_lista')}?mes={mes}&anio={anio}"
+        back_url = f"{reverse('comisiones_comision_list')}?mes={mes}&anio={anio}"
     comisionista_fixed = None
     if comisionista_id:
         from alianzas.models import Alianza
@@ -138,7 +138,7 @@ def registrar_pago(request, comisionista_id: int = None):
             pago.monto = comision.monto
             pago.save()
             Comision.objects.filter(pk=comision.pk).update(pago_comision=True)
-            return redirect(reverse("comisiones_detalle", args=[pago.comisionista_id]) + f"?mes={mes}&anio={anio}")
+            return redirect(reverse("comisiones_comisionista_detail", args=[pago.comisionista_id]) + f"?mes={mes}&anio={anio}")
     else:
         form = PagoComisionForm()
         if comisionista_id:
@@ -162,7 +162,7 @@ def registrar_pago(request, comisionista_id: int = None):
 def editar_pago(request, id: int):
     pago = get_object_or_404(PagoComision, pk=id)
     mes, anio, _ = _coerce_mes_anio(request)
-    back_url = f"{reverse('comisiones_detalle', args=[pago.comisionista_id])}?mes={mes}&anio={anio}"
+    back_url = f"{reverse('comisiones_comisionista_detail', args=[pago.comisionista_id])}?mes={mes}&anio={anio}"
     comisiones_qs = Comision.objects.filter(pk=pago.comision_id)
     if request.method == "POST":
         form = PagoComisionForm(request.POST, instance=pago, comisiones_qs=comisiones_qs)
@@ -187,7 +187,7 @@ def editar_pago(request, id: int):
 def eliminar_pago(request, id: int):
     pago = get_object_or_404(PagoComision, pk=id)
     mes, anio, _ = _coerce_mes_anio(request)
-    back_url = request.POST.get("next") or f"{reverse('comisiones_detalle', args=[pago.comisionista_id])}?mes={mes}&anio={anio}"
+    back_url = request.POST.get("next") or f"{reverse('comisiones_comisionista_detail', args=[pago.comisionista_id])}?mes={mes}&anio={anio}"
     comision_id = pago.comision_id
     pago.delete()
     if comision_id:
@@ -230,12 +230,12 @@ def enviar_detalle_comisionista(request, comisionista_id):
     comisionista = context.get("comisionista")
     if not comisionista:
         messages.error(request, "No se encontraron comisiones para este comisionista.")
-        return redirect(reverse("comisiones_lista") + f"?mes={mes}&anio={anio}")
+        return redirect(reverse("comisiones_comision_list") + f"?mes={mes}&anio={anio}")
 
     destinatario = getattr(comisionista, "correo", None)
     if not destinatario:
         messages.error(request, "El comisionista no tiene correo registrado.")
-        return redirect(reverse("comisiones_detalle", args=[comisionista_id]) + f"?mes={mes}&anio={anio}")
+        return redirect(reverse("comisiones_comisionista_detail", args=[comisionista_id]) + f"?mes={mes}&anio={anio}")
 
     subject = f"Detalle de comisiones {context['mes_nombre']} {anio} - {comisionista.nombre}"
     html_body = render_to_string("comisiones/email_reporte.html", context)
@@ -253,4 +253,4 @@ def enviar_detalle_comisionista(request, comisionista_id):
     except Exception as exc:  # pragma: no cover
         messages.error(request, f"No se pudo enviar el correo: {exc}")
 
-    return redirect(reverse("comisiones_detalle", args=[comisionista_id]) + f"?mes={mes}&anio={anio}")
+    return redirect(reverse("comisiones_comisionista_detail", args=[comisionista_id]) + f"?mes={mes}&anio={anio}")

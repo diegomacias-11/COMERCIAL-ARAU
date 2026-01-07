@@ -139,7 +139,7 @@ ContactoFormSet = inlineformset_factory(
 
 
 def agregar_cliente(request):
-    back_url = request.GET.get("next") or reverse("clientes_lista")
+    back_url = request.GET.get("next") or reverse("clientes_cliente_list")
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
         form = ClienteForm(request.POST)
@@ -151,7 +151,7 @@ def agregar_cliente(request):
 
     contactos_url = None
     if getattr(form.instance, "pk", None):
-        contactos_url = f"{reverse('contactos_cliente', args=[form.instance.pk])}?next={request.get_full_path()}"
+        contactos_url = f"{reverse('clientes_contacto_list', args=[form.instance.pk])}?next={request.get_full_path()}"
 
     context = {
         "form": form,
@@ -163,7 +163,7 @@ def agregar_cliente(request):
 
 
 def editar_cliente(request, id: int):
-    back_url = request.GET.get("next") or reverse("clientes_lista")
+    back_url = request.GET.get("next") or reverse("clientes_cliente_list")
     cliente = get_object_or_404(Cliente, pk=id)
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
@@ -176,7 +176,7 @@ def editar_cliente(request, id: int):
 
     contactos_url = None
     if getattr(form.instance, "pk", None):
-        contactos_url = f"{reverse('contactos_cliente', args=[form.instance.pk])}?next={request.get_full_path()}"
+        contactos_url = f"{reverse('clientes_contacto_list', args=[form.instance.pk])}?next={request.get_full_path()}"
 
     context = {
         "form": form,
@@ -189,14 +189,14 @@ def editar_cliente(request, id: int):
 
 def contactos_cliente(request, id: int):
     cliente = get_object_or_404(Cliente, pk=id)
-    back_url = request.GET.get("next") or reverse("editar_cliente", args=[id])
+    back_url = request.GET.get("next") or reverse("clientes_cliente_update", args=[id])
     if request.method == "POST":
         back_url = request.POST.get("next") or back_url
         formset = ContactoFormSet(request.POST, instance=cliente)
         if formset.is_valid():
             formset.save()
             # Permanece en el directorio de contactos tras guardar
-            stay_url = reverse("contactos_cliente", args=[cliente.pk])
+            stay_url = reverse("clientes_contacto_list", args=[cliente.pk])
             if back_url:
                 stay_url = f"{stay_url}?next={back_url}"
             return redirect(stay_url)
@@ -212,7 +212,7 @@ def contactos_cliente(request, id: int):
 
 
 def eliminar_cliente(request, id: int):
-    back_url = request.POST.get("next") or request.GET.get("next") or reverse("clientes_lista")
+    back_url = request.POST.get("next") or request.GET.get("next") or reverse("clientes_cliente_list")
     cliente = get_object_or_404(Cliente, pk=id)
     cliente.delete()
     return redirect(back_url)
@@ -220,10 +220,10 @@ def eliminar_cliente(request, id: int):
 
 def eliminar_contacto(request, id: int):
     contacto = get_object_or_404(Contacto, pk=id)
-    back_url = request.POST.get("next") or request.GET.get("next") or reverse("contactos_cliente", args=[contacto.cliente_id])
+    back_url = request.POST.get("next") or request.GET.get("next") or reverse("clientes_contacto_list", args=[contacto.cliente_id])
     cliente_id = contacto.cliente_id
     contacto.delete()
     # Siempre regresa al directorio de contactos de ese cliente (o al back_url si viene en next)
     if back_url:
         return redirect(back_url)
-    return redirect(reverse("contactos_cliente", args=[cliente_id]))
+    return redirect(reverse("clientes_contacto_list", args=[cliente_id]))

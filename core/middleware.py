@@ -19,7 +19,7 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     """
 
     _IGNORE = {
-        "lista", "list", "agregar", "add", "editar", "update",
+        "lista", "list", "agregar", "add", "crear", "create", "editar", "update",
         "eliminar", "delete", "reporte", "reportes",
         "detalle", "detail", "ver",
     }
@@ -32,12 +32,13 @@ class GroupPermissionMiddleware(MiddlewareMixin):
 
     def _infer_action(self, url_name: str) -> str:
         lower = url_name.lower()
-        if lower.startswith(("agregar", "add", "crear", "create", "nuevo", "nueva")):
-            return "add"
-        if lower.startswith(("editar", "update", "actualizar", "cambiar")):
-            return "change"
-        if lower.startswith(("eliminar", "delete", "borrar")):
+        tokens = [t for t in re.split(r"[_-]+", lower) if t]
+        if any(t in {"eliminar", "delete", "borrar"} for t in tokens):
             return "delete"
+        if any(t in {"editar", "update", "actualizar", "cambiar"} for t in tokens):
+            return "change"
+        if any(t in {"agregar", "add", "crear", "create", "nuevo", "nueva", "registrar"} for t in tokens):
+            return "add"
         return "view"
 
     def _infer_model(self, url_name: str) -> str:
@@ -102,7 +103,7 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         if not resolver or not resolver.url_name:
             return None
 
-        public_names = {"login", "logout", "inicio"}
+        public_names = {"login", "logout", "core_inicio"}
         if resolver.url_name in public_names:
             return None
 
@@ -180,7 +181,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
             resolver = getattr(request, "resolver_match", None)
             url_name = resolver.url_name if resolver else None
             # Redirigir a actividades_merca al ingresar (home) para grupos de marketing/diseño
-            if url_name in {None, "", "root", "inicio"} or request.path == "/":
+            if url_name in {None, "", "root", "core_inicio"} or request.path == "/":
                 if user.groups.filter(name__in=["Dirección Marketing", "Marketing", "Diseño"]).exists():
                     return HttpResponseRedirect("/actividades_merca/")
                 if user.groups.filter(name__in=["Dirección Marketing", "Diseño"]).exists():
@@ -195,7 +196,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
 
         resolver = getattr(request, "resolver_match", None)
         url_name = resolver.url_name if resolver else None
-        public_names = {"login", "logout", "inicio"}
+        public_names = {"login", "logout", "core_inicio"}
 
         path = request.path
         if (

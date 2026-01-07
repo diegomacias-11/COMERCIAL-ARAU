@@ -54,6 +54,6 @@
 
 {% block extra_actions %}
   {% if actividad %}
-    <button type="submit" class="btn-delete" formaction="{% url 'actividades_exp_eliminar' actividad.id %}" formmethod="post" onclick="return confirm('¿Eliminar esta actividad?');">Eliminar</button>
+    <button type="submit" class="btn-delete" formaction="{% url 'actividades_exp_actividadexp_delete' actividad.id %}" formmethod="post" onclick="return confirm('¿Eliminar esta actividad?');">Eliminar</button>
   {% endif %}
 {% endblock %}

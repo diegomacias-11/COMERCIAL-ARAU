@@ -27,15 +27,15 @@
   </div>
   <div class="filter-row">
     <div></div>
-    <form action="{% url 'comisiones_lista' %}" method="get" class="filter-form-simple comisiones-filter">
+    <form action="{% url 'comisiones_comision_list' %}" method="get" class="filter-form-simple comisiones-filter">
       <input type="hidden" name="mes" value="{{ mes }}">
       <input type="hidden" name="anio" value="{{ anio }}">
-      <a href="{% url 'comisiones_lista' %}?mes={{ mes }}&anio={{ anio }}" class="btn-filter btn-volver btn-volver-bottom">Volver</a>
+      <a href="{% url 'comisiones_comision_list' %}?mes={{ mes }}&anio={{ anio }}" class="btn-filter btn-volver btn-volver-bottom">Volver</a>
     </form>
     <div class="actions actions-bottom">
       {% if comisionista %}
-        <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_enviar_detalle' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Enviar reporte</a>
-        <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_registrar_pago_by_id' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Registrar pago</a>
+        <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_comisionista_send' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Enviar reporte</a>
+        <a class="btn-primary btn-primary-inline btn-primary-bottom" href="{% url 'comisiones_pagocomision_create_for_comisionista' comisionista.id %}?mes={{ mes }}&anio={{ anio }}">Registrar pago</a>
       {% endif %}
     </div>
   </div>
@@ -105,7 +105,7 @@
                   <td>{{ p.monto|currency }}</td>
                   <td>{{ p.comentario|default_if_none:"" }}</td>
                   <td>
-                    <a class="btn-detalle" href="{% url 'comisiones_editar_pago' p.id %}?mes={{ mes }}&anio={{ anio }}">Editar</a>
+                    <a class="btn-detalle" href="{% url 'comisiones_pagocomision_update' p.id %}?mes={{ mes }}&anio={{ anio }}">Editar</a>
                   </td>
                 </tr>
                 {% empty %}

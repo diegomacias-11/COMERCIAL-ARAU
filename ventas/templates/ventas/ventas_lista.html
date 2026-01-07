@@ -8,7 +8,7 @@
 {% block filtros %}
   <div class="ventas-filter-center">
     <div class="filter-title">{{ mes_nombre }} {{ anio }}</div>
-    <form action="{% url 'ventas_lista' %}" method="get" class="filter-form-simple dispersiones-filter">
+    <form action="{% url 'ventas_venta_list' %}" method="get" class="filter-form-simple dispersiones-filter">
       <div class="filter-stack">
         <label for="mes">Mes</label>
         <select id="mes" name="mes">
@@ -44,7 +44,7 @@
 {% endblock %}
 
 {% block filtros_right %}
-  <a href="{% url 'ventas_agregar' %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva venta</a>
+  <a href="{% url 'ventas_venta_create' %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva venta</a>
 {% endblock %}
 
 {% block tabla_head %}
@@ -68,7 +68,7 @@
 {% block tabla_body %}
   {% for d in ventas %}
     <tr>
-      <td class="sticky-1 col-actions"><a class="btn-detalle" href="{% url 'ventas_editar' d.id %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}">Editar</a></td>
+      <td class="sticky-1 col-actions"><a class="btn-detalle" href="{% url 'ventas_venta_update' d.id %}?mes={{ mes }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}">Editar</a></td>
       <td class="sticky-2 col-fecha">{{ d.fecha|date:"d/m/Y" }}</td>
       <td class="sticky-3">{{ d.cliente }}</td>
       <td>{{ d.servicio|default_if_none:"" }}</td>
