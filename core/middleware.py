@@ -74,6 +74,8 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         # Excepcion: permitir webhooks externos (Meta, Stripe, etc.)
         if request.path.startswith("/webhooks/"):
             return None
+        if request.path.startswith("/actividades_merca/solicitud/"):
+            return None
 
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
