@@ -39,8 +39,9 @@
 
       function updateWidth(container) {
         const table = container.querySelector("table");
-        if (!table) return;
-        inner.style.width = `${table.scrollWidth}px`;
+        const width = table ? table.scrollWidth : container.scrollWidth;
+        if (!width) return;
+        inner.style.width = `${width}px`;
       }
 
       function setActive(container) {
@@ -59,7 +60,7 @@
         activeContainer.scrollLeft = bottom.scrollLeft;
       }
 
-      const containers = Array.from(document.querySelectorAll(".table-container"));
+      const containers = Array.from(document.querySelectorAll(".table-container, .kanban-board"));
       containers.forEach((c) => {
         c.addEventListener("mouseenter", () => setActive(c));
         c.addEventListener("scroll", onContainerScroll);
