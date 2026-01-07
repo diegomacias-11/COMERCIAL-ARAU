@@ -25,9 +25,9 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     }
 
     REPORTS_ALLOWED = {
-        "/comercial/reportes/": {"dirección comercial"},
-        "/marketing/reportes/": set(),    # Completar cuando exista
-        "/operaciones/reportes/": set(),  # Completar cuando exista
+        "/comercial/reportes/": {"dirección comercial", "dirección operaciones"},
+        "/marketing/reportes/": {"dirección operaciones"},    # Completar cuando exista
+        "/operaciones/reportes/": {"dirección operaciones"},  # Completar cuando exista
     }
 
     def _infer_action(self, url_name: str) -> str:
@@ -128,15 +128,30 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         self._current_app_label = None
 
         if not model:
+            if action in {"add", "change", "delete"}:
+                return HttpResponse(
+                    "<script>alert('No tienes permisos.'); window.history.back();</script>",
+                    status=403,
+                    content_type="text/html",
+                )
             return None
 
         perm_code = f"{app_label}.{action}_{model}"
 
         # Si no existe un permiso definido para este modelo/acción, no bloquear
-        if not Permission.objects.filter(
+        perm_exists = Permission.objects.filter(
             content_type__app_label=app_label,
             codename=f"{action}_{model}",
-        ).exists():
+        ).exists()
+
+        if action in {"add", "change", "delete"} and not perm_exists:
+            return HttpResponse(
+                "<script>alert('No tienes permisos.'); window.history.back();</script>",
+                status=403,
+                content_type="text/html",
+            )
+
+        if not perm_exists:
             return None
 
         if user.has_perm(perm_code):
