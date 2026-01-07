@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from django.http import HttpResponse, HttpResponseRedirect
+from django.apps import apps
 from django.contrib.auth.models import Permission
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 from django.utils.http import urlencode
+import re
 
 from .models import UserSessionActivity
 
@@ -39,8 +41,37 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         return "view"
 
     def _infer_model(self, url_name: str) -> str:
-        parts = [p for p in url_name.lower().split("_") if p]
-        # Tomar el ultimo segmento que no sea de accion
+        def _tokenize(text: str) -> list[str]:
+            cleaned = re.sub(r"[^a-z0-9_]+", " ", (text or "").lower())
+            return [p for p in cleaned.replace("_", " ").split() if p]
+
+        tokens = _tokenize(url_name)
+        app_label = getattr(self, "_current_app_label", None)
+        models = []
+        if app_label:
+            try:
+                models = list(apps.get_app_config(app_label).get_models())
+            except Exception:
+                models = []
+
+        if tokens and models:
+            token_set = set(tokens)
+            candidates = []
+            for model in models:
+                model_tokens = set()
+                model_tokens.update(_tokenize(model._meta.model_name))
+                model_tokens.update(_tokenize(model._meta.verbose_name))
+                model_tokens.update(_tokenize(model._meta.verbose_name_plural))
+                overlap = model_tokens & token_set
+                if overlap:
+                    candidates.append((len(overlap), model._meta.model_name))
+            if candidates:
+                candidates.sort(key=lambda x: x[0], reverse=True)
+                return candidates[0][1]
+            if len(models) == 1:
+                return models[0]._meta.model_name
+
+        parts = [p for p in (url_name or "").lower().split("_") if p]
         base = ""
         for part in reversed(parts):
             if part not in self._IGNORE:
@@ -49,20 +80,6 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         if not base and parts:
             base = parts[-1]
 
-        # Ajustes manuales por app
-        if "actividades_merca" in url_name:
-            return "actividadmerca"
-        if "comisiones" in parts:
-            if "pago" in parts:
-                return "pagocomision"
-            return "comision"
-        if "clientes" in parts or base == "clientes":
-            return "cliente"
-        if app_label := getattr(self, "_current_app_label", None):
-            if app_label == "leads":
-                return "metalead"
-
-        # Singularizar de forma basica
         if base.endswith("es"):
             base = base[:-2]
         elif base.endswith("s"):
@@ -151,6 +168,14 @@ class LoginRequiredMiddleware(MiddlewareMixin):
             if url_name in {None, "", "root", "inicio"} or request.path == "/":
                 if user.groups.filter(name__in=["Dirección Marketing", "Marketing", "Diseño"]).exists():
                     return HttpResponseRedirect("/actividades_merca/")
+                if user.groups.filter(name__in=["Dirección Marketing", "Diseño"]).exists():
+                    return HttpResponseRedirect("/actividades_merca/")
+                if user.groups.filter(name__in=["Apoyo Comercial"]).exists():
+                    return HttpResponseRedirect("/comercial/citas/")
+                if user.groups.filter(name__in=["Administración", "Dirección Comercial", "Dirección Operaciones", "Dirección"]).exists():
+                    return HttpResponseRedirect("/ventas/")
+                if user.groups.filter(name__in=["Experiencia"]).exists():
+                    return HttpResponseRedirect("/actividades_exp/")
             return None
 
         resolver = getattr(request, "resolver_match", None)

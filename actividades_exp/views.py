@@ -124,3 +124,22 @@ def editar_actividad_exp(request, pk: int):
         "actividades_exp/form.html",
         {"form": form, "back_url": back_url, "actividad": actividad},
     )
+
+
+def eliminar_actividad_exp(request, pk: int):
+    actividad = get_object_or_404(ActividadExp, pk=pk)
+    back_url = request.POST.get("next") or request.GET.get("next") or "/actividades_exp/"
+    if not request.user.has_perm("actividades_exp.delete_actividadexp"):
+        return render(
+            request,
+            "actividades_exp/form.html",
+            {
+                "form": ActividadExpForm(instance=actividad),
+                "back_url": back_url,
+                "actividad": actividad,
+                "errors": {"permiso": "No tienes permisos para eliminar."},
+            },
+            status=403,
+        )
+    actividad.delete()
+    return redirect(back_url)
