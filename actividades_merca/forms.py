@@ -87,7 +87,7 @@ class ActividadMercaForm(forms.ModelForm):
                     self.fields["fecha_fin"].disabled = False
             # Bloquear todo excepto tarea, dias, evaluacion y asignaciones
             for fname, field in self.fields.items():
-                if fname not in {"tarea", "dias", "evaluacion", "mercadologo", "disenador", "fecha_fin"}:
+                if fname not in {"tarea", "url", "dias", "evaluacion", "mercadologo", "disenador", "fecha_fin"}:
                     field.disabled = True
         else:
             # Al crear, ocultar campos que solo se manejan en edición
@@ -134,7 +134,10 @@ class ActividadMercaForm(forms.ModelForm):
                     self.fields["mercadologo"].disabled = True
                     self.fields["mercadologo"].required = False
 
-            if (is_mkt or is_dsn) and not is_dir and self.instance and getattr(self.instance, "pk", None):
+            if (is_mkt or is_dsn) and self.instance and getattr(self.instance, "pk", None):
+                allowed = {"fecha_fin"}
+                if (is_mkt and not is_dsn) or is_dir:
+                    allowed.add("url")
                 for fname, field in self.fields.items():
-                    if fname != "fecha_fin":
+                    if fname not in allowed:
                         field.disabled = True
