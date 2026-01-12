@@ -20,13 +20,13 @@
       <label for="{{ form.cliente.id_for_label }}">Cliente</label>
       {{ form.cliente }}
 
-      <label for="{{ form.area.id_for_label }}">Ãrea</label>
+      <label for="{{ form.area.id_for_label }}">&Aacute;rea</label>
       {{ form.area }}
 
-      <label for="{{ form.mercadologo.id_for_label }}">MercadÃ³logo</label>
+      <label for="{{ form.mercadologo.id_for_label }}">Mercad&oacute;logo</label>
       {{ form.mercadologo }}
 
-      <label for="{{ form.disenador.id_for_label }}">DiseÃ±ador</label>
+      <label for="{{ form.disenador.id_for_label }}">Dise&ntilde;ador</label>
       {{ form.disenador }}
     </div>
     <div class="form-col">
@@ -39,14 +39,14 @@
       <label for="{{ form.fecha_inicio.id_for_label }}">Fecha de inicio</label>
       {{ form.fecha_inicio }}
 
-      <label for="{{ form.dias.id_for_label }}">DÃ­as</label>
+      <label for="{{ form.dias.id_for_label }}">D&iacute;as</label>
       {{ form.dias }}
 
       {% if actividad %}
         <label for="{{ form.fecha_fin.id_for_label }}">Fecha de fin</label>
         {{ form.fecha_fin }}
 
-        <label for="{{ form.evaluacion.id_for_label }}">EvaluaciÃ³n</label>
+        <label for="{{ form.evaluacion.id_for_label }}">Evaluaci&oacute;n</label>
         {{ form.evaluacion }}
       {% endif %}
     </div>
@@ -61,7 +61,7 @@
             formmethod="post"
             formnovalidate
             formaction="{% url 'actividades_merca_actividad_delete' actividad.id %}"
-            onclick="return confirm('Â¿Eliminar esta actividad?');">
+            onclick="return confirm('&iquest;Eliminar esta actividad?');">
       Eliminar
     </button>
   {% endif %}
