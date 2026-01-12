@@ -28,6 +28,11 @@ class GastoMercadotecniaForm(forms.ModelForm):
             if name in self.fields:
                 choices = list(self.fields[name].choices)
                 self.fields[name].choices = [("", "----")] + choices
+        if self.instance and getattr(self.instance, "pk", None) and self.instance.fecha_facturacion:
+            try:
+                self.initial["fecha_facturacion"] = self.instance.fecha_facturacion.isoformat()
+            except Exception:
+                pass
 
 
 def gastos_lista(request):

@@ -35,6 +35,11 @@ class ActividadExpForm(forms.ModelForm):
         for name in ("tipo", "area", "estilo", "comunicado_aviso"):
             if name in self.fields:
                 self.fields[name].empty_label = "----"
+        if self.instance and getattr(self.instance, "pk", None):
+            for fname in ("fecha_solicitud_exp", "fecha_solicitud_mkt", "fecha_entrega_mkt", "fecha_envio"):
+                val = getattr(self.instance, fname, None)
+                if val and fname in self.fields:
+                    self.initial[fname] = val.isoformat()
 
 
 def actividades_exp_lista(request):
