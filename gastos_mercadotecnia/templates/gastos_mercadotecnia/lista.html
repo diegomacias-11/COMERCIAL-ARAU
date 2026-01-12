@@ -34,6 +34,7 @@
 {% endblock %}
 
 {% block filtros_right %}
+  <a href="{% url 'gastos_mercadotecnia_gasto_report' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-primary btn-primary-inline btn-report" target="_blank" rel="noopener">Generar reporte</a>
   <a href="{% url 'gastos_mercadotecnia_gasto_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva inversión</a>
 {% endblock %}
 
