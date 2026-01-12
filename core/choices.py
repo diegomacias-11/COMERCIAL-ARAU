@@ -120,3 +120,50 @@ ACTIVIDADES_EXP_COMUNICADO_CHOICES = [
     ("Programado", "Programado"),
     ("Especial", "Especial"),
 ]
+
+GASTOS_MERCA_CATEGORIA_CHOICES = [
+    ("Pautas", "Pautas"),
+    ("Licencias", "Licencias"),
+    ("Hosting", "Hosting"),
+    ("Dominio", "Dominio"),
+    ("Mail", "Mail"),
+]
+
+GASTOS_MERCA_PLATAFORMA_CHOICES = [
+    ("LinkedIn", "LinkedIn"),
+    ("Meta", "Meta"),
+    ("Adobe", "Adobe"),
+    ("CapCut", "CapCut"),
+    ("Google", "Google"),
+    ("Wix", "Wix"),
+    ("Outlook", "Outlook"),
+    ("Gmail", "Gmail"),
+    ("ChatGpt", "ChatGpt"),
+]
+
+GASTOS_MERCA_MARCA_CHOICES = [
+    ("ENROK", "ENROK"),
+    ("HunterLoop", "HunterLoop"),
+    ("Capheues", "Capheues"),
+    ("ARAU", "ARAU"),
+]
+
+GASTOS_MERCA_TDC_CHOICES = [
+    ("8309", "8309"),
+    ("4002", "4002"),
+    ("1002", "1002"),
+]
+
+GASTOS_MERCA_TIPO_FACTURACION_CHOICES = [
+    ("Fija", "Fija"),
+    ("Variable", "Variable"),
+]
+
+GASTOS_MERCA_PERIODICIDAD_CHOICES = [
+    ("Mensual", "Mensual"),
+    ("C/3 Días", "C/3 Días"),
+    ("Anual", "Anual"),
+    ("Por Campaña", "Por Campaña"),
+    ("C/2mil", "C/2mil"),
+    ("C/5mil", "C/5mil"),
+]

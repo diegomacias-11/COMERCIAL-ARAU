@@ -5,13 +5,15 @@
     <img src="{% static 'img/logo_header.png' %}" alt="ARAU" class="logo" />
   </div>
   <nav class="main-nav main-nav-areas" aria-label="Áreas principales">
-    <div class="nav-area{% if 'leads' in path or 'actividades_merca' in path %} is-active{% endif %}">
+    <div class="nav-area{% if 'leads' in path or 'actividades_merca' in path or 'gastos_mercadotecnia' in path %} is-active{% endif %}">
       <button type="button" class="area-trigger" data-area="marketing" aria-expanded="false">
         Marketing
       </button>
       <div class="area-dropdown" role="menu" aria-label="Marketing">
         <a href="{% url 'actividades_merca_actividad_list' %}" role="menuitem"
            class="{% if 'actividades_merca' in path %}is-active{% endif %}">Actividades</a>
+        <a href="{% url 'gastos_mercadotecnia_gasto_list' %}" role="menuitem"
+           class="{% if 'gastos_mercadotecnia' in path %}is-active{% endif %}">Inversiones</a>
         <a href="{% url 'leads_metalead_list' %}" role="menuitem"
            class="{% if 'leads' in path %}is-active{% endif %}">Leads</a>
         <a href="#" role="menuitem" class="is-placeholder">Reporte</a>
@@ -77,10 +79,12 @@
       </button>
     </form>
   </div>
-  {% if 'actividades_merca' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path %}
+  {% if 'actividades_merca' in path or 'gastos_mercadotecnia' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path %}
   <div class="area-title-bar">
     {% if 'actividades_merca' in path %}
       <span class="area-title">Actividades</span>
+    {% elif 'gastos_mercadotecnia' in path %}
+      <span class="area-title">Inversiones</span>
     {% elif 'leads' in path %}
       <span class="area-title">Leads</span>
     {% elif 'citas' in path %}

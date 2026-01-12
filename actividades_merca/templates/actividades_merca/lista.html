@@ -72,6 +72,7 @@
     <th>Área</th>
     <th>Fecha de Inicio</th>
     <th>Tarea</th>
+    <th>URL</th>
     <th>Días</th>
     <th>Mercadólogo</th>
     <th>Diseñador</th>
@@ -98,6 +99,11 @@
       <td>{{ a.area }}</td>
       <td>{{ a.fecha_inicio|date:"d/m/Y" }}</td>
       <td>{{ a.tarea }}</td>
+      <td>
+        {% if a.url %}
+          <a href="{{ a.url }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
       <td>{{ a.dias }}</td>
       <td>{{ a.mercadologo|default_if_none:"" }}</td>
       <td>{{ a.disenador|default_if_none:"" }}</td>

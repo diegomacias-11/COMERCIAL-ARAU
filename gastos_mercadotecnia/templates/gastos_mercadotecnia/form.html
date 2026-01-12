@@ -1,0 +1,49 @@
+{% extends "form.html" %}
+
+{% block title %}Registrar inversión{% endblock %}
+
+{% block back_link %}
+  <div class="filter-container">
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </div>
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  {% if gasto %}
+    <div class="form-meta">
+      Fecha de registro: {{ gasto.creado|date:"d/m/Y H:i" }}
+    </div>
+  {% endif %}
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.fecha_facturacion.id_for_label }}">Fecha de facturación</label>
+      {{ form.fecha_facturacion }}
+
+      <label for="{{ form.categoria.id_for_label }}">Categoría</label>
+      {{ form.categoria }}
+
+      <label for="{{ form.plataforma.id_for_label }}">Plataforma</label>
+      {{ form.plataforma }}
+
+      <label for="{{ form.marca.id_for_label }}">Marca</label>
+      {{ form.marca }}
+
+      <label for="{{ form.tdc.id_for_label }}">TDC</label>
+      {{ form.tdc }}
+
+      <label for="{{ form.tipo_facturacion.id_for_label }}">Tipo de facturación</label>
+      {{ form.tipo_facturacion }}
+
+      <label for="{{ form.periodicidad.id_for_label }}">Periodicidad</label>
+      {{ form.periodicidad }}
+    </div>
+    <div class="form-col">
+      <label for="{{ form.facturacion.id_for_label }}">Facturación</label>
+      {{ form.facturacion }}
+
+      <label for="{{ form.notas.id_for_label }}">Notas</label>
+      {{ form.notas }}
+    </div>
+  </div>
+{% endblock %}

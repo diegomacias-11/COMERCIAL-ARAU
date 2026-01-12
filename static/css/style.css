@@ -911,6 +911,9 @@ body.reportes-no-scroll { overflow: hidden; }
 .clientes-form .form-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+.clientes-form .form-grid.form-grid-no-comisiones {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
 /* En listas (e.g., encuesta con <ul><li>), no aplica gap del form; usa 1rem directo */
 .form-container li label + input,

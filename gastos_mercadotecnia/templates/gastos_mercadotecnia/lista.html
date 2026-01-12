@@ -1,0 +1,48 @@
+{% extends "lista.html" %}
+{% load comisiones_extras %}
+
+{% block title %}Gastos de Mercadotecnia{% endblock %}
+
+{% block filtros_left %}{% endblock %}
+
+{% block filtros %}{% endblock %}
+
+{% block filtros_right %}
+  <a href="{% url 'gastos_mercadotecnia_gasto_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Registrar nueva inversión</a>
+{% endblock %}
+
+{% block tabla_head %}
+  <tr>
+    <th>Acciones</th>
+    <th>Fecha de facturación</th>
+    <th>Categoría</th>
+    <th>Plataforma</th>
+    <th>Marca</th>
+    <th>TDC</th>
+    <th>Tipo de facturación</th>
+    <th>Periodicidad</th>
+    <th>Facturación</th>
+    <th>Notas</th>
+  </tr>
+{% endblock %}
+
+{% block tabla_body %}
+  {% for g in gastos %}
+    <tr>
+      <td>
+        <a class="btn-detalle" href="{% url 'gastos_mercadotecnia_gasto_update' g.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
+      </td>
+      <td>{{ g.fecha_facturacion|date:"d/m/Y"|default_if_none:"" }}</td>
+      <td>{{ g.categoria|default_if_none:"" }}</td>
+      <td>{{ g.plataforma|default_if_none:"" }}</td>
+      <td>{{ g.marca|default_if_none:"" }}</td>
+      <td>{{ g.tdc|default_if_none:"" }}</td>
+      <td>{{ g.tipo_facturacion|default_if_none:"" }}</td>
+      <td>{{ g.periodicidad|default_if_none:"" }}</td>
+      <td>{{ g.facturacion|currency }}</td>
+      <td>{{ g.notas|default_if_none:"" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="10">Sin registros.</td></tr>
+  {% endfor %}
+{% endblock %}

@@ -38,6 +38,7 @@ class ActividadMercaForm(forms.ModelForm):
             "fecha_inicio",
             "fecha_fin",
             "tarea",
+            "url",
             "dias",
             "mercadologo",
             "disenador",

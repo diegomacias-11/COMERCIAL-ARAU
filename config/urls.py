@@ -30,6 +30,7 @@ urlpatterns = [
     path('leads/', include('leads.urls')),
     path('actividades_merca/', include('actividades_merca.urls')),
     path('actividades_exp/', include('actividades_exp.urls')),
+    path('gastos_mercadotecnia/', include('gastos_mercadotecnia.urls')),
     path('experiencia/', include('experiencia.urls')),
     path('ventas/', include('ventas.urls')),
     path('comisiones/', include('comisiones.urls')),

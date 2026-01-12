@@ -22,7 +22,7 @@
     </div>
   {% endif %}
 
-  <div class="form-grid">
+  <div class="form-grid{% if not can_view_comisiones_inputs %} form-grid-no-comisiones{% endif %}">
     <div class="form-col">
       <label for="{{ form.cliente.id_for_label }}">{{ form.cliente.label }}</label>
       {{ form.cliente }}
@@ -116,6 +116,9 @@
         if (!formEl) return true;
         const razon = (formEl.querySelector('#id_cliente')?.value || 'este cliente').trim();
         const comisionInputs = formEl.querySelectorAll('input[name^="comision_"]');
+        if (!comisionInputs.length) {
+          return true;
+        }
         let total = 0;
         comisionInputs.forEach((input) => {
           const val = parseFloat(input.value);
