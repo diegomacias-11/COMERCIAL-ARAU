@@ -42,6 +42,8 @@ LUGAR_CHOICES = [
     ("Oficina de Arau", "Oficina de Arau"),
     ("Oficina del cliente", "Oficina del cliente"),
     ("Zoom", "Zoom"),
+    ("Teléfono", "Teléfono"),
+    ("Correo", "Correo"),
 ]
 
 
@@ -54,6 +56,7 @@ class Cita(models.Model):
     servicio2 = models.CharField(max_length=100, choices=SERVICIO_CHOICES, blank=True, null=True)
     servicio3 = models.CharField(max_length=100, choices=SERVICIO_CHOICES, blank=True, null=True)
     contacto = models.CharField(max_length=150, blank=True, null=True)
+    puesto = models.CharField(max_length=150, blank=True, null=True)
     telefono = models.CharField(
         max_length=10,
         blank=True,
@@ -62,6 +65,11 @@ class Cita(models.Model):
     )
     correo = models.EmailField("Correo", blank=True, null=True)
     conexion = models.CharField(max_length=150, blank=True, null=True)
+    domicilio = models.CharField(max_length=255, blank=True, null=True)
+    pagina_web = models.URLField("Página web", blank=True, null=True)
+    linkedin = models.URLField("LinkedIn", blank=True, null=True)
+    otra_red = models.URLField("Otra red", blank=True, null=True)
+    propuesta = models.URLField("Propuesta", blank=True, null=True)
     vendedor = models.CharField(max_length=50, choices=VENDEDOR_CHOICES)
     estatus_cita = models.CharField(max_length=50, choices=ESTATUS_CITA_CHOICES, blank=True, null=True)
     numero_cita = models.CharField(max_length=10, choices=NUM_CITA_CHOICES, blank=True, null=True)

@@ -25,6 +25,10 @@ class ClienteForm(forms.ModelForm):
             "tipo",
             "medio",
             "conexion",
+            "domicilio",
+            "pagina_web",
+            "linkedin",
+            "otra_red",
             *[f"comisionista_{i}" for i in range(1, 11)],
             *[f"comision_{i}" for i in range(1, 11)],
         ]

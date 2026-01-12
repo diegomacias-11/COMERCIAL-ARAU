@@ -1,4 +1,5 @@
 from django import forms
+import unicodedata
 
 from clientes.models import Cliente
 from .models import ActividadMerca
@@ -94,15 +95,26 @@ class ActividadMercaForm(forms.ModelForm):
 
         if self.user and self.user.is_authenticated:
             first = (self.user.first_name or "").strip().split(" ")[0].lower()
-            is_dir = self.user.groups.filter(name__iexact="Dirección Marketing").exists()
-            is_mkt = self.user.groups.filter(name__iexact="Marketing").exists()
-            is_dsn = self.user.groups.filter(name__iexact="Diseño").exists()
+            full_name = (self.user.get_full_name() or self.user.username or "").strip()
+            group_names = [g.name for g in self.user.groups.all()]
+
+            def _norm(name: str) -> str:
+                value = unicodedata.normalize("NFKD", name or "")
+                return "".join(ch for ch in value if not unicodedata.combining(ch)).lower().strip()
+
+            normed = {_norm(name) for name in group_names}
+            is_dir = "direccion marketing" in normed
+            is_mkt = "marketing" in normed
+            is_dsn = "diseno" in normed
 
             if is_mkt and not is_dir and "mercadologo" in self.fields:
                 opciones = [(v, l) for v, l in self.fields["mercadologo"].choices if v.lower().startswith(first)]
                 if opciones:
                     self.fields["mercadologo"].choices = opciones
                     self.fields["mercadologo"].initial = opciones[0][0]
+                elif full_name:
+                    self.fields["mercadologo"].choices = [(full_name, full_name)]
+                    self.fields["mercadologo"].initial = full_name
                 self.fields["mercadologo"].disabled = True
                 if "disenador" in self.fields:
                     self.fields["disenador"].disabled = True
@@ -113,6 +125,9 @@ class ActividadMercaForm(forms.ModelForm):
                 if opciones:
                     self.fields["disenador"].choices = opciones
                     self.fields["disenador"].initial = opciones[0][0]
+                elif full_name:
+                    self.fields["disenador"].choices = [(full_name, full_name)]
+                    self.fields["disenador"].initial = full_name
                 self.fields["disenador"].disabled = True
                 if "mercadologo" in self.fields:
                     self.fields["mercadologo"].disabled = True

@@ -74,6 +74,10 @@
       {{ form.contacto }}
       {% if form.contacto.errors %}<div class="error">{{ form.contacto.errors }}</div>{% endif %}
 
+      <label for="{{ form.puesto.id_for_label }}">{{ form.puesto.label }}</label>
+      {{ form.puesto }}
+      {% if form.puesto.errors %}<div class="error">{{ form.puesto.errors }}</div>{% endif %}
+
       <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
       {{ form.telefono }}
       {% if form.telefono.errors %}<div class="error">{{ form.telefono.errors }}</div>{% endif %}
@@ -85,6 +89,10 @@
       <label for="{{ form.conexion.id_for_label }}">{{ form.conexion.label }}</label>
       {{ form.conexion }}
       {% if form.conexion.errors %}<div class="error">{{ form.conexion.errors }}</div>{% endif %}
+
+      <label for="{{ form.domicilio.id_for_label }}">{{ form.domicilio.label }}</label>
+      {{ form.domicilio }}
+      {% if form.domicilio.errors %}<div class="error">{{ form.domicilio.errors }}</div>{% endif %}
     </div>
 
     <!-- Grupo 3 -->
@@ -108,6 +116,18 @@
       <label for="{{ form.lugar.id_for_label }}">{{ form.lugar.label }}</label>
       {{ form.lugar }}
       {% if form.lugar.errors %}<div class="error">{{ form.lugar.errors }}</div>{% endif %}
+
+      <label for="{{ form.pagina_web.id_for_label }}">{{ form.pagina_web.label }}</label>
+      {{ form.pagina_web }}
+      {% if form.pagina_web.errors %}<div class="error">{{ form.pagina_web.errors }}</div>{% endif %}
+
+      <label for="{{ form.linkedin.id_for_label }}">{{ form.linkedin.label }}</label>
+      {{ form.linkedin }}
+      {% if form.linkedin.errors %}<div class="error">{{ form.linkedin.errors }}</div>{% endif %}
+
+      <label for="{{ form.otra_red.id_for_label }}">{{ form.otra_red.label }}</label>
+      {{ form.otra_red }}
+      {% if form.otra_red.errors %}<div class="error">{{ form.otra_red.errors }}</div>{% endif %}
     </div>
 
     <!-- Grupo 4 -->
@@ -127,6 +147,10 @@
       <label for="{{ form.monto_factura.id_for_label }}">{{ form.monto_factura.label }}</label>
       {{ form.monto_factura }}
       {% if form.monto_factura.errors %}<div class="error">{{ form.monto_factura.errors }}</div>{% endif %}
+
+      <label for="{{ form.propuesta.id_for_label }}">{{ form.propuesta.label }}</label>
+      {{ form.propuesta }}
+      {% if form.propuesta.errors %}<div class="error">{{ form.propuesta.errors }}</div>{% endif %}
     </div>
   </div>
 

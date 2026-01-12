@@ -43,6 +43,22 @@
       <label for="{{ form.medio.id_for_label }}">{{ form.medio.label }}</label>
       {{ form.medio }}
       {% if form.medio.errors %}<div class="error">{{ form.medio.errors }}</div>{% endif %}
+
+      <label for="{{ form.domicilio.id_for_label }}">{{ form.domicilio.label }}</label>
+      {{ form.domicilio }}
+      {% if form.domicilio.errors %}<div class="error">{{ form.domicilio.errors }}</div>{% endif %}
+
+      <label for="{{ form.pagina_web.id_for_label }}">{{ form.pagina_web.label }}</label>
+      {{ form.pagina_web }}
+      {% if form.pagina_web.errors %}<div class="error">{{ form.pagina_web.errors }}</div>{% endif %}
+
+      <label for="{{ form.linkedin.id_for_label }}">{{ form.linkedin.label }}</label>
+      {{ form.linkedin }}
+      {% if form.linkedin.errors %}<div class="error">{{ form.linkedin.errors }}</div>{% endif %}
+
+      <label for="{{ form.otra_red.id_for_label }}">{{ form.otra_red.label }}</label>
+      {{ form.otra_red }}
+      {% if form.otra_red.errors %}<div class="error">{{ form.otra_red.errors }}</div>{% endif %}
     </div>
 
     <div class="form-col">

@@ -40,9 +40,15 @@ class CitaForm(forms.ModelForm):
             "servicio2",
             "servicio3",
             "contacto",
+            "puesto",
             "telefono",
             "correo",
             "conexion",
+            "domicilio",
+            "pagina_web",
+            "linkedin",
+            "otra_red",
+            "propuesta",
             "medio",
             "estatus_cita",
             "fecha_cita",
@@ -80,9 +86,15 @@ def _initial_desde_cita(cita: Cita) -> dict:
         "servicio2": cita.servicio2,
         "servicio3": cita.servicio3,
         "contacto": cita.contacto,
+        "puesto": cita.puesto,
         "telefono": cita.telefono,
         "correo": cita.correo,
         "conexion": cita.conexion,
+        "domicilio": cita.domicilio,
+        "pagina_web": cita.pagina_web,
+        "linkedin": cita.linkedin,
+        "otra_red": cita.otra_red,
+        "propuesta": cita.propuesta,
         "medio": cita.medio,
         "estatus_cita": cita.estatus_cita,
         "numero_cita": _siguiente_numero_cita(cita.numero_cita),
@@ -100,6 +112,8 @@ def citas_lista(request):
     fecha_hasta = (request.GET.get("fecha_hasta") or "").strip()
     prospecto = (request.GET.get("prospecto") or "").strip()
     servicio = (request.GET.get("servicio") or "").strip()
+    estatus_cita = (request.GET.get("estatus_cita") or "").strip()
+    estatus_seguimiento = (request.GET.get("estatus_seguimiento") or "").strip()
 
     tz = timezone.get_current_timezone()
     if fecha_desde:
@@ -120,13 +134,21 @@ def citas_lista(request):
         citas = citas.filter(prospecto__icontains=prospecto)
     if servicio:
         citas = citas.filter(servicio=servicio)
+    if estatus_cita:
+        citas = citas.filter(estatus_cita=estatus_cita)
+    if estatus_seguimiento:
+        citas = citas.filter(estatus_seguimiento=estatus_seguimiento)
     context = {
         "citas": citas,
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
         "prospecto": prospecto,
         "servicio": servicio,
+        "estatus_cita": estatus_cita,
+        "estatus_seguimiento": estatus_seguimiento,
         "servicio_choices": SERVICIO_CHOICES,
+        "estatus_cita_choices": Cita._meta.get_field("estatus_cita").choices,
+        "estatus_seguimiento_choices": Cita._meta.get_field("estatus_seguimiento").choices,
     }
     return render(request, "comercial/lista.html", context)
 

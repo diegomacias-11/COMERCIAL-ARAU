@@ -36,6 +36,26 @@
         {% endfor %}
       </select>
     </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="estatus_cita">Estatus cita</label>
+      <select id="estatus_cita" name="estatus_cita">
+        <option value="">Todos</option>
+        {% for val,label in estatus_cita_choices %}
+          <option value="{{ val }}" {% if estatus_cita == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="estatus_seguimiento">Estatus seguimiento</label>
+      <select id="estatus_seguimiento" name="estatus_seguimiento">
+        <option value="">Todos</option>
+        {% for val,label in estatus_seguimiento_choices %}
+          <option value="{{ val }}" {% if estatus_seguimiento == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="filter-actions">
       <button type="submit" class="btn-filter">Filtrar</button>
       <a href="{% url 'comercial_cita_list' %}" class="btn-filter">Limpiar</a>
@@ -56,6 +76,7 @@
     <th>Número cita</th>
     <th>Estatus seguimiento</th>
     <th>Lugar</th>
+    <th>Propuesta</th>
   </tr>
 {% endblock %}
 
@@ -74,6 +95,11 @@
       <td>{{ c.numero_cita|default_if_none:"" }}</td>
       <td>{{ c.estatus_seguimiento|default_if_none:"" }}</td>
       <td>{{ c.lugar|default_if_none:"" }}</td>
+      <td>
+        {% if c.propuesta %}
+          <a href="{{ c.propuesta }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
     </tr>
   {% empty %}
     <tr>
@@ -81,7 +107,5 @@
     </tr>
   {% endfor %}
 {% endblock %}
-
-
 
 

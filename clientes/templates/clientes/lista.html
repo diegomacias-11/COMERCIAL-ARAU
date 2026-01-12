@@ -55,7 +55,10 @@
     <th>Servicio</th>
     <th>Giro</th>
     <th>Medio</th>
-    <th>ConexiИn</th>
+    <th>Conexión</th>
+    <th>Página web</th>
+    <th>LinkedIn</th>
+    <th>Otra red</th>
     <th>Fecha registro</th>
   </tr>
 {% endblock %}
@@ -71,6 +74,21 @@
       <td>{{ c.giro|default_if_none:"" }}</td>
       <td>{{ c.medio|default_if_none:c.tipo|default_if_none:"" }}</td>
       <td>{{ c.conexion|default_if_none:"" }}</td>
+      <td>
+        {% if c.pagina_web %}
+          <a href="{{ c.pagina_web }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
+      <td>
+        {% if c.linkedin %}
+          <a href="{{ c.linkedin }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
+      <td>
+        {% if c.otra_red %}
+          <a href="{{ c.otra_red }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
       <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>
     </tr>
   {% empty %}
