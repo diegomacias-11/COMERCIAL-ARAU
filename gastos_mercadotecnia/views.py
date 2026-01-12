@@ -32,7 +32,25 @@ class GastoMercadotecniaForm(forms.ModelForm):
 
 def gastos_lista(request):
     gastos = GastoMercadotecnia.objects.all().order_by("-fecha_facturacion", "-creado")
-    return render(request, "gastos_mercadotecnia/lista.html", {"gastos": gastos})
+    fecha_desde = (request.GET.get("fecha_desde") or "").strip()
+    fecha_hasta = (request.GET.get("fecha_hasta") or "").strip()
+    marca = (request.GET.get("marca") or "").strip()
+
+    if fecha_desde:
+        gastos = gastos.filter(fecha_facturacion__gte=fecha_desde)
+    if fecha_hasta:
+        gastos = gastos.filter(fecha_facturacion__lte=fecha_hasta)
+    if marca:
+        gastos = gastos.filter(marca=marca)
+
+    context = {
+        "gastos": gastos,
+        "fecha_desde": fecha_desde,
+        "fecha_hasta": fecha_hasta,
+        "marca": marca,
+        "marca_choices": GastoMercadotecnia._meta.get_field("marca").choices,
+    }
+    return render(request, "gastos_mercadotecnia/lista.html", context)
 
 
 def gastos_crear(request):

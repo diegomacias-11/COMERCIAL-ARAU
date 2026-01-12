@@ -5,10 +5,36 @@
 
 {% block filtros_left %}{% endblock %}
 
-{% block filtros %}{% endblock %}
+{% block filtros %}
+  <form method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="fecha_desde">Fecha inicio</label>
+      <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+    </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="fecha_hasta">Fecha fin</label>
+      <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+    </div>
+    <span class="filter-separator"></span>
+    <div class="filter-block">
+      <label for="marca">Marca</label>
+      <select id="marca" name="marca">
+        <option value="">Todas</option>
+        {% for val, label in marca_choices %}
+          <option value="{{ val }}" {% if marca == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'gastos_mercadotecnia_gasto_list' %}" class="btn-filter">Limpiar</a>
+    </div>
+  </form>
+{% endblock %}
 
 {% block filtros_right %}
-  <a href="{% url 'gastos_mercadotecnia_gasto_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Registrar nueva inversión</a>
+  <a href="{% url 'gastos_mercadotecnia_gasto_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Nueva inversión</a>
 {% endblock %}
 
 {% block tabla_head %}
