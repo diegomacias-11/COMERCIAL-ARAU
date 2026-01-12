@@ -10,6 +10,7 @@ from django.utils import timezone
 from core.choices import SERVICIO_CHOICES
 from .models import Cliente, Contacto
 from alianzas.models import Alianza
+import unicodedata
 
 
 class ClienteForm(forms.ModelForm):
@@ -96,6 +97,21 @@ def _comision_pairs(form: ClienteForm):
     return pairs
 
 
+def _can_view_comisiones_inputs(user) -> bool:
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    names = [g.name for g in user.groups.all()]
+
+    def _norm(value: str) -> str:
+        normalized = unicodedata.normalize("NFKD", value or "")
+        return "".join(ch for ch in normalized if not unicodedata.combining(ch)).lower().strip()
+
+    normed = {_norm(name) for name in names}
+    return "direccion comercial" in normed or "direccion operaciones" in normed
+
+
 def clientes_lista(request):
     clientes = Cliente.objects.all().order_by("-fecha_registro")
     fecha_desde = request.GET.get("fecha_desde") or ""
@@ -162,6 +178,7 @@ def agregar_cliente(request):
         "back_url": back_url,
         "comisiones": _comision_pairs(form),
         "contactos_url": contactos_url,
+        "can_view_comisiones_inputs": _can_view_comisiones_inputs(request.user),
     }
     return render(request, "clientes/form.html", context)
 
@@ -187,6 +204,7 @@ def editar_cliente(request, id: int):
         "back_url": back_url,
         "comisiones": _comision_pairs(form),
         "contactos_url": contactos_url,
+        "can_view_comisiones_inputs": _can_view_comisiones_inputs(request.user),
     }
     return render(request, "clientes/form.html", context)
 

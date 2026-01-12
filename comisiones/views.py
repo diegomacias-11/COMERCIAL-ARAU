@@ -11,7 +11,6 @@ from .forms import PagoComisionForm
 from .models import Comision, PagoComision
 from core.google_email import send_google_mail, GoogleEmailError
 
-
 MESES_NOMBRES = [
     "",
     "Enero",
@@ -27,7 +26,6 @@ MESES_NOMBRES = [
     "Noviembre",
     "Diciembre",
 ]
-
 
 def _coerce_mes_anio(request):
     today = date.today()
