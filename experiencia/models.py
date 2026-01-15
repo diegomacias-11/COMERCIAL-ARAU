@@ -9,6 +9,8 @@ class ExperienciaCliente(models.Model):
     servicio = models.CharField(max_length=100, blank=True, null=True)
     giro = models.CharField(max_length=150, blank=True, null=True)
 
+    propuesta = models.URLField("Propuesta", blank=True, null=True)
+
     # Campos gestionados en experiencia
     nombre_comercial = models.CharField(max_length=200, blank=True, null=True)
     domicilio = models.CharField(max_length=255, blank=True, null=True)

@@ -59,6 +59,10 @@
       <label for="{{ form.otra_red.id_for_label }}">{{ form.otra_red.label }}</label>
       {{ form.otra_red }}
       {% if form.otra_red.errors %}<div class="error">{{ form.otra_red.errors }}</div>{% endif %}
+
+      <label for="{{ form.propuesta.id_for_label }}">{{ form.propuesta.label }}</label>
+      {{ form.propuesta }}
+      {% if form.propuesta.errors %}<div class="error">{{ form.propuesta.errors }}</div>{% endif %}
     </div>
 
     <div class="form-col">

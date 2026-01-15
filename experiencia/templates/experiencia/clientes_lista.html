@@ -38,6 +38,7 @@
     <th>Giro</th>
     <th>Nombre comercial</th>
     <th>Domicilio</th>
+    <th>Propuesta</th>
     <th>Fecha contrato</th>
     <th>Periodicidad</th>
     <th>Chat welcome</th>
@@ -56,6 +57,11 @@
       <td>{{ c.giro|default_if_none:"" }}</td>
       <td>{{ c.nombre_comercial|default_if_none:"" }}</td>
       <td>{{ c.domicilio|default_if_none:"" }}</td>
+      <td>
+        {% if c.propuesta %}
+          <a href="{{ c.propuesta }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
       <td>{{ c.fecha_contrato|date:"d/m/Y"|default_if_none:"" }}</td>
       <td>{{ c.get_periodicidad_display|default_if_none:"" }}</td>
       <td>{{ c.get_chat_welcome_display|default_if_none:"" }}</td>

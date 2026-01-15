@@ -59,6 +59,7 @@
     <th>Página web</th>
     <th>LinkedIn</th>
     <th>Otra red</th>
+    <th>Propuesta</th>
     <th>Fecha registro</th>
   </tr>
 {% endblock %}
@@ -87,6 +88,11 @@
       <td>
         {% if c.otra_red %}
           <a href="{{ c.otra_red }}" target="_blank" rel="noopener">Link</a>
+        {% endif %}
+      </td>
+      <td>
+        {% if c.propuesta %}
+          <a href="{{ c.propuesta }}" target="_blank" rel="noopener">Link</a>
         {% endif %}
       </td>
       <td>{{ c.fecha_registro|date:"d/m/Y H:i"|default_if_none:"" }}</td>

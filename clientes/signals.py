@@ -16,6 +16,7 @@ def _sync_experiencia(cliente: Cliente):
             "cliente": cliente.cliente,
             "servicio": cliente.servicio,
             "giro": cliente.giro,
+            "propuesta": cliente.propuesta,
         },
     )
 

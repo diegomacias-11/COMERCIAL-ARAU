@@ -26,6 +26,7 @@ def crear_cliente_al_cerrar(sender, instance: Cita, created: bool, **kwargs):
             "pagina_web": instance.pagina_web,
             "linkedin": instance.linkedin,
             "otra_red": instance.otra_red,
+            "propuesta": instance.propuesta,
             "servicio": instance.servicio,
         }
         # Usa update_or_create para evitar duplicados si la Cita se edita muchas veces

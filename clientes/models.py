@@ -14,6 +14,7 @@ class Cliente(models.Model):
     pagina_web = models.URLField("Página web", blank=True, null=True)
     linkedin = models.URLField("LinkedIn", blank=True, null=True)
     otra_red = models.URLField("Otra red", blank=True, null=True)
+    propuesta = models.URLField("Propuesta", blank=True, null=True)
     comisionista_1 = models.ForeignKey("alianzas.Alianza", related_name="clientes_com1", on_delete=models.SET_NULL, blank=True, null=True)
     comisionista_2 = models.ForeignKey("alianzas.Alianza", related_name="clientes_com2", on_delete=models.SET_NULL, blank=True, null=True)
     comisionista_3 = models.ForeignKey("alianzas.Alianza", related_name="clientes_com3", on_delete=models.SET_NULL, blank=True, null=True)

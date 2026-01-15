@@ -34,6 +34,15 @@
 
       <label>Giro</label>
       <input type="text" value="{{ cliente_exp.giro|default_if_none:'' }}" disabled>
+
+      <label>Propuesta</label>
+      <div style="text-align: center;">
+        {% if cliente_exp.propuesta %}
+          <a href="{{ cliente_exp.propuesta }}" target="_blank" rel="noopener">Link</a>
+        {% else %}
+          <span>-</span>
+        {% endif %}
+      </div>
       {% if contactos_url %}
         <div style="margin-top: 10px; text-align: center;">
           <label>Contacto</label>
