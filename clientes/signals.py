@@ -10,12 +10,15 @@ def _sync_experiencia(cliente: Cliente):
     except Exception:
         return
 
+    exp = ExperienciaCliente.objects.filter(cliente_id=cliente.id).first()
+    domicilio = cliente.domicilio or (exp.domicilio if exp else None)
     ExperienciaCliente.objects.update_or_create(
         cliente_id=cliente.id,
         defaults={
             "cliente": cliente.cliente,
             "servicio": cliente.servicio,
             "giro": cliente.giro,
+            "domicilio": domicilio,
             "propuesta": cliente.propuesta,
         },
     )
