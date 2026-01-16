@@ -275,6 +275,7 @@ def solicitud_publica(request):
         "tipo": request.POST.get("tipo", ""),
         "formato": request.POST.get("formato", ""),
         "mensaje": request.POST.get("mensaje", ""),
+        "url": request.POST.get("url", ""),
         "fecha_entrega": request.POST.get("fecha_entrega", ""),
         "quien": request.POST.get("quien", ""),
         "departamento": request.POST.get("departamento", ""),
@@ -285,6 +286,7 @@ def solicitud_publica(request):
         tipo = (request.POST.get("tipo") or "").strip()
         formato = (request.POST.get("formato") or "").strip()
         mensaje = (request.POST.get("mensaje") or "").strip()
+        url = (request.POST.get("url") or "").strip()
         fecha_entrega_raw = (request.POST.get("fecha_entrega") or "").strip()
         quien = (request.POST.get("quien") or "").strip()
         departamento = (request.POST.get("departamento") or "").strip()
@@ -331,6 +333,7 @@ def solicitud_publica(request):
                 area="Internas",
                 fecha_inicio=hoy,
                 tarea=tarea_text,
+                url=url or None,
                 dias=dias,
                 mercadologo=None,
                 disenador=None,
@@ -342,6 +345,7 @@ def solicitud_publica(request):
             "tipo": "",
             "formato": "",
             "mensaje": "",
+            "url": "",
             "fecha_entrega": "",
             "quien": "",
             "departamento": "",

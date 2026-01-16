@@ -30,6 +30,10 @@
       <textarea id="mensaje" name="mensaje" maxlength="1000" rows="5" placeholder="Contenido del mensaje de la imagen" required>{{ mensaje }}</textarea>
       {% if errors.mensaje %}<div class="error">{{ errors.mensaje }}</div>{% endif %}
 
+      <label for="url">URL</label>
+      <input type="url" id="url" name="url" value="{{ url }}" maxlength="500" placeholder="https://..." />
+      {% if errors.url %}<div class="error">{{ errors.url }}</div>{% endif %}
+
       <label for="fecha_entrega">Fecha de entrega</label>
       <input type="date" id="fecha_entrega" name="fecha_entrega" value="{{ fecha_entrega }}" required>
       {% if errors.fecha_entrega %}<div class="error">{{ errors.fecha_entrega }}</div>{% endif %}
