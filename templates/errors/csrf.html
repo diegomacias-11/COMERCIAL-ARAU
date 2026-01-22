@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Sesión expirada{% endblock %}
+
+{% block content %}
+  <section class="form-container">
+    <div class="form-meta">Sesión expirada</div>
+    <div class="form-meta">Tu sesión ya no es válida. Recarga para intentar de nuevo.</div>
+    {% if reason %}
+      <div class="form-meta">{{ reason }}</div>
+    {% endif %}
+    <a class="btn-primary" href="{% url 'login' %}">Recargar</a>
+  </section>
+{% endblock %}

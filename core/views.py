@@ -23,3 +23,12 @@ def root_redirect(request):
         return redirect("comercial_cita_list")
 
     return redirect("comercial_cita_list")
+
+
+def csrf_failure(request, reason=""):
+    return render(
+        request,
+        "errors/csrf.html",
+        {"reason": reason},
+        status=403,
+    )

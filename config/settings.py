@@ -151,6 +151,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+CSRF_FAILURE_VIEW = "core.views.csrf_failure"
 # Mensaje de error simplificado
 from django.contrib.messages import constants as messages  # noqa
 MESSAGE_TAGS = {
