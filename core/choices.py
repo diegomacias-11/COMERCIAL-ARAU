@@ -23,6 +23,7 @@ SERVICIO_CHOICES = [
     ("Laboral", "Laboral"),
     ("Maquila de Nómina", "Maquila de Nómina"),
     ("Marketing", "Marketing"),
+    ("Materialidad", "Materialidad"),
     ("Reclutamiento", "Reclutamiento"),
     ("REPSE", "REPSE"),
 ]
