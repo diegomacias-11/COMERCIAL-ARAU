@@ -25,7 +25,7 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     }
 
     REPORTS_ALLOWED = {
-        "/comercial/reportes/": {"dirección comercial", "dirección operaciones"},
+        "/comercial/reportes/": {"dirección comercial", "dirección operaciones", "apoyo comercial"},
         "/marketing/reportes/": {"dirección operaciones"},    # Completar cuando exista
         "/operaciones/reportes/": {"dirección operaciones"},  # Completar cuando exista
     }
