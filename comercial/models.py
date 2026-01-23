@@ -46,6 +46,21 @@ LUGAR_CHOICES = [
     ("Correo", "Correo"),
 ]
 
+MES_CHOICES = [
+    (1, "Enero"),
+    (2, "Febrero"),
+    (3, "Marzo"),
+    (4, "Abril"),
+    (5, "Mayo"),
+    (6, "Junio"),
+    (7, "Julio"),
+    (8, "Agosto"),
+    (9, "Septiembre"),
+    (10, "Octubre"),
+    (11, "Noviembre"),
+    (12, "Diciembre"),
+]
+
 
 class Cita(models.Model):
     prospecto = models.CharField(max_length=150)
@@ -100,4 +115,33 @@ class Cita(models.Model):
         ordering = ["-fecha_cita"]
         verbose_name = "Cita"
         verbose_name_plural = "Citas"
+
+
+class ComercialKpi(models.Model):
+    nombre = models.CharField(max_length=150, unique=True)
+    descripcion = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.nombre
+
+    class Meta:
+        ordering = ["nombre"]
+        verbose_name = "KPI comercial"
+        verbose_name_plural = "KPIs comerciales"
+
+
+class ComercialKpiMeta(models.Model):
+    kpi = models.ForeignKey(ComercialKpi, on_delete=models.CASCADE, related_name="metas")
+    anio = models.PositiveIntegerField()
+    mes = models.PositiveSmallIntegerField(choices=MES_CHOICES)
+    meta = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self) -> str:
+        return f"{self.kpi} - {self.mes}/{self.anio}"
+
+    class Meta:
+        ordering = ["-anio", "-mes", "kpi__nombre"]
+        unique_together = ("kpi", "anio", "mes")
+        verbose_name = "Meta KPI comercial"
+        verbose_name_plural = "Metas KPI comercial"
 

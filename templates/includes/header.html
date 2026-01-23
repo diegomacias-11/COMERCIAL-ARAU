@@ -31,6 +31,8 @@
            class="{% if 'clientes' in path and 'experiencia' not in path %}is-active{% endif %}">Clientes</a>
         <a href="{% url 'ventas_venta_list' %}" role="menuitem"
            class="{% if 'ventas' in path %}is-active{% endif %}">Ventas</a>
+        <a href="{% url 'comercial_control' %}" role="menuitem"
+           class="{% if 'comercial/control' in path %}is-active{% endif %}">Control</a>
         <a href="{% url 'comercial_reportes_dashboard' %}" role="menuitem"
            class="{% if 'reportes' in path %}is-active{% endif %}">Reporte</a>
       </div>
@@ -60,6 +62,16 @@
            class="{% if 'experiencia' in path %}is-active{% endif %}">Clientes</a>
       </div>
     </div>
+
+    <div class="nav-area{% if 'recursos_humanos' in path %} is-active{% endif %}">
+      <button type="button" class="area-trigger" data-area="recursos_humanos" aria-expanded="false">
+        Recursos Humanos
+      </button>
+      <div class="area-dropdown" role="menu" aria-label="Recursos Humanos">
+        <a href="{% url 'recursos_humanos_control' %}" role="menuitem"
+           class="{% if 'recursos_humanos/control' in path %}is-active{% endif %}">Control</a>
+      </div>
+    </div>
   </nav>
   <div class="user-card">
     <div class="user-text">
@@ -79,7 +91,7 @@
       </button>
     </form>
   </div>
-  {% if 'actividades_merca' in path or 'gastos_mercadotecnia' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path %}
+  {% if 'actividades_merca' in path or 'gastos_mercadotecnia' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'reportes' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path or 'recursos_humanos' in path or 'comercial/control' in path %}
   <div class="area-title-bar">
     {% if 'actividades_merca' in path %}
       <span class="area-title">Actividades</span>
@@ -97,12 +109,16 @@
       <span class="area-title">Clientes</span>
     {% elif 'reportes' in path %}
       <span class="area-title">Reportes</span>
+    {% elif 'comercial/control' in path %}
+      <span class="area-title">Control Comercial</span>
     {% elif 'alianzas' in path %}
       <span class="area-title">Alianzas</span>
     {% elif 'ventas' in path %}
       <span class="area-title">Ventas</span>
     {% elif 'comisiones' in path %}
       <span class="area-title">Comisiones</span>
+    {% elif 'recursos_humanos' in path %}
+      <span class="area-title">Recursos Humanos</span>
     {% endif %}
   </div>
   {% endif %}

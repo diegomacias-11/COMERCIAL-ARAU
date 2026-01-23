@@ -7,7 +7,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.choices import SERVICIO_CHOICES
-from .models import Cita, NUM_CITA_CHOICES
+from .forms import ComercialKpiForm, ComercialKpiMetaForm
+from .models import Cita, ComercialKpi, ComercialKpiMeta, NUM_CITA_CHOICES
 
 
 class CitaForm(forms.ModelForm):
@@ -198,3 +199,152 @@ def eliminar_cita(request, id: int):
 
 def reportes_dashboard(request):
     return render(request, "comercial/reportes.html")
+
+
+def control_comercial(request):
+    current_year = timezone.now().year
+    anio_raw = (request.GET.get("anio") or "").strip()
+    try:
+        anio = int(anio_raw) if anio_raw else current_year
+    except ValueError:
+        anio = current_year
+
+    if request.method == "POST" and request.POST.get("form_type") == "meta_add":
+        meta_form = ComercialKpiMetaForm(request.POST)
+        if meta_form.is_valid():
+            ComercialKpiMeta.objects.update_or_create(
+                kpi=meta_form.cleaned_data["kpi"],
+                anio=int(meta_form.cleaned_data["anio"]),
+                mes=int(meta_form.cleaned_data["mes"]),
+                defaults={"meta": meta_form.cleaned_data["meta"]},
+            )
+            return redirect(f"{reverse('comercial_control')}?anio={anio}")
+
+    kpis = ComercialKpi.objects.all()
+    metas = ComercialKpiMeta.objects.select_related("kpi").filter(anio=anio)
+    metas_por_mes = {m: [] for m, _ in ComercialKpiMeta._meta.get_field("mes").choices}
+    for meta in metas:
+        metas_por_mes.setdefault(meta.mes, []).append(meta)
+    meses = [
+        {"num": num, "nombre": label, "metas": metas_por_mes.get(num, [])}
+        for num, label in ComercialKpiMeta._meta.get_field("mes").choices
+    ]
+    context = {
+        "kpis": kpis,
+        "meses": meses,
+        "anio": anio,
+    }
+    return render(request, "comercial/control.html", context)
+
+
+def comercial_kpi_create(request):
+    back_url = request.GET.get("next") or reverse("comercial_control")
+    if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
+        form = ComercialKpiForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(back_url)
+    else:
+        form = ComercialKpiForm()
+    return render(request, "comercial/kpi_form.html", {"form": form, "back_url": back_url})
+
+
+def comercial_kpi_update(request, pk: int):
+    kpi = get_object_or_404(ComercialKpi, pk=pk)
+    back_url = request.GET.get("next") or reverse("comercial_control")
+    if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
+        form = ComercialKpiForm(request.POST, instance=kpi)
+        if form.is_valid():
+            form.save()
+            return redirect(back_url)
+    else:
+        form = ComercialKpiForm(instance=kpi)
+    return render(
+        request,
+        "comercial/kpi_form.html",
+        {"form": form, "back_url": back_url, "kpi": kpi},
+    )
+
+
+def comercial_kpi_delete(request, pk: int):
+    back_url = request.POST.get("next") or reverse("comercial_control")
+    kpi = get_object_or_404(ComercialKpi, pk=pk)
+    kpi.delete()
+    return redirect(back_url)
+
+
+def comercial_meta_create(request):
+    back_url = request.GET.get("next") or reverse("comercial_control")
+    initial = {}
+    mes_raw = (request.GET.get("mes") or "").strip()
+    anio_raw = (request.GET.get("anio") or "").strip()
+    if mes_raw.isdigit():
+        initial["mes"] = int(mes_raw)
+    try:
+        if anio_raw:
+            initial["anio"] = int(anio_raw)
+    except ValueError:
+        pass
+    if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
+        form = ComercialKpiMetaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(back_url)
+    else:
+        form = ComercialKpiMetaForm(
+            initial=initial,
+            filter_month=initial.get("mes"),
+            filter_year=initial.get("anio"),
+        )
+    mes_nombre = dict(ComercialKpiMeta._meta.get_field("mes").choices).get(initial.get("mes"))
+    return render(
+        request,
+        "comercial/meta_form.html",
+        {
+            "form": form,
+            "back_url": back_url,
+            "mes": initial.get("mes"),
+            "anio": initial.get("anio"),
+            "mes_nombre": mes_nombre,
+        },
+    )
+
+
+def comercial_meta_update(request, pk: int):
+    meta = get_object_or_404(ComercialKpiMeta, pk=pk)
+    back_url = request.GET.get("next") or reverse("comercial_control")
+    if request.method == "POST":
+        back_url = request.POST.get("next") or back_url
+        form = ComercialKpiMetaForm(request.POST, instance=meta)
+        if form.is_valid():
+            form.save()
+            return redirect(back_url)
+    else:
+        form = ComercialKpiMetaForm(
+            instance=meta,
+            filter_month=meta.mes,
+            filter_year=meta.anio,
+        )
+    mes_nombre = meta.get_mes_display()
+    return render(
+        request,
+        "comercial/meta_form.html",
+        {
+            "form": form,
+            "back_url": back_url,
+            "meta": meta,
+            "mes": meta.mes,
+            "anio": meta.anio,
+            "mes_nombre": mes_nombre,
+        },
+    )
+
+
+def comercial_meta_delete(request, pk: int):
+    back_url = request.POST.get("next") or reverse("comercial_control")
+    meta = get_object_or_404(ComercialKpiMeta, pk=pk)
+    meta.delete()
+    return redirect(back_url)

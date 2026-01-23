@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Control Comercial{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .kpi-table-container {
+      flex: 0 0 auto;
+      height: auto;
+      max-height: none;
+    }
+    .kanban-board {
+      flex: 1 1 auto;
+      align-items: stretch;
+      min-height: 240px;
+      margin-top: 8px;
+      padding-bottom: 8px;
+    }
+    .kanban-column {
+      height: 100%;
+    }
+    .kanban-month-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #c7d5e5;
+    }
+    .kanban-month-link {
+      text-decoration: none;
+      color: inherit;
+    }
+    .btn-mini {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.4rem;
+      line-height: 1;
+      border-radius: 6px;
+    }
+    .kanban-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .filter-bar-stacked {
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .filter-title-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+    }
+    .filter-form-row {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .filter-bar-balanced {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      width: 100%;
+      gap: 0.5rem;
+    }
+    .filter-bar-balanced .filter-title {
+      text-align: center;
+    }
+    .filter-bar-balanced .filter-slot {
+      display: flex;
+      align-items: center;
+    }
+    .filter-bar-balanced .filter-slot-left {
+      justify-content: flex-start;
+    }
+    .filter-bar-balanced .filter-slot-right {
+      justify-content: flex-end;
+    }
+    .metas-filter {
+      background-color: #59b9c7;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="filter-container">
+    <div class="filter-bar filter-bar-balanced">
+      <div class="filter-slot filter-slot-left"></div>
+      <div class="filter-title">KPIs</div>
+      <div class="filter-slot filter-slot-right">
+        <a href="{% url 'comercial_kpi_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Registrar KPI</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="table-container kpi-table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Detalle</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for kpi in kpis %}
+          <tr>
+            <td>
+              <a href="{% url 'comercial_kpi_update' kpi.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+            </td>
+            <td>{{ kpi.nombre }}</td>
+            <td>{{ kpi.descripcion|default_if_none:"" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3">Sin KPIs registrados</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <section class="filter-container metas-filter" style="margin-top: 1rem;">
+    <div class="filter-bar filter-bar-stacked">
+      <div class="filter-title-row">
+        <div class="filter-title">Metas por mes - {{ anio }}</div>
+      </div>
+      <div class="filter-form-row">
+        <form method="get" class="filter-form-simple">
+          <div class="filter-block">
+            <label for="anio">Año</label>
+            <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" step="1" />
+          </div>
+          <button type="submit" class="btn-filter">Filtrar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="kanban-board" aria-label="Metas mensuales">
+    {% for mes in meses %}
+      <div class="kanban-column">
+        <div class="kanban-month-header">
+          <a class="kanban-column-title kanban-month-link" href="{% url 'recursos_humanos_resumen' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}">{{ mes.nombre }}</a>
+          <a href="{% url 'comercial_meta_create' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
+        </div>
+        {% if mes.metas %}
+          {% for meta in mes.metas %}
+            <div class="kanban-card">
+              <div class="kanban-card-header">
+                <div class="kanban-task">{{ meta.kpi.nombre }}</div>
+                <a href="{% url 'comercial_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
+              </div>
+              <div class="kanban-meta">Meta: {{ meta.meta|floatformat:0 }}</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="kanban-empty">Sin metas</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}

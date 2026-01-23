@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Recursos Humanos - Resumen{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .kpi-progress {
+      width: 100%;
+      max-width: 220px;
+      height: 8px;
+      background: #e8eef5;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 4px auto 0;
+    }
+    .kpi-progress-bar {
+      height: 100%;
+      background: #59b9c7;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="filter-container">
+    <div class="filter-bar" style="flex-direction: column;">
+      <div class="filter-slot filter-slot-center">
+        <div class="filter-title">
+          {% if mes_nombre and anio %} {{ mes_nombre }} {{ anio }}{% endif %}
+        </div>
+      </div>
+      <div class="filter-slot filter-slot-center">
+        <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+      </div>
+    </div>
+  </section>
+  <section class="form-container">
+    {% if kpi_results %}
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>KPI</th>
+              <th>Meta</th>
+              <th>Cumplimiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in kpi_results %}
+              <tr>
+                <td>{{ item.nombre }}</td>
+                <td>{% if item.meta %}{{ item.meta|floatformat:0 }}{% else %}-{% endif %}</td>
+                <td>
+                  {% if item.avance_pct is not None %}
+                    {{ item.avance_pct|floatformat:0 }}%
+                    <div class="kpi-progress">
+                      <div class="kpi-progress-bar" style="width: {{ item.avance_bar|floatformat:0 }}%;"></div>
+                    </div>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="form-meta">Sin KPIs configurados para este mes.</div>
+    {% endif %}
+  </section>
+{% endblock %}

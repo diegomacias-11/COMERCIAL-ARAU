@@ -1,0 +1,36 @@
+{% extends "form.html" %}
+
+{% block title %}Meta KPI Comercial{% endblock %}
+
+{% block back_link %}
+  <section class="filter-container">
+    <div class="filter-title">Meta KPI Comercial</div>
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </section>
+{% endblock %}
+
+{% block extra_actions %}
+  {% if meta %}
+    <button type="submit" class="btn-delete" formaction="{% url 'comercial_meta_delete' meta.id %}" formmethod="post" onclick="return confirm('¿Eliminar esta meta?');">Eliminar</button>
+  {% endif %}
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  {% if mes and anio %}
+    <input type="hidden" name="mes" value="{{ mes }}">
+    <input type="hidden" name="anio" value="{{ anio }}">
+    <div class="fixed-center">{{ mes_nombre }} {{ anio }}</div>
+  {% endif %}
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.kpi.id_for_label }}">KPI</label>
+      {{ form.kpi }}
+      {% if form.kpi.errors %}<div class="error">{{ form.kpi.errors }}</div>{% endif %}
+
+      <label for="{{ form.meta.id_for_label }}">Meta</label>
+      {{ form.meta }}
+      {% if form.meta.errors %}<div class="error">{{ form.meta.errors }}</div>{% endif %}
+    </div>
+  </div>
+{% endblock %}

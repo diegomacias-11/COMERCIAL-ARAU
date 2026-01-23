@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'actividades_exp',
     'experiencia',
     'gastos_mercadotecnia',
+    'recursos_humanos',
 ]
 
 

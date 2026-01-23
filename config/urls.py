@@ -34,6 +34,7 @@ urlpatterns = [
     path('experiencia/', include('experiencia.urls')),
     path('ventas/', include('ventas.urls')),
     path('comisiones/', include('comisiones.urls')),
+    path('recursos_humanos/', include('recursos_humanos.urls')),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
 ]

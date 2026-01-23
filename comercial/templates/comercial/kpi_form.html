@@ -1,0 +1,31 @@
+{% extends "form.html" %}
+
+{% block title %}KPI Comercial{% endblock %}
+
+{% block back_link %}
+  <section class="filter-container">
+    <div class="filter-title">KPI Comercial</div>
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </section>
+{% endblock %}
+
+{% block extra_actions %}
+  {% if kpi %}
+    <button type="submit" class="btn-delete" formaction="{% url 'comercial_kpi_delete' kpi.id %}" formmethod="post" onclick="return confirm('¿Eliminar este KPI?');">Eliminar</button>
+  {% endif %}
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+      {{ form.nombre }}
+      {% if form.nombre.errors %}<div class="error">{{ form.nombre.errors }}</div>{% endif %}
+
+      <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+      {{ form.descripcion }}
+      {% if form.descripcion.errors %}<div class="error">{{ form.descripcion.errors }}</div>{% endif %}
+    </div>
+  </div>
+{% endblock %}
