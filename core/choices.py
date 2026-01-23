@@ -168,3 +168,10 @@ GASTOS_MERCA_PERIODICIDAD_CHOICES = [
     ("C/2mil", "C/2mil"),
     ("C/5mil", "C/5mil"),
 ]
+
+CONTROL_PERIODICIDAD_CHOICES = [
+    ('mensual', 'Mensual'),
+    ('trimestral', 'Trimestral'),
+    ('semestral', 'Semestral'),
+    ('anual', 'Anual'),
+]

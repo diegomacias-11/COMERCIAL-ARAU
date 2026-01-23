@@ -6,9 +6,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
-from core.choices import SERVICIO_CHOICES
+from core.choices import CONTROL_PERIODICIDAD_CHOICES, SERVICIO_CHOICES
 from .forms import ComercialKpiForm, ComercialKpiMetaForm
-from .models import Cita, ComercialKpi, ComercialKpiMeta, NUM_CITA_CHOICES
+from .models import Cita, ComercialKpi, ComercialKpiMeta, MES_CHOICES, NUM_CITA_CHOICES
 
 
 class CitaForm(forms.ModelForm):
@@ -204,35 +204,61 @@ def reportes_dashboard(request):
 def control_comercial(request):
     current_year = timezone.now().year
     anio_raw = (request.GET.get("anio") or "").strip()
+    periodicidad_raw = (request.GET.get("periodicidad") or "mensual").strip().lower()
+    periodicidad_values = {val for val, _ in CONTROL_PERIODICIDAD_CHOICES}
+    periodicidad = periodicidad_raw if periodicidad_raw in periodicidad_values else "mensual"
     try:
         anio = int(anio_raw) if anio_raw else current_year
     except ValueError:
         anio = current_year
 
-    if request.method == "POST" and request.POST.get("form_type") == "meta_add":
-        meta_form = ComercialKpiMetaForm(request.POST)
-        if meta_form.is_valid():
-            ComercialKpiMeta.objects.update_or_create(
-                kpi=meta_form.cleaned_data["kpi"],
-                anio=int(meta_form.cleaned_data["anio"]),
-                mes=int(meta_form.cleaned_data["mes"]),
-                defaults={"meta": meta_form.cleaned_data["meta"]},
-            )
-            return redirect(f"{reverse('comercial_control')}?anio={anio}")
-
     kpis = ComercialKpi.objects.all()
     metas = ComercialKpiMeta.objects.select_related("kpi").filter(anio=anio)
-    metas_por_mes = {m: [] for m, _ in ComercialKpiMeta._meta.get_field("mes").choices}
+    metas_por_mes = {m: [] for m, _ in MES_CHOICES}
     for meta in metas:
         metas_por_mes.setdefault(meta.mes, []).append(meta)
-    meses = [
-        {"num": num, "nombre": label, "metas": metas_por_mes.get(num, [])}
-        for num, label in ComercialKpiMeta._meta.get_field("mes").choices
-    ]
+    meses = [{"num": num, "nombre": label} for num, label in MES_CHOICES]
+
+    if periodicidad == "trimestral":
+        grupos = [
+            ("Q1", [1, 2, 3]),
+            ("Q2", [4, 5, 6]),
+            ("Q3", [7, 8, 9]),
+            ("Q4", [10, 11, 12]),
+        ]
+    elif periodicidad == "semestral":
+        grupos = [("H1", [1, 2, 3, 4, 5, 6]), ("H2", [7, 8, 9, 10, 11, 12])]
+    elif periodicidad == "anual":
+        grupos = [("Anual", [m["num"] for m in meses])]
+    else:
+        grupos = [(m["nombre"], [m["num"]]) for m in meses]
+
+    periodos = []
+    for etiqueta, month_nums in grupos:
+        month_blocks = []
+        for num in month_nums:
+            nombre = next((m["nombre"] for m in meses if m["num"] == num), "")
+            month_blocks.append(
+                {
+                    "num": num,
+                    "nombre": nombre,
+                    "metas": metas_por_mes.get(num, []),
+                }
+            )
+        periodos.append(
+            {
+                "label": etiqueta,
+                "start": month_nums[0],
+                "end": month_nums[-1],
+                "months": month_blocks,
+            }
+        )
     context = {
         "kpis": kpis,
-        "meses": meses,
+        "periodos": periodos,
         "anio": anio,
+        "periodicidad": periodicidad,
+        "periodicidad_choices": CONTROL_PERIODICIDAD_CHOICES,
     }
     return render(request, "comercial/control.html", context)
 

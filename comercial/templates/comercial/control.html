@@ -84,6 +84,29 @@
     .metas-filter {
       background-color: #59b9c7;
     }
+    .year-input {
+      width: 80px;
+    }
+    .period-select {
+      min-width: 140px;
+    }
+    .period-month {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed #c7d5e5;
+    }
+    .period-month:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    .period-month-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
   </style>
 {% endblock %}
 
@@ -134,7 +157,15 @@
         <form method="get" class="filter-form-simple">
           <div class="filter-block">
             <label for="anio">Año</label>
-            <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" step="1" />
+            <input type="number" id="anio" name="anio" value="{{ anio }}" min="2000" step="1" class="year-input" />
+          </div>
+          <div class="filter-block">
+            <label for="periodicidad">Periodo</label>
+            <select id="periodicidad" name="periodicidad" class="period-select">
+              {% for val, label in periodicidad_choices %}
+                <option value="{{ val }}" {% if periodicidad == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
           </div>
           <button type="submit" class="btn-filter">Filtrar</button>
         </form>
@@ -143,24 +174,50 @@
   </section>
 
   <section class="kanban-board" aria-label="Metas mensuales">
-    {% for mes in meses %}
+    {% for periodo in periodos %}
       <div class="kanban-column">
         <div class="kanban-month-header">
-          <a class="kanban-column-title kanban-month-link" href="{% url 'recursos_humanos_resumen' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}">{{ mes.nombre }}</a>
-          <a href="{% url 'comercial_meta_create' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
+          <a class="kanban-column-title kanban-month-link" href="{% url 'recursos_humanos_resumen' %}?start={{ periodo.start }}&end={{ periodo.end }}&anio={{ anio }}&label={{ periodo.label }}&next={{ request.get_full_path|urlencode }}">{{ periodo.label }}</a>
+          {% if periodicidad == "mensual" %}
+            <a href="{% url 'comercial_meta_create' %}?mes={{ periodo.start }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
+          {% endif %}
         </div>
-        {% if mes.metas %}
-          {% for meta in mes.metas %}
-            <div class="kanban-card">
-              <div class="kanban-card-header">
-                <div class="kanban-task">{{ meta.kpi.nombre }}</div>
-                <a href="{% url 'comercial_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
+        {% if periodicidad == "mensual" %}
+          {% if periodo.months.0.metas %}
+            {% for meta in periodo.months.0.metas %}
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-task">{{ meta.kpi.nombre }}</div>
+                  <a href="{% url 'comercial_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
+                </div>
+                <div class="kanban-meta">Meta: {{ meta.meta|floatformat:0 }}</div>
               </div>
-              <div class="kanban-meta">Meta: {{ meta.meta|floatformat:0 }}</div>
+            {% endfor %}
+          {% else %}
+            <div class="kanban-empty">Sin metas</div>
+          {% endif %}
+        {% else %}
+          {% for mes in periodo.months %}
+            <div class="period-month">
+              <div class="period-month-header">
+                <div class="kanban-task">{{ mes.nombre }}</div>
+                <a href="{% url 'comercial_meta_create' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
+              </div>
+              {% if mes.metas %}
+                {% for meta in mes.metas %}
+                  <div class="kanban-card">
+                    <div class="kanban-card-header">
+                      <div class="kanban-task">{{ meta.kpi.nombre }}</div>
+                      <a href="{% url 'comercial_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
+                    </div>
+                    <div class="kanban-meta">Meta: {{ meta.meta|floatformat:0 }}</div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="kanban-empty">Sin metas</div>
+              {% endif %}
             </div>
           {% endfor %}
-        {% else %}
-          <div class="kanban-empty">Sin metas</div>
         {% endif %}
       </div>
     {% endfor %}
