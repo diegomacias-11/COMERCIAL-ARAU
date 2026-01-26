@@ -90,7 +90,7 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         # Excepcion: permitir webhooks externos (Meta, Stripe, etc.)
-        if request.path.startswith("/webhooks/"):
+        if request.path.startswith("/webhooks/") or request.path.startswith("/leads/webhooks/"):
             return None
         if request.path.startswith("/actividades_merca/solicitud/"):
             return None
@@ -173,7 +173,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         # Excepcion: permitir webhooks externos
-        if request.path.startswith("/webhooks/"):
+        if request.path.startswith("/webhooks/") or request.path.startswith("/leads/webhooks/"):
             return None
 
         user = getattr(request, "user", None)
