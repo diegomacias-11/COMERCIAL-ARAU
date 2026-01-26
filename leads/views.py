@@ -192,9 +192,13 @@ def lead_detail(request, pk: int):
     field_rows = []
     for field in lead.fields.all():
         label = " ".join((field.name or "").replace("_", " ").split())
+        label = label.replace("¿", "").replace("?", "")
         if label:
-            label = label[0].upper() + label[1:]
-        field_rows.append({"label": label or "Campo", "value": field.value or ""})
+            label = " ".join(word.capitalize() for word in label.split())
+        value = field.value or ""
+        value = " ".join(str(value).replace("_", " ").split())
+        value = value.replace("¿", "").replace("?", "")
+        field_rows.append({"label": label or "Campo", "value": value})
     return render(
         request,
         "leads/detalle.html",

@@ -14,17 +14,18 @@
 
 {% block form_fields %}
   <input type="hidden" name="next" value="{{ back_url }}">
-  <div class="form-grid">
-    <div class="form-col">
-      <label>Fecha lead</label>
-      <input type="text" value="{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}" readonly>
-
-      <label>Formulario ID</label>
-      <input type="text" value="{{ lead.form_id|default_if_none:"" }}" readonly>
+  <div class="lead-summary-grid">
+    <div class="lead-summary-item">
+      <span class="lead-summary-label">Fecha lead</span>
+      <span class="lead-summary-value">{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</span>
     </div>
-    <div class="form-col">
-      <label>Lead ID</label>
-      <input type="text" value="{{ lead.leadgen_id }}" readonly>
+    <div class="lead-summary-item">
+      <span class="lead-summary-label">Formulario ID</span>
+      <span class="lead-summary-value">{{ lead.form_id|default_if_none:"" }}</span>
+    </div>
+    <div class="lead-summary-item">
+      <span class="lead-summary-label">Lead ID</span>
+      <span class="lead-summary-value">{{ lead.leadgen_id }}</span>
     </div>
   </div>
 
@@ -32,7 +33,7 @@
     {% for field in field_rows %}
       <div class="lead-fields-label">{{ field.label }}</div>
       <div class="lead-fields-value">
-        <input type="text" value="{{ field.value }}" readonly>
+        <input type="text" value="{{ field.value }}" readonly class="input-readonly">
       </div>
     {% empty %}
       <p>Sin respuestas registradas.</p>
