@@ -7,7 +7,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
@@ -86,7 +86,7 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "access_token": META_PAGE_TOKEN,
         "fields": (
             "created_time,ad_id,ad_name,adset_id,adset_name,"
-            "campaign_id,campaign_name,form_id,form_name,"
+            "campaign_id,campaign_name,form_id,"
             "is_organic,platform,field_data"
         ),
     }
@@ -161,6 +161,23 @@ def leads_lista(request):
         )
 
     return render(request, "leads/lista.html", {"leads": leads, "q": q})
+
+
+@login_required
+def lead_delete(request, pk: int):
+    if request.method != "POST":
+        return HttpResponse(status=405)
+    lead = get_object_or_404(MetaLead, pk=pk)
+    lead.delete()
+    back_url = request.POST.get("next") or "/leads/"
+    return redirect(back_url)
+
+
+@login_required
+def lead_detail(request, pk: int):
+    lead = get_object_or_404(MetaLead, pk=pk)
+    back_url = request.GET.get("next") or "/leads/"
+    return render(request, "leads/detalle.html", {"lead": lead, "back_url": back_url})
 
 
 @csrf_exempt

@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import meta_lead_webhook, leads_lista
+from .views import lead_delete, lead_detail, meta_lead_webhook, leads_lista
 
 urlpatterns = [
     path("", leads_lista, name="leads_metalead_list"),
+    path("<int:pk>/", lead_detail, name="leads_metalead_detail"),
+    path("<int:pk>/eliminar/", lead_delete, name="leads_metalead_delete"),
     path("webhooks/meta/lead/", meta_lead_webhook, name="leads_metalead_webhook"),
 ]
