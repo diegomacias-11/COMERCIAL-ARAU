@@ -19,7 +19,6 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.views.generic import RedirectView
 from core.views import root_redirect
-from leads.views import meta_lead_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,7 +28,6 @@ urlpatterns = [
     path('clientes/', include('clientes.urls')),
     path('alianzas/', include('alianzas.urls')),
     path('leads/', include('leads.urls')),
-    path('webhooks/meta/lead/', meta_lead_webhook, name='meta_lead_webhook_alias'),
     path('actividades_merca/', include('actividades_merca.urls')),
     path('actividades_exp/', include('actividades_exp.urls')),
     path('gastos_mercadotecnia/', include('gastos_mercadotecnia.urls')),
