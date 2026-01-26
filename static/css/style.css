@@ -1727,6 +1727,24 @@ body.reportes-no-scroll { overflow: hidden; }
   margin-right: 0.45rem;
 }
 
+/* === Leads: detalle preguntas/respuestas === */
+.lead-fields-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 2fr);
+  gap: 0.5rem 1rem;
+  align-items: center;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+.lead-fields-label {
+  text-align: right;
+  font-weight: 700;
+  color: #2b313f;
+}
+.lead-fields-value input {
+  width: 100%;
+}
+
 
 /* ==== Alianzas: centrar formulario ==== */
 .alianzas-form .form-grid {

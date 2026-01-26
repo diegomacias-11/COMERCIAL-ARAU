@@ -5,7 +5,7 @@
 {% block extra_head %}
   <style>
     .table-container { overflow-x: auto !important; }
-    .table { min-width: 1100px; }
+    .table { min-width: 520px; }
   </style>
 {% endblock %}
 
@@ -17,7 +17,7 @@
         type="text"
         id="q"
         name="q"
-        placeholder="Buscar nombre, email, telefono, campana o formulario"
+        placeholder="Buscar lead ID o form ID"
         value="{{ q }}"
       />
     </div>
@@ -32,13 +32,7 @@
   <tr>
     <th>Detalle</th>
     <th>Fecha lead</th>
-    <th>Nombre</th>
-    <th>Email</th>
-    <th>Telefono</th>
-    <th>Campana</th>
-    <th>Formulario</th>
-    <th>Plataforma</th>
-    <th>Organic</th>
+    <th>Formulario ID</th>
     <th>Lead ID</th>
   </tr>
 {% endblock %}
@@ -50,13 +44,7 @@
         <a href="{% url 'leads_metalead_detail' lead.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
       </td>
       <td>{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</td>
-      <td>{{ lead.full_name|default_if_none:"" }}</td>
-      <td>{{ lead.email|default_if_none:"" }}</td>
-      <td>{{ lead.phone_number|default_if_none:"" }}</td>
-      <td>{{ lead.campaign_name|default_if_none:"" }}</td>
-      <td>{{ lead.form_name|default_if_none:"" }}</td>
-      <td>{{ lead.platform|default_if_none:"" }}</td>
-      <td>{{ lead.is_organic|yesno:"Si,No" }}</td>
+      <td>{{ lead.form_id|default_if_none:"" }}</td>
       <td>{{ lead.leadgen_id }}</td>
     </tr>
   {% empty %}

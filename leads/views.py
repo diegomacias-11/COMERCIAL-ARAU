@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import MetaLead
+from .models import MetaLead, MetaLeadField
 
 logger = logging.getLogger(__name__)
 META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
@@ -139,10 +139,25 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "raw_payload": data,
     }
 
-    MetaLead.objects.update_or_create(
+    lead, _ = MetaLead.objects.update_or_create(
         leadgen_id=str(leadgen_id),
         defaults=defaults,
     )
+    if raw_fields:
+        MetaLeadField.objects.filter(lead=lead).delete()
+        fields_to_create = []
+        for idx, (name, value) in enumerate(raw_fields.items()):
+            if isinstance(value, list):
+                value = ", ".join(str(v) for v in value if v is not None)
+            fields_to_create.append(
+                MetaLeadField(
+                    lead=lead,
+                    name=str(name),
+                    value=str(value) if value is not None else "",
+                    position=idx,
+                )
+            )
+        MetaLeadField.objects.bulk_create(fields_to_create)
     logger.info("Lead %s guardado desde Graph API", leadgen_id)
 
 
@@ -153,11 +168,8 @@ def leads_lista(request):
 
     if q:
         leads = leads.filter(
-            Q(full_name__icontains=q)
-            | Q(email__icontains=q)
-            | Q(phone_number__icontains=q)
-            | Q(campaign_name__icontains=q)
-            | Q(form_name__icontains=q)
+            Q(leadgen_id__icontains=q)
+            | Q(form_id__icontains=q)
         )
 
     return render(request, "leads/lista.html", {"leads": leads, "q": q})
@@ -177,7 +189,17 @@ def lead_delete(request, pk: int):
 def lead_detail(request, pk: int):
     lead = get_object_or_404(MetaLead, pk=pk)
     back_url = request.GET.get("next") or "/leads/"
-    return render(request, "leads/detalle.html", {"lead": lead, "back_url": back_url})
+    field_rows = []
+    for field in lead.fields.all():
+        label = " ".join((field.name or "").replace("_", " ").split())
+        if label:
+            label = label[0].upper() + label[1:]
+        field_rows.append({"label": label or "Campo", "value": field.value or ""})
+    return render(
+        request,
+        "leads/detalle.html",
+        {"lead": lead, "back_url": back_url, "field_rows": field_rows},
+    )
 
 
 @csrf_exempt

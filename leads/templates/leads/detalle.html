@@ -19,30 +19,23 @@
       <label>Fecha lead</label>
       <input type="text" value="{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}" readonly>
 
-      <label>Nombre</label>
-      <input type="text" value="{{ lead.full_name|default_if_none:"" }}" readonly>
-
-      <label>Email</label>
-      <input type="text" value="{{ lead.email|default_if_none:"" }}" readonly>
-
-      <label>Telefono</label>
-      <input type="text" value="{{ lead.phone_number|default_if_none:"" }}" readonly>
-
-      <label>Campana</label>
-      <input type="text" value="{{ lead.campaign_name|default_if_none:"" }}" readonly>
-
-      <label>Formulario</label>
-      <input type="text" value="{{ lead.form_name|default_if_none:"" }}" readonly>
+      <label>Formulario ID</label>
+      <input type="text" value="{{ lead.form_id|default_if_none:"" }}" readonly>
     </div>
     <div class="form-col">
-      <label>Plataforma</label>
-      <input type="text" value="{{ lead.platform|default_if_none:"" }}" readonly>
-
-      <label>Organic</label>
-      <input type="text" value="{{ lead.is_organic|yesno:"Si,No" }}" readonly>
-
       <label>Lead ID</label>
       <input type="text" value="{{ lead.leadgen_id }}" readonly>
     </div>
+  </div>
+
+  <div class="lead-fields-grid">
+    {% for field in field_rows %}
+      <div class="lead-fields-label">{{ field.label }}</div>
+      <div class="lead-fields-value">
+        <input type="text" value="{{ field.value }}" readonly>
+      </div>
+    {% empty %}
+      <p>Sin respuestas registradas.</p>
+    {% endfor %}
   </div>
 {% endblock %}
