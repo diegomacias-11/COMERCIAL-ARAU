@@ -21,18 +21,6 @@
 
   <div class="lead-meta-grid">
     <div class="lead-meta-item">
-      <span class="lead-meta-label">Adset</span>
-      <span class="lead-meta-value">{{ lead.adset_name|default_if_none:"" }}</span>
-    </div>
-    <div class="lead-meta-item">
-      <span class="lead-meta-label">Ad</span>
-      <span class="lead-meta-value">{{ lead.ad_name|default_if_none:"" }}</span>
-    </div>
-    <div class="lead-meta-item lead-meta-item-right">
-      <span class="lead-meta-label">Formulario</span>
-      <span class="lead-meta-value">{{ lead.form_name|default_if_none:"" }}</span>
-    </div>
-    <div class="lead-meta-item">
       <span class="lead-meta-label">Plataforma</span>
       <span class="lead-meta-value">{{ lead.platform|default_if_none:"" }}</span>
     </div>
@@ -43,6 +31,18 @@
     <div class="lead-meta-item">
       <span class="lead-meta-label">Orgánico</span>
       <span class="lead-meta-value">{{ lead.is_organic|yesno:"Si,No" }}</span>
+    </div>
+    <div class="lead-meta-item">
+      <span class="lead-meta-label">Adset</span>
+      <span class="lead-meta-value">{{ lead.adset_name|default_if_none:"" }}</span>
+    </div>
+    <div class="lead-meta-item">
+      <span class="lead-meta-label">Ad</span>
+      <span class="lead-meta-value">{{ lead.ad_name|default_if_none:"" }}</span>
+    </div>
+    <div class="lead-meta-item lead-meta-item-right">
+      <span class="lead-meta-label">Formulario</span>
+      <span class="lead-meta-value">{{ lead.form_name|default_if_none:"" }}</span>
     </div>
   </div>
 
