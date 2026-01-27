@@ -17,7 +17,7 @@
         type="text"
         id="q"
         name="q"
-        placeholder="Buscar lead ID o form ID"
+        placeholder="Buscar lead ID, form o campaña"
         value="{{ q }}"
       />
     </div>
@@ -32,8 +32,9 @@
   <tr>
     <th>Detalle</th>
     <th>Fecha lead</th>
-    <th>Formulario ID</th>
+    <th>Formulario</th>
     <th>Lead ID</th>
+    <th>Orgánico</th>
   </tr>
 {% endblock %}
 
@@ -44,8 +45,9 @@
         <a href="{% url 'leads_metalead_detail' lead.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
       </td>
       <td>{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</td>
-      <td>{{ lead.form_id|default_if_none:"" }}</td>
+      <td>{{ lead.form_name|default_if_none:"" }}</td>
       <td>{{ lead.leadgen_id }}</td>
+      <td>{{ lead.is_organic|yesno:"Si,No" }}</td>
     </tr>
   {% empty %}
     <tr>

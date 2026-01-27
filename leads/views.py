@@ -120,6 +120,21 @@ def fetch_and_save_meta_lead(leadgen_id: str):
     if created_dt and timezone.is_naive(created_dt):
         created_dt = timezone.make_aware(created_dt, timezone.utc)
 
+    form_name = data.get("form_name") or ""
+    form_id = data.get("form_id") or ""
+    if form_id and not form_name:
+        try:
+            form_resp = requests.get(
+                f"https://graph.facebook.com/v24.0/{form_id}",
+                params={"access_token": META_PAGE_TOKEN, "fields": "name"},
+                timeout=10,
+            )
+            form_resp.raise_for_status()
+            form_payload = form_resp.json() or {}
+            form_name = form_payload.get("name") or form_name
+        except Exception:
+            logger.warning("No se pudo obtener el nombre del formulario %s", form_id)
+
     defaults = {
         "created_time": created_dt or timezone.now(),
         "ad_id": data.get("ad_id") or "",
@@ -128,8 +143,8 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "adset_name": data.get("adset_name") or "",
         "campaign_id": data.get("campaign_id") or "",
         "campaign_name": data.get("campaign_name") or "",
-        "form_id": data.get("form_id") or "",
-        "form_name": data.get("form_name") or "",
+        "form_id": form_id,
+        "form_name": form_name,
         "is_organic": data.get("is_organic") or False,
         "platform": data.get("platform") or "",
         "full_name": raw_fields.get("full_name"),
@@ -170,6 +185,8 @@ def leads_lista(request):
         leads = leads.filter(
             Q(leadgen_id__icontains=q)
             | Q(form_id__icontains=q)
+            | Q(form_name__icontains=q)
+            | Q(campaign_name__icontains=q)
         )
 
     return render(request, "leads/lista.html", {"leads": leads, "q": q})
