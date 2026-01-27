@@ -1751,6 +1751,9 @@ body.reportes-no-scroll { overflow: hidden; }
   width: 100%;
   margin-bottom: 0.75rem;
 }
+.lead-summary-grid-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .lead-summary-item {
   background: #f2f6fa;
   border: 1px solid #c7d5e5;
@@ -1758,6 +1761,21 @@ body.reportes-no-scroll { overflow: hidden; }
   padding: 0.6rem 0.75rem;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.lead-ads-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+.lead-ads-item {
+  background: #eef3f7;
+  border: 1px solid #c7d5e5;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 .lead-summary-label {
   display: block;
