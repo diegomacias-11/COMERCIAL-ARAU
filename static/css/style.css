@@ -1753,6 +1753,23 @@ body.reportes-no-scroll { overflow: hidden; }
   border-bottom: 1px solid #c7d5e5;
   padding-bottom: 0.75rem;
 }
+.lead-meta-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  margin-bottom: 0.6rem;
+}
+.lead-meta-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  margin: 0.35rem 0 0.75rem;
+}
+.lead-meta-item-right {
+  grid-column: 3;
+}
 .lead-meta-item {
   text-align: center;
   padding: 0.1rem 0.25rem 0.35rem;

@@ -14,39 +14,41 @@
 
 {% block form_fields %}
   <input type="hidden" name="next" value="{{ back_url }}">
+  <div class="lead-meta-top">
+    <span class="lead-meta-label">Fecha lead</span>
+    <span class="lead-meta-value">{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</span>
+  </div>
+
   <div class="lead-meta-grid">
     <div class="lead-meta-item">
-      <span class="lead-meta-label">Fecha lead</span>
-      <span class="lead-meta-value">{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</span>
+      <span class="lead-meta-label">Adset</span>
+      <span class="lead-meta-value">{{ lead.adset_name|default_if_none:"" }}</span>
     </div>
     <div class="lead-meta-item">
-      <span class="lead-meta-label">Campaña</span>
-      <span class="lead-meta-value">{{ lead.campaign_name|default_if_none:"" }}</span>
+      <span class="lead-meta-label">Ad</span>
+      <span class="lead-meta-value">{{ lead.ad_name|default_if_none:"" }}</span>
     </div>
-    <div class="lead-meta-item">
+    <div class="lead-meta-item lead-meta-item-right">
       <span class="lead-meta-label">Formulario</span>
       <span class="lead-meta-value">{{ lead.form_name|default_if_none:"" }}</span>
-    </div>
-    <div class="lead-meta-item">
-      <span class="lead-meta-label">Lead ID</span>
-      <span class="lead-meta-value">{{ lead.leadgen_id }}</span>
     </div>
     <div class="lead-meta-item">
       <span class="lead-meta-label">Plataforma</span>
       <span class="lead-meta-value">{{ lead.platform|default_if_none:"" }}</span>
     </div>
     <div class="lead-meta-item">
+      <span class="lead-meta-label">Campaña</span>
+      <span class="lead-meta-value">{{ lead.campaign_name|default_if_none:"" }}</span>
+    </div>
+    <div class="lead-meta-item">
       <span class="lead-meta-label">Orgánico</span>
       <span class="lead-meta-value">{{ lead.is_organic|yesno:"Si,No" }}</span>
     </div>
-    <div class="lead-meta-item">
-      <span class="lead-meta-label">Adset</span>
-      <span class="lead-meta-value">{{ lead.adset_name|default_if_none:"" }}</span>
-    </div>
-    <div class="lead-meta-item">
-      <span class="lead-meta-label">Anuncio</span>
-      <span class="lead-meta-value">{{ lead.ad_name|default_if_none:"" }}</span>
-    </div>
+  </div>
+
+  <div class="lead-meta-center">
+    <span class="lead-meta-label">Lead ID</span>
+    <span class="lead-meta-value">{{ lead.leadgen_id }}</span>
   </div>
 
   <div class="lead-fields-grid">
