@@ -76,11 +76,41 @@
   padding: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
+.kanban-column.status-cancelada {
+  background: #f3b0b0;
+  border-color: #e29191;
+}
+.kanban-column.status-agendada {
+  background: #f5e2a8;
+  border-color: #e6cf7c;
+}
+.kanban-column.status-atendida {
+  background: #b8d9b3;
+  border-color: #9cc89c;
+}
 .kanban-column-title {
   font-weight: 700;
   color: #1f2a3d;
   margin-bottom: 8px;
   text-align: center;
+}
+.kanban-column-title-citas {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+}
+.kanban-column-name {
+  justify-self: center;
+  text-align: center;
+}
+.kanban-column-count {
+  font-size: 0.85rem;
+  color: #1f5ea8;
+}
+.kanban-column-title .btn-expand-toggle {
+  justify-self: start;
+  margin: 0;
 }
 .kanban-area {
   border: 1px solid #c7d5e5;
@@ -94,6 +124,19 @@
   color: #0f4c75;
   margin-bottom: 6px;
   text-align: center;
+}
+.kanban-area-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kanban-area-name {
+  text-align: left;
+}
+.kanban-area-count {
+  font-size: 0.85rem;
+  color: #1f5ea8;
 }
 .kanban-card {
   border: 1px solid #d4dde7;
@@ -132,6 +175,7 @@
 }
 .kanban-card-body {
   margin-top: 6px;
+  position: relative;
 }
 .kanban-task {
   font-weight: 600;
@@ -141,6 +185,14 @@
 .kanban-meta {
   font-size: 0.85rem;
   color: #556575;
+}
+.kanban-card .btn-detalle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.7rem;
+  padding: 0.18rem 0.45rem;
+  line-height: 1.1;
 }
 .kanban-empty {
   text-align: center;
@@ -878,6 +930,31 @@ body.reportes-no-scroll { overflow: hidden; }
 .filter-bar-stacked {
   flex-direction: column;
   gap: 0.4rem;
+}
+.kanban-citas-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+.kanban-citas-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+.kanban-citas-row .filter-form-simple {
+  justify-content: center !important;
+  margin: 0 auto !important;
+  width: max-content;
+}
+.kanban-citas-metrics {
+  margin: 0;
+}
+.kanban-citas-spacer {
+  width: 1px;
+  height: 1px;
 }
 .filter-title-row {
   width: 100%;

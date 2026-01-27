@@ -2,6 +2,10 @@
 
 {% block title %}Citas{% endblock %}
 
+{% block filtros_left %}
+  <a class="btn-primary btn-primary-inline" href="{% url 'comercial_cita_kanban' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">Vista</a>
+{% endblock %}
+
 {% block extra_head %}
   <style>
     .table-container { overflow-x: auto !important; }
@@ -107,5 +111,4 @@
     </tr>
   {% endfor %}
 {% endblock %}
-
 

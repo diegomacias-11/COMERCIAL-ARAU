@@ -1,0 +1,107 @@
+{% extends "kanban_base.html" %}
+
+{% block title %}Citas (Kanban){% endblock %}
+
+{% block filtros %}
+  <div class="kanban-citas-filters">
+    <div class="kanban-citas-row">
+      <a class="btn-primary btn-primary-inline btn-view" href="{% url 'comercial_cita_list' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">Vista</a>
+      <div class="metrics-row metrics-row-compact kanban-citas-metrics">
+        <div class="metric">
+          <div class="metric-label">Total citas</div>
+          <div class="metric-value">{{ total_citas|default_if_none:"0" }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Citas atendidas</div>
+          <div class="metric-value">{{ total_atendidas|default_if_none:"0" }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Cerrados</div>
+          <div class="metric-value">{{ total_cerradas|default_if_none:"0" }}</div>
+        </div>
+      </div>
+      <span class="kanban-citas-spacer" aria-hidden="true"></span>
+    </div>
+    <div class="kanban-citas-row">
+      <form method="get" class="filter-form-simple kanban-filter">
+        <div class="filter-block">
+          <label for="fecha_desde">Fecha desde</label>
+          <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}" />
+        </div>
+        <span class="filter-separator" aria-hidden="true"></span>
+        <div class="filter-block">
+          <label for="fecha_hasta">Fecha hasta</label>
+          <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}" />
+        </div>
+        <div class="filter-actions">
+          <button type="submit" class="btn-filter">Filtrar</button>
+          <a href="{% url 'comercial_cita_kanban' %}" class="btn-filter">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block kanban_content %}
+  <div class="kanban-board">
+    {% for bloque in kanban_data %}
+      <div class="kanban-column {{ bloque.status_class }}">
+        <div class="kanban-column-title kanban-column-title-citas">
+          <button type="button" class="btn-filter btn-expand-toggle" data-action="toggle">Extender</button>
+          <span class="kanban-column-name">{{ bloque.title }}</span>
+          <span class="kanban-column-count">Total: <strong>{{ bloque.card_count }}</strong></span>
+        </div>
+        {% for grupo in bloque.groups %}
+          <details class="kanban-area">
+            <summary class="kanban-area-title kanban-area-title-bar">
+              <span class="kanban-area-name">{{ grupo.seguimiento }}</span>
+              <span class="kanban-area-count">Total: <strong>{{ grupo.card_count }}</strong></span>
+            </summary>
+            {% if grupo.items %}
+              {% for item in grupo.items %}
+                <div class="kanban-card">
+                  <div class="kanban-card-body">
+                    <div class="kanban-task">{{ item.fecha_cita|date:"d/m/Y H:i" }} - {{ item.prospecto|default_if_none:"" }}</div>
+                    <div class="kanban-meta">Servicio: <strong>{{ item.servicio|default_if_none:"" }}</strong></div>
+                    <div class="kanban-meta">Número de cita: <strong>{{ item.numero_cita|default_if_none:"" }}</strong></div>
+                    <div class="kanban-meta">Vendedor: <strong>{{ item.vendedor|default_if_none:"" }}</strong></div>
+                    <a class="btn-detalle" href="{% url 'comercial_cita_update' item.id %}?next={{ request.get_full_path|urlencode }}">Detalle</a>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="kanban-empty">Sin registros</div>
+            {% endif %}
+          </details>
+        {% empty %}
+          <div class="kanban-empty">Sin registros</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <script>
+    (function () {
+      function toggleColumn(button) {
+        var column = button.closest(".kanban-column");
+        if (!column) {
+          return;
+        }
+        var details = column.querySelectorAll("details.kanban-area");
+        if (!details.length) {
+          return;
+        }
+        var shouldOpen = button.textContent.trim().toLowerCase() === "extender";
+        details.forEach(function (el) {
+          el.open = shouldOpen;
+        });
+        button.textContent = shouldOpen ? "Retraer" : "Extender";
+      }
+
+      document.querySelectorAll(".btn-expand-toggle").forEach(function (button) {
+        button.addEventListener("click", function () {
+          toggleColumn(button);
+        });
+      });
+    })();
+  </script>
+{% endblock %}

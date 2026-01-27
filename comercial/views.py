@@ -154,6 +154,81 @@ def citas_lista(request):
     return render(request, "comercial/lista.html", context)
 
 
+def citas_kanban(request):
+    citas = Cita.objects.all().order_by("-fecha_registro")
+    fecha_desde = (request.GET.get("fecha_desde") or "").strip()
+    fecha_hasta = (request.GET.get("fecha_hasta") or "").strip()
+
+    tz = timezone.get_current_timezone()
+    if fecha_desde:
+        try:
+            d = datetime.strptime(fecha_desde, "%Y-%m-%d").date()
+            start_dt = timezone.make_aware(datetime.combine(d, time.min), tz)
+            citas = citas.filter(fecha_cita__gte=start_dt)
+        except ValueError:
+            pass
+    if fecha_hasta:
+        try:
+            d = datetime.strptime(fecha_hasta, "%Y-%m-%d").date()
+            end_dt = timezone.make_aware(datetime.combine(d, time.max), tz)
+            citas = citas.filter(fecha_cita__lte=end_dt)
+        except ValueError:
+            pass
+
+    total_citas = citas.count()
+    total_atendidas = citas.filter(estatus_cita="Atendida").count()
+    total_cerradas = citas.filter(estatus_seguimiento="Cerrado").count()
+
+    seguimiento_order = [val for val, _ in Cita._meta.get_field("estatus_seguimiento").choices]
+    seguimiento_order.append("Sin seguimiento")
+
+    columnas = [
+        {"key": "Cancelada", "title": "Canceladas", "statuses": ["Cancelada"], "class": "status-cancelada"},
+        {"key": "Agendada", "title": "Agendadas", "statuses": ["Agendada", "Pospuesta"], "class": "status-agendada"},
+        {"key": "Atendida", "title": "Atendidas", "statuses": ["Atendida"], "class": "status-atendida"},
+    ]
+
+    kanban_data = []
+    for col in columnas:
+        col_citas = citas.filter(estatus_cita__in=col["statuses"])
+        groups = {}
+        for c in col_citas:
+            key = c.estatus_seguimiento or "Sin seguimiento"
+            groups.setdefault(key, []).append(c)
+
+        grouped = []
+        for status in seguimiento_order:
+            items = groups.get(status)
+            if not items:
+                continue
+            grouped.append(
+                {
+                    "seguimiento": status,
+                    "items": items,
+                    "card_count": len(items),
+                }
+            )
+
+        kanban_data.append(
+            {
+                "title": col["title"],
+                "status_class": col["class"],
+                "groups": grouped,
+                "card_count": col_citas.count(),
+            }
+        )
+
+    context = {
+        "fecha_desde": fecha_desde,
+        "fecha_hasta": fecha_hasta,
+        "total_citas": total_citas,
+        "total_atendidas": total_atendidas,
+        "total_cerradas": total_cerradas,
+        "kanban_data": kanban_data,
+    }
+    return render(request, "comercial/kanban.html", context)
+
+
 def agregar_cita(request):
     back_url = request.GET.get("next") or reverse("comercial_cita_list")
     copy_from = request.GET.get("copy_from")
