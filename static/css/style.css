@@ -956,6 +956,13 @@ body.reportes-no-scroll { overflow: hidden; }
   width: 1px;
   height: 1px;
 }
+.kanban-citas-row-filters {
+  grid-template-columns: 1fr auto 1fr;
+}
+.kanban-citas-row-filters .filter-form-simple {
+  grid-column: 2;
+  justify-self: center;
+}
 .filter-title-row {
   width: 100%;
   display: flex;
