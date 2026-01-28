@@ -60,7 +60,7 @@
     {% for col in kanban_columns %}
       <div class="kanban-column {% if col.status_class %}{{ col.status_class }}{% endif %}">
         <div class="kanban-column-title kanban-column-title-citas">
-          <button type="button" class="btn-filter btn-expand-toggle" data-target="col-{{ forloop.counter }}">Retraer</button>
+          <button type="button" class="btn-filter btn-expand-toggle" data-target="col-{{ forloop.counter }}">Extender</button>
           <div class="kanban-column-name">{{ col.status }}</div>
           <div class="kanban-column-count">Total: {{ col.total }}</div>
         </div>
@@ -114,8 +114,21 @@
       btn.addEventListener('click', function() {
         var target = document.getElementById(btn.dataset.target);
         if (!target) return;
-        var collapsed = target.classList.toggle('is-collapsed');
-        btn.textContent = collapsed ? 'Extender' : 'Retraer';
+        // Solo controla subgrupos de cliente (no colapsa la columna)
+        var clientBodies = target.querySelectorAll('.kanban-client-body');
+        var clientToggles = target.querySelectorAll('.btn-client-toggle');
+        var anyOpen = Array.from(clientBodies).some(function(body) {
+          return !body.classList.contains('is-collapsed');
+        });
+        if (anyOpen) {
+          clientBodies.forEach(function(body) { body.classList.add('is-collapsed'); });
+          clientToggles.forEach(function(toggle) { toggle.setAttribute('aria-expanded', 'false'); });
+          btn.textContent = 'Extender';
+        } else {
+          clientBodies.forEach(function(body) { body.classList.remove('is-collapsed'); });
+          clientToggles.forEach(function(toggle) { toggle.setAttribute('aria-expanded', 'true'); });
+          btn.textContent = 'Retraer';
+        }
       });
     });
     document.querySelectorAll('.btn-client-toggle').forEach(function(btn) {
