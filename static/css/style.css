@@ -77,6 +77,22 @@
   padding: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
+.kanban-column.status-on-time {
+  background: #cfe5cc;
+  border-color: #a8d0a6;
+}
+.kanban-column.status-due-today {
+  background: #f8e9b9;
+  border-color: #e8d78c;
+}
+.kanban-column.status-in-time {
+  background: #c5e3e8;
+  border-color: #9fcdd4;
+}
+.kanban-column.status-late {
+  background: #f6c1c1;
+  border-color: #e7a3a3;
+}
 .kanban-column.status-cancelada {
   background: #f3b0b0;
   border-color: #e29191;
@@ -112,6 +128,36 @@
 .kanban-column-title .btn-expand-toggle {
   justify-self: start;
   margin: 0;
+}
+.kanban-column-body.is-collapsed {
+  display: none;
+}
+.kanban-client {
+  border: 1px solid #c7d5e5;
+  border-radius: 8px;
+  background: #fdfefe;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+.kanban-client-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: 700;
+  color: #1f2a3d;
+  margin-bottom: 6px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.kanban-client-count {
+  font-size: 0.85rem;
+  color: #1f5ea8;
+}
+.kanban-client-body.is-collapsed {
+  display: none;
 }
 .kanban-area {
   border: 1px solid #c7d5e5;
@@ -175,6 +221,15 @@
   align-items: center;
   gap: 8px;
   padding-right: 54px;
+}
+.kanban-card-date {
+  font-weight: 700;
+  color: #1f2a3d;
+}
+.kanban-card-days {
+  font-size: 0.85rem;
+  color: #1f5ea8;
+  margin-bottom: 4px;
 }
 .kanban-card-body {
   margin-top: 6px;

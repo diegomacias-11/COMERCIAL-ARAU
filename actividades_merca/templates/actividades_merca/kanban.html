@@ -57,42 +57,74 @@
 
 {% block kanban_content %}
   <div class="kanban-board">
-    {% for bloque in kanban_data %}
-      <div class="kanban-column">
-        <div class="kanban-column-title">{{ bloque.cliente }}</div>
-        {% for area in bloque.areas %}
-          <div class="kanban-area">
-            <div class="kanban-area-title">{{ area.nombre }}</div>
-            {% if area.items %}
-              {% for act in area.items %}
-                {% with act.estatus as st %}
-                <div class="kanban-card
-                           {% if st == 'Entregada a tiempo' %} status-on-time
-                           {% elif st == 'Vence hoy' %} status-due-today
-                           {% elif st == 'En tiempo' %} status-in-time
-                           {% elif st == 'Se entregó tarde' %} status-late
-                           {% endif %}">
-                  <div class="kanban-card-header">
-                    <a href="{% url 'actividades_merca_actividad_update' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
-                    {% if st %}
-                      <span class="status-pill">{{ st }}</span>
-                    {% endif %}
+    {% for col in kanban_columns %}
+      <div class="kanban-column {% if col.status_class %}{{ col.status_class }}{% endif %}">
+        <div class="kanban-column-title kanban-column-title-citas">
+          <button type="button" class="btn-filter btn-expand-toggle" data-target="col-{{ forloop.counter }}">Extender</button>
+          <div class="kanban-column-name">{{ col.status }}</div>
+          <div class="kanban-column-count">Total: {{ col.total }}</div>
+        </div>
+        <div class="kanban-column-body is-collapsed" id="col-{{ forloop.counter }}">
+          {% for client in col.clients %}
+            <div class="kanban-client">
+              <button type="button"
+                      class="kanban-client-title btn-client-toggle"
+                      data-target="client-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                      aria-expanded="false">
+                <span class="kanban-client-name">{{ client.cliente }}</span>
+                <span class="kanban-client-count">Total: {{ client.total }}</span>
+              </button>
+              <div class="kanban-client-body is-collapsed" id="client-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+              {% for area in client.areas %}
+                <div class="kanban-area">
+                  <div class="kanban-area-title">
+                    <span>{{ area.nombre }}</span>
+                    <span class="kanban-area-count">({{ area.count }})</span>
                   </div>
-                  <div class="kanban-card-body">
-                    <div class="kanban-task">{{ act.tarea }}</div>
-                    <div class="kanban-meta">Inicio {{ act.fecha_inicio|date:"d/m/y" }} · Días restantes {{ act.dias_restantes }}</div>
-                  </div>
+                  {% if area.items %}
+                    {% for act in area.items %}
+                      <div class="kanban-card">
+                        <div class="kanban-card-header">
+                          <div class="kanban-card-date">{{ act.fecha_inicio|date:"d/m/Y" }}</div>
+                          <a href="{% url 'actividades_merca_actividad_update' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+                        </div>
+                        <div class="kanban-card-days">{{ act.dias_label }}</div>
+                        <div class="kanban-task">{{ act.tarea }}</div>
+                        <div class="kanban-meta">Responsable: {{ act.responsables }}</div>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="kanban-empty">Sin tareas</div>
+                  {% endif %}
                 </div>
-                {% endwith %}
               {% endfor %}
-            {% else %}
-              <div class="kanban-empty">Sin tareas</div>
-            {% endif %}
-          </div>
-        {% endfor %}
+              </div>
+            </div>
+          {% empty %}
+            <div class="kanban-empty">Sin actividades</div>
+          {% endfor %}
+        </div>
       </div>
     {% empty %}
       <div class="kanban-empty">Sin actividades</div>
     {% endfor %}
   </div>
+  <script>
+    document.querySelectorAll('.btn-expand-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var target = document.getElementById(btn.dataset.target);
+        if (!target) return;
+        var collapsed = target.classList.toggle('is-collapsed');
+        btn.textContent = collapsed ? 'Extender' : 'Retraer';
+      });
+    });
+    document.querySelectorAll('.btn-client-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var target = document.getElementById(btn.dataset.target);
+        if (!target) return;
+        var collapsed = target.classList.toggle('is-collapsed');
+        btn.setAttribute('aria-expanded', String(!collapsed));
+      });
+    });
+  </script>
 {% endblock %}

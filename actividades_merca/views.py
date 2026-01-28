@@ -114,34 +114,90 @@ def actividades_lista(request):
     )
 
     if vista == "kanban":
-        # Agrupar por cliente y dentro por área
-        grouped = []
-        by_cliente = {}
+        status_order = ["Se entregó tarde", "Vence hoy", "En tiempo"]
+        by_status = {}
+        today = timezone.now().date()
+
+        def _normalize_status(value: str) -> str:
+            val = (value or "").strip()
+            val = val.replace("Se entregÃ³ tarde", "Se entregó tarde")
+            val = val.replace("Se entreg? tarde", "Se entregó tarde")
+            val = val.replace("Se entrego tarde", "Se entregó tarde")
+            return val
+
         for act in actividades:
             try:
                 compromiso = act.fecha_compromiso
-                today = timezone.now().date()
                 remaining = _business_days_between(today, compromiso) if compromiso else None
-                act.dias_restantes = remaining if remaining is not None else ""
             except Exception:
-                act.dias_restantes = ""
-            key = (act.cliente or "").strip().upper()
-            if key not in by_cliente:
-                by_cliente[key] = {}
+                remaining = None
+
+            if remaining is None:
+                act.dias_label = ""
+            elif remaining < 0:
+                act.dias_label = f"Días atrasados: {abs(remaining)}"
+            else:
+                act.dias_label = f"Días restantes: {remaining}"
+
+            responsables = []
+            for name in [act.mercadologo, act.disenador]:
+                if name and name != "Todos":
+                    responsables.append(name)
+            act.responsables = " / ".join(responsables) if responsables else "Sin asignar"
+
+            status_key = _normalize_status(act.estatus or "Sin estatus")
+            if status_key == "Entregada a tiempo":
+                continue
+            client_key = (act.cliente or "").strip().upper() or "Sin cliente"
             area_key = act.area or "Sin área"
-            by_cliente[key].setdefault(area_key, []).append(act)
-        for cliente, areas in by_cliente.items():
-            grouped.append(
+
+            by_status.setdefault(status_key, {})
+            by_status[status_key].setdefault(client_key, {})
+            by_status[status_key][client_key].setdefault(area_key, []).append(act)
+
+        columns = []
+        status_class_map = {
+            "En tiempo": "status-in-time",
+            "Vence hoy": "status-due-today",
+            "Se entregó tarde": "status-late",
+        }
+
+        for status_name in status_order:
+            clients = []
+            total_col = 0
+            for client_name, areas in by_status.get(status_name, {}).items():
+                area_blocks = []
+                total_client = 0
+                for area_name, items in areas.items():
+                    total_client += len(items)
+                    area_blocks.append(
+                        {
+                            "nombre": area_name,
+                            "items": items,
+                            "count": len(items),
+                        }
+                    )
+                total_col += total_client
+                clients.append(
+                    {
+                        "cliente": client_name,
+                        "total": total_client,
+                        "areas": area_blocks,
+                    }
+                )
+            columns.append(
                 {
-                    "cliente": cliente or "Sin cliente",
-                    "areas": [{ "nombre": area, "items": acts } for area, acts in areas.items()],
+                    "status": status_name,
+                    "total": total_col,
+                    "status_class": status_class_map.get(status_name, ""),
+                    "clients": clients,
                 }
             )
-        context["kanban_data"] = grouped
+
+        context["kanban_columns"] = columns
         return render(request, "actividades_merca/kanban.html", context)
 
     return render(request, "actividades_merca/lista.html", context)
-
 
 def reporte_actividades(request):
     actividades, filtros = _filtered_actividades(request, "lista")
