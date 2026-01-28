@@ -4,8 +4,7 @@
 
 {% block filtros %}
   <div class="kanban-citas-filters">
-    <div class="kanban-citas-row">
-      <a class="btn-primary btn-primary-inline btn-view" href="{% url 'comercial_cita_list' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">Vista</a>
+    <div class="kanban-citas-row kanban-citas-row-top">
       <div class="metrics-row metrics-row-compact kanban-citas-metrics">
         <div class="metric">
           <div class="metric-label">Total citas</div>
@@ -20,9 +19,9 @@
           <div class="metric-value">{{ total_cerradas|default_if_none:"0" }}</div>
         </div>
       </div>
-      <span class="kanban-citas-spacer" aria-hidden="true"></span>
     </div>
     <div class="kanban-citas-row kanban-citas-row-filters">
+      <a class="btn-primary btn-primary-inline btn-view kanban-citas-btn" href="{% url 'comercial_cita_list' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">Vista</a>
       <form method="get" class="filter-form-simple kanban-filter">
         <div class="filter-block">
           <label for="fecha_desde">Fecha desde</label>
@@ -38,6 +37,7 @@
           <a href="{% url 'comercial_cita_kanban' %}" class="btn-filter">Limpiar</a>
         </div>
       </form>
+      <a class="btn-primary btn-primary-inline kanban-citas-btn" target="_blank" href="{% url 'comercial_cita_kanban_resumen' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">Resumen</a>
     </div>
   </div>
 {% endblock %}

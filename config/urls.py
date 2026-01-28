@@ -22,6 +22,7 @@ from core.views import root_redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('favicon.ico', RedirectView.as_view(url='/static/img/favicon.png', permanent=True)),
     path('', root_redirect, name='root'),
     path('', include('core.urls')),
     path('comercial/', include('comercial.urls')),

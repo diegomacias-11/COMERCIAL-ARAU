@@ -1,10 +1,20 @@
 from datetime import datetime, time
+from io import BytesIO
 
 from django import forms
+from django.db.models import Max, Min
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from PyPDF2 import PdfReader, PdfWriter
+import copy
+from django.conf import settings
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from core.choices import CONTROL_PERIODICIDAD_CHOICES, SERVICIO_CHOICES
 from .forms import ComercialKpiForm, ComercialKpiMetaForm
@@ -154,7 +164,7 @@ def citas_lista(request):
     return render(request, "comercial/lista.html", context)
 
 
-def citas_kanban(request):
+def _filter_citas_queryset(request):
     citas = Cita.objects.all().order_by("-fecha_registro")
     fecha_desde = (request.GET.get("fecha_desde") or "").strip()
     fecha_hasta = (request.GET.get("fecha_hasta") or "").strip()
@@ -174,7 +184,10 @@ def citas_kanban(request):
             citas = citas.filter(fecha_cita__lte=end_dt)
         except ValueError:
             pass
+    return citas, fecha_desde, fecha_hasta
 
+
+def _build_citas_kanban_data(citas):
     total_citas = citas.count()
     total_atendidas = citas.filter(estatus_cita="Atendida").count()
     total_cerradas = citas.filter(estatus_seguimiento="Cerrado").count()
@@ -218,6 +231,12 @@ def citas_kanban(request):
             }
         )
 
+    return kanban_data, total_citas, total_atendidas, total_cerradas
+
+
+def citas_kanban(request):
+    citas, fecha_desde, fecha_hasta = _filter_citas_queryset(request)
+    kanban_data, total_citas, total_atendidas, total_cerradas = _build_citas_kanban_data(citas)
     context = {
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
@@ -227,6 +246,254 @@ def citas_kanban(request):
         "kanban_data": kanban_data,
     }
     return render(request, "comercial/kanban.html", context)
+
+
+def citas_kanban_resumen_pdf(request):
+    citas, fecha_desde, fecha_hasta = _filter_citas_queryset(request)
+    kanban_data, total_citas, total_atendidas, total_cerradas = _build_citas_kanban_data(citas)
+
+    if fecha_desde or fecha_hasta:
+        desde_txt = fecha_desde or "—"
+        hasta_txt = fecha_hasta or "—"
+    else:
+        fechas = citas.aggregate(min_fecha=Min("fecha_cita"), max_fecha=Max("fecha_cita"))
+        min_fecha = fechas.get("min_fecha")
+        max_fecha = fechas.get("max_fecha")
+        desde_txt = min_fecha.strftime("%d/%m/%Y") if min_fecha else "—"
+        hasta_txt = max_fecha.strftime("%d/%m/%Y") if max_fecha else "—"
+    subtitle_text = f"Fechas: {desde_txt} a {hasta_txt}"
+
+    template_path = settings.BASE_DIR / "static" / "img" / "MEMBRETE.pdf"
+    pagesize = landscape(letter)
+    if template_path.exists():
+        try:
+            template_reader = PdfReader(str(template_path))
+            template_page = template_reader.pages[0]
+            pagesize = (float(template_page.mediabox.width), float(template_page.mediabox.height))
+        except Exception:
+            template_reader = None
+            template_page = None
+    else:
+        template_reader = None
+        template_page = None
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=pagesize,
+        leftMargin=18,
+        rightMargin=18,
+        topMargin=85.04,
+        bottomMargin=85.04,
+    )
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    title_style.alignment = 1
+    subtitle_style = styles["Heading2"]
+    subtitle_style.alignment = 1
+    body_style = ParagraphStyle(
+        "BodySmall",
+        parent=styles["BodyText"],
+        fontSize=8,
+        leading=10,
+    )
+    number_style = ParagraphStyle(
+        "TotalsNumber",
+        parent=styles["BodyText"],
+        fontSize=18,
+        leading=18,
+        alignment=1,
+        spaceBefore=0,
+        spaceAfter=0,
+    )
+
+    elements = [
+        Paragraph("Resumen de Citas", title_style),
+        Paragraph(subtitle_text, subtitle_style),
+        Spacer(1, 8),
+    ]
+
+    page_width = pagesize[0]
+    available_width = page_width - doc.leftMargin - doc.rightMargin
+    totals_table = Table(
+        [
+            ["Total citas", "Atendidas", "Cerrados"],
+            [
+                Paragraph(str(total_citas), number_style),
+                Paragraph(str(total_atendidas), number_style),
+                Paragraph(str(total_cerradas), number_style),
+            ],
+        ],
+        colWidths=[available_width / 3] * 3,
+        rowHeights=[22, 30],
+    )
+    totals_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2b313f")),
+                ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#f8fbff")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#59b9c7")),
+                ("TEXTCOLOR", (0, 1), (-1, 1), colors.HexColor("#003b71")),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("FONTSIZE", (0, 1), (-1, 1), 18),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#aebed2")),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 2),
+                ("TOPPADDING", (0, 0), (-1, 0), 2),
+                ("BOTTOMPADDING", (0, 1), (-1, 1), 0),
+                ("TOPPADDING", (0, 1), (-1, 1), 0),
+            ]
+        )
+    )
+    elements.append(totals_table)
+    elements.append(Spacer(1, 10))
+    totals_separator = Table([[""]], colWidths=[available_width * 0.9])
+    totals_separator.setStyle(
+        TableStyle(
+            [
+                ("LINEBELOW", (0, 0), (-1, -1), 1.2, colors.HexColor("#2b313f")),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ]
+        )
+    )
+    elements.append(totals_separator)
+    elements.append(Spacer(1, 12))
+
+    col_widths = [
+        available_width * 0.18,
+        available_width * 0.23,
+        available_width * 0.17,
+        available_width * 0.12,
+        available_width * 0.14,
+        available_width * 0.16,
+    ]
+
+    header_style = TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.90, 0.93, 0.96, alpha=0.3)),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#1f2a3d")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#aebed2")),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 9),
+            ("FONTSIZE", (0, 1), (-1, -1), 8),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]
+    )
+
+    block_by_title = {b["title"]: b for b in kanban_data}
+    ordered_titles = ["Atendidas", "Agendadas", "Canceladas"]
+    block_colors = {
+        "Atendidas": colors.HexColor("#b8d9b3"),
+        "Agendadas": colors.HexColor("#f5e2a8"),
+        "Canceladas": colors.HexColor("#f3b0b0"),
+    }
+
+    for idx, title in enumerate(ordered_titles):
+        bloque = block_by_title.get(title)
+        if not bloque:
+            continue
+        elements.append(Spacer(1, 6))
+        for grupo in bloque["groups"]:
+            table_data = [
+                [
+                    f"{bloque['title']}",
+                    "",
+                    "",
+                    "",
+                    "",
+                    f"Total: {bloque['card_count']}",
+                ],
+                [
+                    "Fecha",
+                    "Prospecto",
+                    "Servicio",
+                    "Número cita",
+                    "Vendedor",
+                    "Estatus seguimiento",
+                ]
+            ]
+            for item in grupo["items"]:
+                table_data.append(
+                    [
+                        item.fecha_cita.strftime("%d/%m/%Y %H:%M") if item.fecha_cita else "",
+                        Paragraph(item.prospecto or "", body_style),
+                        Paragraph(item.servicio or "", body_style),
+                        item.numero_cita or "",
+                        Paragraph(item.vendedor or "", body_style),
+                        item.estatus_seguimiento or "",
+                    ]
+                )
+            table = Table(table_data, colWidths=col_widths, repeatRows=2)
+            table_style = TableStyle(list(header_style.getCommands()))
+            table_style.add("SPAN", (0, 0), (4, 0))
+            table_style.add("ALIGN", (0, 0), (4, 0), "CENTER")
+            table_style.add("ALIGN", (5, 0), (5, 0), "CENTER")
+            table_style.add("ALIGN", (0, 1), (-1, 1), "CENTER")
+            table_style.add("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+            table_style.add("FONTSIZE", (0, 0), (-1, 0), 10)
+            table_style.add("WORDWRAP", (0, 0), (-1, -1), True)
+            header_color = block_colors.get(bloque["title"])
+            if header_color:
+                darker = colors.Color(
+                    max(header_color.red - 0.18, 0),
+                    max(header_color.green - 0.18, 0),
+                    max(header_color.blue - 0.18, 0),
+                )
+                darker_text = colors.Color(
+                    max(header_color.red - 0.55, 0),
+                    max(header_color.green - 0.55, 0),
+                    max(header_color.blue - 0.55, 0),
+                )
+                table_style.add("BACKGROUND", (0, 0), (-1, 0), darker)
+                table_style.add("TEXTCOLOR", (0, 0), (-1, 0), darker_text)
+                table_style.add("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#b7c7d9"))
+                table_style.add("TEXTCOLOR", (0, 1), (-1, 1), colors.HexColor("#1f2a3d"))
+                table_style.add("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold")
+            table.setStyle(table_style)
+            elements.append(table)
+            is_last_table = idx == len(ordered_titles) - 1 and grupo == bloque["groups"][-1]
+            if not is_last_table:
+                elements.append(Spacer(1, 14))
+                separator = Table([[""]], colWidths=[available_width * 0.9])
+                separator.setStyle(
+                    TableStyle(
+                        [
+                            ("LINEBELOW", (0, 0), (-1, -1), 1.2, colors.HexColor("#2b313f")),
+                            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                            ("TOPPADDING", (0, 0), (-1, -1), 0),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                        ]
+                    )
+                )
+                elements.append(separator)
+                elements.append(Spacer(1, 14))
+
+    doc.build(elements)
+    content_pdf = buffer.getvalue()
+    buffer.close()
+
+    if template_reader and template_page:
+        content_reader = PdfReader(BytesIO(content_pdf))
+        writer = PdfWriter()
+        for page in content_reader.pages:
+            base = copy.copy(template_page)
+            if base.mediabox != page.mediabox:
+                base.mediabox = page.mediabox
+            base.merge_page(page)
+            writer.add_page(base)
+        output = BytesIO()
+        writer.write(output)
+        pdf = output.getvalue()
+        output.close()
+    else:
+        pdf = content_pdf
+
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="resumen_citas.pdf"'
+    return response
 
 
 def agregar_cita(request):
