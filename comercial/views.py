@@ -422,7 +422,7 @@ def citas_kanban_resumen_pdf(request):
                 "Fecha",
                 "Prospecto",
                 "Servicio",
-                "N??mero cita",
+                "N?mero cita",
                 "Vendedor",
                 "Estatus seguimiento",
             ]
