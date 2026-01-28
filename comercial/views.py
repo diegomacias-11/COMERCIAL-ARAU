@@ -396,80 +396,82 @@ def citas_kanban_resumen_pdf(request):
         if not bloque:
             continue
         elements.append(Spacer(1, 6))
+        all_items = []
         for grupo in bloque["groups"]:
-            table_data = [
-                [
-                    f"{bloque['title']}",
-                    "",
-                    "",
-                    "",
-                    "",
-                    f"Total: {bloque['card_count']}",
-                ],
-                [
-                    "Fecha",
-                    "Prospecto",
-                    "Servicio",
-                    "Número cita",
-                    "Vendedor",
-                    "Estatus seguimiento",
-                ]
+            all_items.extend(grupo["items"])
+        table_data = [
+            [
+                f"{bloque['title']}",
+                "",
+                "",
+                "",
+                "",
+                f"Total: {bloque['card_count']}",
+            ],
+            [
+                "Fecha",
+                "Prospecto",
+                "Servicio",
+                "N??mero cita",
+                "Vendedor",
+                "Estatus seguimiento",
             ]
-            for item in grupo["items"]:
-                table_data.append(
+        ]
+        for item in all_items:
+            table_data.append(
+                [
+                    item.fecha_cita.strftime("%d/%m/%Y %H:%M") if item.fecha_cita else "",
+                    Paragraph(item.prospecto or "", body_style),
+                    Paragraph(item.servicio or "", body_style),
+                    item.numero_cita or "",
+                    Paragraph(item.vendedor or "", body_style),
+                    item.estatus_seguimiento or "",
+                ]
+            )
+        table = Table(table_data, colWidths=col_widths, repeatRows=2)
+        table_style = TableStyle(list(header_style.getCommands()))
+        table_style.add("SPAN", (0, 0), (4, 0))
+        table_style.add("ALIGN", (0, 0), (4, 0), "CENTER")
+        table_style.add("ALIGN", (5, 0), (5, 0), "CENTER")
+        table_style.add("ALIGN", (0, 1), (-1, 1), "CENTER")
+        table_style.add("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+        table_style.add("FONTSIZE", (0, 0), (-1, 0), 10)
+        table_style.add("WORDWRAP", (0, 0), (-1, -1), True)
+        header_color = block_colors.get(bloque["title"])
+        if header_color:
+            darker = colors.Color(
+                max(header_color.red - 0.18, 0),
+                max(header_color.green - 0.18, 0),
+                max(header_color.blue - 0.18, 0),
+            )
+            darker_text = colors.Color(
+                max(header_color.red - 0.55, 0),
+                max(header_color.green - 0.55, 0),
+                max(header_color.blue - 0.55, 0),
+            )
+            table_style.add("BACKGROUND", (0, 0), (-1, 0), darker)
+            table_style.add("TEXTCOLOR", (0, 0), (-1, 0), darker_text)
+            table_style.add("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#b7c7d9"))
+            table_style.add("TEXTCOLOR", (0, 1), (-1, 1), colors.HexColor("#1f2a3d"))
+            table_style.add("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold")
+        table.setStyle(table_style)
+        elements.append(table)
+        is_last_table = idx == len(ordered_titles) - 1
+        if not is_last_table:
+            elements.append(Spacer(1, 14))
+            separator = Table([[""]], colWidths=[available_width * 0.9])
+            separator.setStyle(
+                TableStyle(
                     [
-                        item.fecha_cita.strftime("%d/%m/%Y %H:%M") if item.fecha_cita else "",
-                        Paragraph(item.prospecto or "", body_style),
-                        Paragraph(item.servicio or "", body_style),
-                        item.numero_cita or "",
-                        Paragraph(item.vendedor or "", body_style),
-                        item.estatus_seguimiento or "",
+                        ("LINEBELOW", (0, 0), (-1, -1), 1.2, colors.HexColor("#2b313f")),
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("TOPPADDING", (0, 0), (-1, -1), 0),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
                     ]
                 )
-            table = Table(table_data, colWidths=col_widths, repeatRows=2)
-            table_style = TableStyle(list(header_style.getCommands()))
-            table_style.add("SPAN", (0, 0), (4, 0))
-            table_style.add("ALIGN", (0, 0), (4, 0), "CENTER")
-            table_style.add("ALIGN", (5, 0), (5, 0), "CENTER")
-            table_style.add("ALIGN", (0, 1), (-1, 1), "CENTER")
-            table_style.add("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
-            table_style.add("FONTSIZE", (0, 0), (-1, 0), 10)
-            table_style.add("WORDWRAP", (0, 0), (-1, -1), True)
-            header_color = block_colors.get(bloque["title"])
-            if header_color:
-                darker = colors.Color(
-                    max(header_color.red - 0.18, 0),
-                    max(header_color.green - 0.18, 0),
-                    max(header_color.blue - 0.18, 0),
-                )
-                darker_text = colors.Color(
-                    max(header_color.red - 0.55, 0),
-                    max(header_color.green - 0.55, 0),
-                    max(header_color.blue - 0.55, 0),
-                )
-                table_style.add("BACKGROUND", (0, 0), (-1, 0), darker)
-                table_style.add("TEXTCOLOR", (0, 0), (-1, 0), darker_text)
-                table_style.add("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#b7c7d9"))
-                table_style.add("TEXTCOLOR", (0, 1), (-1, 1), colors.HexColor("#1f2a3d"))
-                table_style.add("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold")
-            table.setStyle(table_style)
-            elements.append(table)
-            is_last_table = idx == len(ordered_titles) - 1 and grupo == bloque["groups"][-1]
-            if not is_last_table:
-                elements.append(Spacer(1, 14))
-                separator = Table([[""]], colWidths=[available_width * 0.9])
-                separator.setStyle(
-                    TableStyle(
-                        [
-                            ("LINEBELOW", (0, 0), (-1, -1), 1.2, colors.HexColor("#2b313f")),
-                            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                            ("TOPPADDING", (0, 0), (-1, -1), 0),
-                            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-                        ]
-                    )
-                )
-                elements.append(separator)
-                elements.append(Spacer(1, 14))
+            )
+            elements.append(separator)
+            elements.append(Spacer(1, 14))
 
     doc.build(elements)
     content_pdf = buffer.getvalue()
