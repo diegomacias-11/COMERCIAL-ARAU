@@ -253,8 +253,16 @@ def citas_kanban_resumen_pdf(request):
     kanban_data, total_citas, total_atendidas, total_cerradas = _build_citas_kanban_data(citas)
 
     if fecha_desde or fecha_hasta:
-        desde_txt = fecha_desde or "—"
-        hasta_txt = fecha_hasta or "—"
+        desde_txt = (
+            datetime.strptime(fecha_desde, "%Y-%m-%d").strftime("%d/%m/%Y")
+            if fecha_desde
+            else "???"
+        )
+        hasta_txt = (
+            datetime.strptime(fecha_hasta, "%Y-%m-%d").strftime("%d/%m/%Y")
+            if fecha_hasta
+            else "???"
+        )
     else:
         fechas = citas.aggregate(min_fecha=Min("fecha_cita"), max_fecha=Max("fecha_cita"))
         min_fecha = fechas.get("min_fecha")
