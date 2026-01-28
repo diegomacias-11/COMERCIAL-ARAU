@@ -296,6 +296,8 @@ def citas_kanban_resumen_pdf(request):
         parent=styles["BodyText"],
         fontSize=8,
         leading=10,
+        wordWrap="LTR",
+        splitLongWords=0,
     )
     number_style = ParagraphStyle(
         "TotalsNumber",
@@ -425,7 +427,7 @@ def citas_kanban_resumen_pdf(request):
                     Paragraph(item.servicio or "", body_style),
                     item.numero_cita or "",
                     Paragraph(item.vendedor or "", body_style),
-                    item.estatus_seguimiento or "",
+                    Paragraph(item.estatus_seguimiento or "", body_style),
                 ]
             )
         table = Table(table_data, colWidths=col_widths, repeatRows=2)
