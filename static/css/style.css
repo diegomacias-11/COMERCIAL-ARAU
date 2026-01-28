@@ -224,7 +224,7 @@
 }
 .kanban-card-date {
   font-weight: 700;
-  color: #1f2a3d;
+  color: #1f5ea8;
 }
 .kanban-card-days {
   font-size: 0.85rem;
@@ -236,13 +236,13 @@
   position: relative;
 }
 .kanban-task {
-  font-weight: 600;
-  color: #1f2a3d;
+  font-size: 0.85rem;
+  color: #1f5ea8;
   overflow-wrap: anywhere;
 }
 .kanban-meta {
   font-size: 0.85rem;
-  color: #556575;
+  color: #1f5ea8;
 }
 .kanban-card .btn-detalle {
   position: absolute;

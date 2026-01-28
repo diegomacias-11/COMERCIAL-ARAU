@@ -88,9 +88,13 @@
                           <div class="kanban-card-date">{{ act.fecha_inicio|date:"d/m/Y" }}</div>
                           <a href="{% url 'actividades_merca_actividad_update' act.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
                         </div>
-                        <div class="kanban-card-days">{{ act.dias_label }}</div>
-                        <div class="kanban-task">{{ act.tarea }}</div>
-                        <div class="kanban-meta">Responsable: {{ act.responsables }}</div>
+                        <div class="kanban-card-days">
+                          {% if act.dias_label %}
+                            <strong>{{ act.dias_label }}:</strong> {{ act.dias_value }}
+                          {% endif %}
+                        </div>
+                        <div class="kanban-task"><strong>Tarea:</strong> {{ act.tarea }}</div>
+                        <div class="kanban-meta"><strong>Responsable:</strong> {{ act.responsables }}</div>
                       </div>
                     {% endfor %}
                   {% else %}

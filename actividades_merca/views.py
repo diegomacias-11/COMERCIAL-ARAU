@@ -134,10 +134,13 @@ def actividades_lista(request):
 
             if remaining is None:
                 act.dias_label = ""
+                act.dias_value = ""
             elif remaining < 0:
-                act.dias_label = f"Días atrasados: {abs(remaining)}"
+                act.dias_label = "Días atrasados"
+                act.dias_value = str(abs(remaining))
             else:
-                act.dias_label = f"Días restantes: {remaining}"
+                act.dias_label = "Días restantes"
+                act.dias_value = str(remaining)
 
             responsables = []
             for name in [act.mercadologo, act.disenador]:
