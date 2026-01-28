@@ -11,7 +11,7 @@
 
 {% block extra_actions %}
   {% if meta %}
-    <button type="submit" class="btn-delete" formaction="{% url 'comercial_meta_delete' meta.id %}" formmethod="post" onclick="return confirm('¿Eliminar esta meta?');">Eliminar</button>
+    <button type="submit" class="btn-delete" formaction="{% url 'recursos_humanos_meta_delete' meta.id %}" formmethod="post" onclick="return confirm('¿Eliminar esta meta?');">Eliminar</button>
   {% endif %}
 {% endblock %}
 

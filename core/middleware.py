@@ -24,12 +24,6 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         "detalle", "detail", "ver",
     }
 
-    REPORTS_ALLOWED = {
-        "/comercial/reportes/": {"dirección comercial", "dirección operaciones", "apoyo comercial"},
-        "/marketing/reportes/": {"dirección operaciones"},    # Completar cuando exista
-        "/operaciones/reportes/": {"dirección operaciones"},  # Completar cuando exista
-    }
-
     def _infer_action(self, url_name: str) -> str:
         lower = url_name.lower()
         tokens = [t for t in re.split(r"[_-]+", lower) if t]
@@ -106,21 +100,6 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         public_names = {"login", "logout", "core_inicio"}
         if resolver.url_name in public_names:
             return None
-
-        # Control fino para reportes (no hay modelo en admin)
-        for prefix, allowed_groups in self.REPORTS_ALLOWED.items():
-            if request.path.startswith(prefix):
-                if user.is_superuser:
-                    return None
-                if allowed_groups:
-                    user_groups = {g.lower() for g in user.groups.values_list("name", flat=True)}
-                    if user_groups & allowed_groups:
-                        return None
-                return HttpResponse(
-                    "<script>alert('No tienes permisos para este reporte.'); window.history.back();</script>",
-                    status=403,
-                    content_type="text/html",
-                )
 
         app_label = view_func.__module__.split(".")[0]
         self._current_app_label = app_label
@@ -248,8 +227,6 @@ class ActivityLogMiddleware(MiddlewareMixin):
             "lead": "Leads",
             "citas": "Citas",
             "cita": "Citas",
-            "reportes": "Reportes",
-            "reporte": "Reportes",
             "experiencia": "Experiencia",
             "contactos": "Contactos",
             "contacto": "Contactos",

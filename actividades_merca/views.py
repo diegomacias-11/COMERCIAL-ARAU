@@ -159,6 +159,9 @@ def actividades_lista(request):
             by_status[status_key][client_key].setdefault(area_key, []).append(act)
 
         columns = []
+        status_label_map = {
+            "Se entregó tarde": "Vencidas",
+        }
         status_class_map = {
             "En tiempo": "status-in-time",
             "Vence hoy": "status-due-today",
@@ -191,6 +194,7 @@ def actividades_lista(request):
             columns.append(
                 {
                     "status": status_name,
+                    "status_label": status_label_map.get(status_name, status_name),
                     "total": total_col,
                     "status_class": status_class_map.get(status_name, ""),
                     "clients": clients,

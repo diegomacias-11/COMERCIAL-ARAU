@@ -10,10 +10,12 @@
 {% block content %}
   <section class="filter-container">
     <div class="filter-bar filter-bar-balanced">
-      <div class="filter-slot filter-slot-left"></div>
+      <div class="filter-slot filter-slot-left">
+        <a href="{% url 'recursos_humanos_control' %}" class="btn-primary btn-primary-inline">Volver</a>
+      </div>
       <div class="filter-title">KPIs</div>
       <div class="filter-slot filter-slot-right">
-        <a href="{% url 'comercial_kpi_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Registrar KPI</a>
+        <a href="{% url 'recursos_humanos_kpi_create' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Registrar KPI</a>
       </div>
     </div>
   </section>
@@ -31,7 +33,7 @@
         {% for kpi in kpis %}
           <tr>
             <td>
-              <a href="{% url 'comercial_kpi_update' kpi.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
+              <a href="{% url 'recursos_humanos_kpi_update' kpi.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle">Detalle</a>
             </td>
             <td>{{ kpi.nombre }}</td>
             <td>{{ kpi.descripcion|default_if_none:"" }}</td>
@@ -76,7 +78,7 @@
         <div class="kanban-month-header">
           <a class="kanban-column-title kanban-month-link" href="{% url 'recursos_humanos_resumen' %}?start={{ periodo.start }}&end={{ periodo.end }}&anio={{ anio }}&label={{ periodo.label }}&next={{ request.get_full_path|urlencode }}">{{ periodo.label }}</a>
           {% if periodicidad == "mensual" %}
-            <a href="{% url 'comercial_meta_create' %}?mes={{ periodo.start }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
+            <a href="{% url 'recursos_humanos_meta_create' %}?mes={{ periodo.start }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
           {% endif %}
         </div>
         {% if periodicidad == "mensual" %}
@@ -85,7 +87,7 @@
               <div class="kanban-card">
                 <div class="kanban-card-header">
                   <div class="kanban-task">{{ meta.kpi.nombre }}</div>
-                  <a href="{% url 'comercial_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
+                  <a href="{% url 'recursos_humanos_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
                 </div>
                 <div class="kanban-meta">Meta: {{ meta.meta|floatformat:0 }}</div>
               </div>
@@ -98,14 +100,14 @@
             <div class="period-month">
               <div class="period-month-header">
                 <div class="kanban-task">{{ mes.nombre }}</div>
-                <a href="{% url 'comercial_meta_create' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
+                <a href="{% url 'recursos_humanos_meta_create' %}?mes={{ mes.num }}&anio={{ anio }}&next={{ request.get_full_path|urlencode }}" class="btn-primary btn-mini">Registrar</a>
               </div>
               {% if mes.metas %}
                 {% for meta in mes.metas %}
                   <div class="kanban-card">
                     <div class="kanban-card-header">
                       <div class="kanban-task">{{ meta.kpi.nombre }}</div>
-                      <a href="{% url 'comercial_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
+                      <a href="{% url 'recursos_humanos_meta_update' meta.id %}?next={{ request.get_full_path|urlencode }}" class="btn-detalle btn-mini">Detalle</a>
                     </div>
                     <div class="kanban-meta">Meta: {{ meta.meta|floatformat:0 }}</div>
                   </div>

@@ -688,12 +688,7 @@ main {
   padding-bottom: 0;
 }
 
-/* Reportes (Looker Studio) */
 html, body { height: 100%; }
-body.reportes-no-scroll { overflow: hidden; }
-.full-bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
-.ls-container { position: relative; }
-#ls-iframe { display:block; border:0; width:100vw; height:100vh; position: relative; z-index: 1; }
 
 .filter-container {
   width: 100%;

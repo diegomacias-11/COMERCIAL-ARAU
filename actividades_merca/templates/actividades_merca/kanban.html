@@ -61,7 +61,7 @@
       <div class="kanban-column {% if col.status_class %}{{ col.status_class }}{% endif %}">
         <div class="kanban-column-title kanban-column-title-citas">
           <button type="button" class="btn-filter btn-expand-toggle" data-target="col-{{ forloop.counter }}">Extender</button>
-          <div class="kanban-column-name">{{ col.status }}</div>
+          <div class="kanban-column-name">{{ col.status_label }}</div>
           <div class="kanban-column-count">Total: {{ col.total }}</div>
         </div>
         <div class="kanban-column-body" id="col-{{ forloop.counter }}">

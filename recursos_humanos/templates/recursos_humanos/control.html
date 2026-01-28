@@ -22,13 +22,9 @@
       border-bottom: 1px solid #c7d5e5;
       margin-bottom: 8px;
     }
-    .kanban-kpi-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
+    .kanban-kpi-grid {
       display: grid;
       gap: 6px;
-      text-align: center;
     }
     .kanban-kpi-item {
       background: #ffffff;
@@ -38,6 +34,7 @@
       font-weight: 600;
       color: #1f2a3d;
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      text-align: center;
     }
   </style>
 {% endblock %}
@@ -46,14 +43,14 @@
   <section class="kanban-board" aria-label="Control Recursos Humanos">
     {% for area in areas %}
       {% if area == "Comercial" %}
-        <a class="kanban-column kanban-link" href="{% url 'comercial_control' %}">
+        <a class="kanban-column kanban-link" href="{% url 'recursos_humanos_comercial_control' %}">
           <div class="kanban-column-title">{{ area }}</div>
           {% if kpis_comercial %}
-            <ul class="kanban-kpi-list">
+            <div class="kanban-kpi-grid">
               {% for kpi in kpis_comercial %}
-                <li class="kanban-kpi-item">{{ kpi.nombre }}</li>
+                <div class="kanban-kpi-item">{{ kpi.nombre }}</div>
               {% endfor %}
-            </ul>
+            </div>
           {% else %}
             <div class="kanban-empty">Sin KPIs</div>
           {% endif %}

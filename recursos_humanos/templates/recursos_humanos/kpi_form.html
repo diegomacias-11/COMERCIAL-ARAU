@@ -11,7 +11,7 @@
 
 {% block extra_actions %}
   {% if kpi %}
-    <button type="submit" class="btn-delete" formaction="{% url 'comercial_kpi_delete' kpi.id %}" formmethod="post" onclick="return confirm('¿Eliminar este KPI?');">Eliminar</button>
+    <button type="submit" class="btn-delete" formaction="{% url 'recursos_humanos_kpi_delete' kpi.id %}" formmethod="post" onclick="return confirm('¿Eliminar este KPI?');">Eliminar</button>
   {% endif %}
 {% endblock %}
 

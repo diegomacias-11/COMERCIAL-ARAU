@@ -40,7 +40,6 @@ AREA_CHOICES = [
     ("Página Web Diseño/Mtto", "Página Web Diseño/Mtto"),
     ("Parrilla", "Parrilla"),
     ("Performance Mkt", "Performance Mkt"),
-    ("Reportes", "Reportes"),
     ("Vídeos", "Vídeos"),
 ]
 
