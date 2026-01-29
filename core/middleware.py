@@ -108,6 +108,9 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         if resolver.url_name in public_names:
             return None
 
+        if user.is_superuser:
+            return None
+
         if request.path.startswith("/comercial/kpis/"):
             if user.is_superuser:
                 return None
