@@ -30,6 +30,9 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         "dirección comercial",
         "dirección operaciones",
     }
+    RH_CONTROL_ALLOWED = {
+        "recursos humanos",
+    }
 
     def _infer_action(self, url_name: str) -> str:
         lower = url_name.lower()
@@ -119,6 +122,18 @@ class GroupPermissionMiddleware(MiddlewareMixin):
                 return None
             return HttpResponse(
                 "<script>alert('No tienes permisos para ver KPIs comerciales.'); window.history.back();</script>",
+                status=403,
+                content_type="text/html",
+            )
+
+        if request.path.startswith("/recursos_humanos/control/"):
+            if user.is_superuser:
+                return None
+            user_groups = {g.lower() for g in user.groups.values_list("name", flat=True)}
+            if user_groups & self.RH_CONTROL_ALLOWED:
+                return None
+            return HttpResponse(
+                "<script>alert('No tienes permisos para ver Control de Recursos Humanos.'); window.history.back();</script>",
                 status=403,
                 content_type="text/html",
             )
