@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="nav-area{% if 'citas' in path or 'ventas' in path or 'clientes' in path and not 'experiencia' in path %} is-active{% endif %}">
+    <div class="nav-area{% if 'citas' in path or 'ventas' in path or 'clientes' in path and not 'experiencia' in path or 'comercial/kpis' in path %} is-active{% endif %}">
       <button type="button" class="area-trigger" data-area="comercial" aria-expanded="false">
         Comercial
       </button>
@@ -30,6 +30,8 @@
            class="{% if 'clientes' in path and 'experiencia' not in path %}is-active{% endif %}">Clientes</a>
         <a href="{% url 'ventas_venta_list' %}" role="menuitem"
            class="{% if 'ventas' in path %}is-active{% endif %}">Ventas</a>
+        <a href="{% url 'comercial_kpis' %}" role="menuitem"
+           class="{% if 'comercial/kpis' in path %}is-active{% endif %}">KPIs</a>
       </div>
     </div>
 
@@ -85,7 +87,7 @@
       </button>
     </form>
   </div>
-  {% if 'actividades_merca' in path or 'gastos_mercadotecnia' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path or 'recursos_humanos' in path %}
+  {% if 'actividades_merca' in path or 'gastos_mercadotecnia' in path or 'leads' in path or 'citas' in path or 'clientes' in path and not 'experiencia' in path or 'alianzas' in path or 'ventas' in path or 'comisiones' in path or 'experiencia' in path or 'actividades_exp' in path or 'recursos_humanos' in path or 'comercial/kpis' in path %}
   <div class="area-title-bar">
     {% if 'actividades_merca' in path %}
       <span class="area-title">Actividades</span>
@@ -105,6 +107,8 @@
       <span class="area-title">Alianzas</span>
     {% elif 'ventas' in path %}
       <span class="area-title">Ventas</span>
+    {% elif 'comercial/kpis' in path %}
+      <span class="area-title">KPIs</span>
     {% elif 'comisiones' in path %}
       <span class="area-title">Comisiones</span>
     {% elif 'recursos_humanos' in path %}

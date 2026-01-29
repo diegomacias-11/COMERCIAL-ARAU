@@ -24,6 +24,13 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         "detalle", "detail", "ver",
     }
 
+    KPIS_COMERCIAL_ALLOWED = {
+        "apoyo comercial",
+        "dirección",
+        "dirección comercial",
+        "dirección operaciones",
+    }
+
     def _infer_action(self, url_name: str) -> str:
         lower = url_name.lower()
         tokens = [t for t in re.split(r"[_-]+", lower) if t]
@@ -100,6 +107,18 @@ class GroupPermissionMiddleware(MiddlewareMixin):
         public_names = {"login", "logout", "core_inicio"}
         if resolver.url_name in public_names:
             return None
+
+        if request.path.startswith("/comercial/kpis/"):
+            if user.is_superuser:
+                return None
+            user_groups = {g.lower() for g in user.groups.values_list("name", flat=True)}
+            if user_groups & self.KPIS_COMERCIAL_ALLOWED:
+                return None
+            return HttpResponse(
+                "<script>alert('No tienes permisos para ver KPIs comerciales.'); window.history.back();</script>",
+                status=403,
+                content_type="text/html",
+            )
 
         app_label = view_func.__module__.split(".")[0]
         self._current_app_label = app_label

@@ -508,6 +508,66 @@ def citas_kanban_resumen_pdf(request):
     return response
 
 
+def comercial_kpis(request):
+    current_year = timezone.now().year
+    anio_raw = (request.GET.get("anio") or "").strip()
+    periodicidad_raw = (request.GET.get("periodicidad") or "mensual").strip().lower()
+    periodicidad_values = {val for val, _ in CONTROL_PERIODICIDAD_CHOICES}
+    periodicidad = periodicidad_raw if periodicidad_raw in periodicidad_values else "mensual"
+    try:
+        anio = int(anio_raw) if anio_raw else current_year
+    except ValueError:
+        anio = current_year
+
+    metas = ComercialKpiMeta.objects.select_related("kpi").filter(anio=anio)
+    metas_por_mes = {m: [] for m, _ in MES_CHOICES}
+    for meta in metas:
+        metas_por_mes.setdefault(meta.mes, []).append(meta)
+    meses = [{"num": num, "nombre": label} for num, label in MES_CHOICES]
+
+    if periodicidad == "trimestral":
+        grupos = [
+            ("Q1", [1, 2, 3]),
+            ("Q2", [4, 5, 6]),
+            ("Q3", [7, 8, 9]),
+            ("Q4", [10, 11, 12]),
+        ]
+    elif periodicidad == "semestral":
+        grupos = [("H1", [1, 2, 3, 4, 5, 6]), ("H2", [7, 8, 9, 10, 11, 12])]
+    elif periodicidad == "anual":
+        grupos = [("Anual", [m["num"] for m in meses])]
+    else:
+        grupos = [(m["nombre"], [m["num"]]) for m in meses]
+
+    periodos = []
+    for etiqueta, month_nums in grupos:
+        month_blocks = []
+        for num in month_nums:
+            nombre = next((m["nombre"] for m in meses if m["num"] == num), "")
+            month_blocks.append(
+                {
+                    "num": num,
+                    "nombre": nombre,
+                    "metas": metas_por_mes.get(num, []),
+                }
+            )
+        periodos.append(
+            {
+                "label": etiqueta,
+                "start": month_nums[0],
+                "end": month_nums[-1],
+                "months": month_blocks,
+            }
+        )
+    context = {
+        "periodos": periodos,
+        "anio": anio,
+        "periodicidad": periodicidad,
+        "periodicidad_choices": CONTROL_PERIODICIDAD_CHOICES,
+    }
+    return render(request, "comercial/kpis.html", context)
+
+
 def agregar_cita(request):
     back_url = request.GET.get("next") or reverse("comercial_cita_list")
     copy_from = request.GET.get("copy_from")
