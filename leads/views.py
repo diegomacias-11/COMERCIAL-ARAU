@@ -128,13 +128,7 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         logger.exception("No se pudo obtener lead %s desde Meta: %s", leadgen_id, exc)
         return
 
-    raw_fields = {}
-    for field in data.get("field_data", []) or []:
-        name = (field.get("name") or "").strip()
-        values = field.get("values") or []
-        if not name or not values:
-            continue
-        raw_fields[name] = values[0] if len(values) == 1 else values
+    raw_fields, normalized_fields = _split_field_data(data.get("field_data", []) or [])
 
     created_dt = parse_datetime(data.get("created_time") or "")
     if created_dt and timezone.is_naive(created_dt):
@@ -154,11 +148,11 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "form_name": data.get("form_name") or "",
         "is_organic": data.get("is_organic") or False,
         "platform": data.get("platform") or "",
-        "full_name": raw_fields.get("full_name"),
-        "email": raw_fields.get("email"),
-        "phone_number": raw_fields.get("phone_number"),
-        "job_title": raw_fields.get("job_title"),
-        "company_name": raw_fields.get("company_name"),
+        "full_name": raw_fields.get("full_name") or _pick_first(normalized_fields, ["full_name", "nombre_completo", "nombre", "name"]),
+        "email": raw_fields.get("email") or _pick_first(normalized_fields, ["email", "correo", "correo_electronico", "email_address"]),
+        "phone_number": raw_fields.get("phone_number") or _pick_first(normalized_fields, ["phone_number", "telefono", "tel", "celular", "mobile", "phone"]),
+        "job_title": raw_fields.get("job_title") or _pick_first(normalized_fields, ["job_title", "puesto", "cargo", "title"]),
+        "company_name": raw_fields.get("company_name") or _pick_first(normalized_fields, ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa", "razon_social", "business_name"]),
         "raw_fields": raw_fields,
         "raw_payload": data,
     }
@@ -241,7 +235,21 @@ def lead_detail(request, pk: int):
             else:
                 cita = Cita(fecha_cita=cita_dt)
 
-            cita.prospecto = lead.company_name or ""
+            raw_fields = lead.raw_fields or {}
+            normalized_fields = {_normalize_key(k): v for k, v in raw_fields.items()}
+            company_name = lead.company_name or _pick_first(
+                normalized_fields,
+                [
+                    "company_name",
+                    "company",
+                    "empresa",
+                    "nombre_empresa",
+                    "nombre_de_empresa",
+                    "razon_social",
+                    "business_name",
+                ],
+            )
+            cita.prospecto = company_name or ""
             cita.medio = "Lead"
             cita.servicio = lead.servicio or "Pendiente"
             cita.contacto = lead.full_name or ""

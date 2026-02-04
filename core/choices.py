@@ -19,6 +19,8 @@ SERVICIO_CHOICES = [
     ("Auditoría Contable", "Auditoría Contable"),
     ("Contabilidad", "Contabilidad"),
     ("Corridas", "Corridas"),
+    ("CUSTOMEER", "CUSTOMEER"),
+    ("Control operativo", "Control operativo"),
     ("E-Commerce", "E-Commerce"),
     ("Laboral", "Laboral"),
     ("Maquila de Nómina", "Maquila de Nómina"),
