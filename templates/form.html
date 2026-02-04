@@ -8,6 +8,7 @@
   {% block back_link %}{% endblock %}
 
   <div class="form-container {% block form_container_classes %}{% endblock %}">
+    <div class="form-flash" role="status" aria-live="polite" hidden></div>
     <form method="post">
       {% csrf_token %}
       {% block form_fields %}
@@ -18,4 +19,50 @@
       </form>
   </div>
   </main>
+  <style>
+    .form-flash {
+      margin: 0 0 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      background: #e8f7ef;
+      color: #0f5132;
+      font-weight: 600;
+      border: 1px solid #b7e4c7;
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.querySelector('.form-container form');
+      const flash = document.querySelector('.form-flash');
+      if (!form || !flash) return;
+
+      form.addEventListener('submit', (ev) => {
+        const ok = confirm('¿Guardar cambios?');
+        if (!ok) {
+          ev.preventDefault();
+          return;
+        }
+        sessionStorage.setItem('form_success_pending', '1');
+      });
+
+      const deleteButtons = Array.from(document.querySelectorAll('.btn-delete'));
+      deleteButtons.forEach((btn) => {
+        const hasInlineConfirm = (btn.getAttribute('onclick') || '').toLowerCase().includes('confirm(');
+        if (hasInlineConfirm) return;
+        btn.addEventListener('click', (ev) => {
+          const ok = confirm('¿Eliminar este registro?');
+          if (!ok) ev.preventDefault();
+        });
+      });
+
+      if (sessionStorage.getItem('form_success_pending') === '1') {
+        const hasErrors = document.querySelector('.error') !== null;
+        if (!hasErrors) {
+          flash.textContent = 'Guardado correctamente.';
+          flash.hidden = false;
+        }
+        sessionStorage.removeItem('form_success_pending');
+      }
+    });
+  </script>
 {% endblock %}
