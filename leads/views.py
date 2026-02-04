@@ -229,7 +229,7 @@ def lead_detail(request, pk: int):
         cita_value = request.POST.get("cita_agendada") or ""
         cita_dt = parse_datetime(cita_value) if cita_value else None
         if cita_dt and timezone.is_naive(cita_dt):
-            cita_dt = timezone.make_aware(cita_dt, timezone.utc)
+            cita_dt = timezone.make_aware(cita_dt, timezone.get_current_timezone())
 
         lead.cita_agendada = cita_dt
         lead.save(update_fields=["contactado", "estatus", "servicio", "notas", "cita_agendada"])
