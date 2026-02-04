@@ -17,12 +17,12 @@
         type="text"
         id="q"
         name="q"
-        placeholder="Buscar lead ID, form o campaña"
+        placeholder="Buscar por nombre"
         value="{{ q }}"
       />
     </div>
     <div class="filter-actions">
-      <button type="submit" class="btn-filter">Buscar</button>
+      <button type="submit" class="btn-filter">Filtrar</button>
       <a href="{% url 'leads_metalead_list' %}" class="btn-filter">Limpiar</a>
     </div>
   </form>
@@ -33,8 +33,7 @@
     <th>Detalle</th>
     <th>Fecha lead</th>
     <th>Nombre</th>
-    <th>Lead ID</th>
-    <th>Orgánico</th>
+    <th>Contactado</th>
   </tr>
 {% endblock %}
 
