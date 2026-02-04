@@ -1,4 +1,5 @@
 from django.db import models
+from core.choices import LEAD_ESTATUS_CHOICES, SERVICIO_CHOICES
 
 class MetaLead(models.Model):
     # === Core Meta (fijo) ===
@@ -24,6 +25,22 @@ class MetaLead(models.Model):
     full_name = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
+    job_title = models.CharField(max_length=150, blank=True, null=True)
+    company_name = models.CharField(max_length=200, blank=True, null=True)
+
+    # === Control comercial ===
+    contactado = models.BooleanField(default=False)
+    estatus = models.CharField(max_length=30, choices=LEAD_ESTATUS_CHOICES, blank=True, null=True)
+    servicio = models.CharField(max_length=100, choices=SERVICIO_CHOICES, blank=True, null=True)
+    cita_agendada = models.DateTimeField(blank=True, null=True)
+    notas = models.TextField(blank=True, null=True)
+    cita = models.OneToOneField(
+        "comercial.Cita",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="meta_lead",
+    )
 
     # === Dinámico / universal ===
     raw_fields = models.JSONField(default=dict)   # preguntas del form

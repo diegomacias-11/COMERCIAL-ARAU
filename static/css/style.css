@@ -1881,6 +1881,16 @@ html, body { height: 100%; }
   align-items: center;
   width: 100%;
   margin-top: 0.75rem;
+  min-height: 60px;
+}
+.lead-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2b313f;
+  font-weight: 600;
+  padding: 0.75rem 0;
 }
 .lead-fields-label {
   text-align: right;
@@ -1889,6 +1899,46 @@ html, body { height: 100%; }
 }
 .lead-fields-value input {
   width: 100%;
+}
+.lead-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  align-items: start;
+  width: 100%;
+}
+.lead-detail-right {
+  border-left: 1px solid #c7d5e5;
+  padding-left: 1.2rem;
+}
+.lead-edit-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.lead-edit-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(220px, 2fr);
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.lead-edit-label {
+  text-align: left;
+  font-weight: 700;
+  color: #2b313f;
+}
+.lead-edit-value input,
+.lead-edit-value select,
+.lead-edit-value textarea {
+  width: 100%;
+}
+.lead-edit-value input:disabled,
+.lead-edit-value select:disabled,
+.lead-edit-value textarea:disabled {
+  background: #f3f6fa;
+  border-color: #aebed2;
+  color: #2b313f;
+  opacity: 1;
 }
 .lead-meta-grid {
   display: grid;
@@ -1905,6 +1955,10 @@ html, body { height: 100%; }
   align-items: center;
   gap: 0.1rem;
   margin-bottom: 0.6rem;
+}
+.lead-meta-top .lead-meta-value {
+  color: #7a8699;
+  font-weight: 500;
 }
 .lead-meta-center {
   display: flex;
@@ -1930,7 +1984,8 @@ html, body { height: 100%; }
   display: block;
   color: #003b71;
   font-weight: 600;
-  word-break: break-all;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 .input-readonly {
   background: #f3f6fa;

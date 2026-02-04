@@ -28,6 +28,72 @@ SERVICIO_CHOICES = [
     ("REPSE", "REPSE"),
 ]
 
+LEAD_ESTATUS_CHOICES = [
+    ("Perdido", "Perdido"),
+    ("No calificado", "No calificado"),
+    ("Calificado", "Calificado"),
+    ("Convertido", "Convertido"),
+]
+
+VENDEDOR_CHOICES = [
+    ("Giovanni", "Giovanni"),
+    ("Daniel S.", "Daniel S."),
+]
+
+ESTATUS_CITA_CHOICES = [
+    ("Agendada", "Agendada"),
+    ("Pospuesta", "Pospuesta"),
+    ("Cancelada", "Cancelada"),
+    ("Atendida", "Atendida"),
+]
+
+NUM_CITA_CHOICES = [
+    ("Primera", "Primera"),
+    ("Segunda", "Segunda"),
+    ("Tercera", "Tercera"),
+    ("Cuarta", "Cuarta"),
+    ("Quinta", "Quinta"),
+]
+
+ESTATUS_SEGUIMIENTO_CHOICES = [
+    ("Esperando respuesta del cliente", "Esperando respuesta del cliente"),
+    ("Agendar nueva cita", "Agendar nueva cita"),
+    ("Solicitud de propuesta", "Solicitud de propuesta"),
+    ("ElaboraciÃ³n de propuesta", "ElaboraciÃ³n de propuesta"),
+    ("Propuesta enviada", "Propuesta enviada"),
+    ("Se enviÃ³ auditorÃ­a Laboral", "Se enviÃ³ auditorÃ­a Laboral"),
+    ("Stand by", "Stand by"),
+    ("Pendiente de cierre", "Pendiente de cierre"),
+    ("En activaciÃ³n", "En activaciÃ³n"),
+    ("Reclutando", "Reclutando"),
+    ("Cerrado", "Cerrado"),
+    ("No estÃ¡ interesado en este servicio", "No estÃ¡ interesado en este servicio"),
+    ("Fuera de su presupuesto", "Fuera de su presupuesto"),
+]
+
+LUGAR_CHOICES = [
+    ("Oficina de Arau", "Oficina de Arau"),
+    ("Oficina del cliente", "Oficina del cliente"),
+    ("Zoom", "Zoom"),
+    ("TelÃ©fono", "TelÃ©fono"),
+    ("Correo", "Correo"),
+]
+
+MES_CHOICES = [
+    (1, "Enero"),
+    (2, "Febrero"),
+    (3, "Marzo"),
+    (4, "Abril"),
+    (5, "Mayo"),
+    (6, "Junio"),
+    (7, "Julio"),
+    (8, "Agosto"),
+    (9, "Septiembre"),
+    (10, "Octubre"),
+    (11, "Noviembre"),
+    (12, "Diciembre"),
+]
+
 AREA_CHOICES = [
     ("Análisis de Mkt", "Análisis de Mkt"),
     ("Blog", "Blog"),

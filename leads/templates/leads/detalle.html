@@ -14,6 +14,11 @@
 
 {% block form_fields %}
   <input type="hidden" name="next" value="{{ back_url }}">
+  {% if not can_edit %}
+    <style>
+      .form-container .btn-submit { display: none; }
+    </style>
+  {% endif %}
   <div class="lead-meta-top">
     <span class="lead-meta-label">Fecha lead</span>
     <span class="lead-meta-value">{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</span>
@@ -41,8 +46,8 @@
       <span class="lead-meta-value">{{ lead.ad_name|default_if_none:"" }}</span>
     </div>
     <div class="lead-meta-item lead-meta-item-right">
-      <span class="lead-meta-label">Formulario</span>
-      <span class="lead-meta-value">{{ lead.form_name|default_if_none:"" }}</span>
+      <span class="lead-meta-label">Form ID</span>
+      <span class="lead-meta-value">{{ lead.form_id|default_if_none:"" }}</span>
     </div>
   </div>
 
@@ -51,14 +56,68 @@
     <span class="lead-meta-value">{{ lead.leadgen_id }}</span>
   </div>
 
-  <div class="lead-fields-grid">
-    {% for field in field_rows %}
-      <div class="lead-fields-label">{{ field.label }}</div>
-      <div class="lead-fields-value">
-        <input type="text" value="{{ field.value }}" readonly class="input-readonly">
+  <div class="lead-detail-grid">
+    <div class="lead-detail-left">
+      <div class="lead-fields-grid">
+        {% if field_rows %}
+          {% for field in field_rows %}
+            <div class="lead-fields-label">{{ field.label }}</div>
+            <div class="lead-fields-value">
+              <input type="text" value="{{ field.value }}" readonly class="input-readonly">
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="lead-empty">Sin respuestas registradas.</div>
+        {% endif %}
       </div>
-    {% empty %}
-      <p>Sin respuestas registradas.</p>
-    {% endfor %}
+    </div>
+    <div class="lead-detail-right">
+      <div class="lead-edit-grid">
+        <div class="lead-edit-row">
+          <div class="lead-edit-label">Servicio</div>
+          <div class="lead-edit-value">
+            <select name="servicio" {% if not can_edit %}disabled{% endif %}>
+              <option value="">---------</option>
+              {% for value, label in servicio_choices %}
+                <option value="{{ value }}" {% if lead.servicio == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="lead-edit-row">
+          <div class="lead-edit-label">Contactado</div>
+          <div class="lead-edit-value">
+            <input type="checkbox" name="contactado" {% if lead.contactado %}checked{% endif %} {% if not can_edit %}disabled{% endif %}>
+          </div>
+        </div>
+
+        <div class="lead-edit-row">
+          <div class="lead-edit-label">Estatus</div>
+          <div class="lead-edit-value">
+            <select name="estatus" {% if not can_edit %}disabled{% endif %}>
+              <option value="">---------</option>
+              {% for value, label in lead_estatus_choices %}
+                <option value="{{ value }}" {% if lead.estatus == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="lead-edit-row">
+          <div class="lead-edit-label">Cita agendada</div>
+          <div class="lead-edit-value">
+            <input type="datetime-local" name="cita_agendada" value="{{ cita_agendada_value }}" {% if not can_edit %}disabled{% endif %}>
+          </div>
+        </div>
+
+        <div class="lead-edit-row">
+          <div class="lead-edit-label">Notas</div>
+          <div class="lead-edit-value">
+            <textarea name="notas" rows="4" {% if not can_edit %}disabled{% endif %}>{{ lead.notas|default_if_none:"" }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}

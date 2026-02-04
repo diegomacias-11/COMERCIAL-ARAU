@@ -1,66 +1,16 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from core.choices import TIPO_CHOICES, MEDIO_CHOICES, SERVICIO_CHOICES
-
-VENDEDOR_CHOICES = [
-    ("Giovanni", "Giovanni"),
-    ("Daniel S.", "Daniel S."),
-]
-
-ESTATUS_CITA_CHOICES = [
-    ("Agendada", "Agendada"),
-    ("Pospuesta", "Pospuesta"),
-    ("Cancelada", "Cancelada"),
-    ("Atendida", "Atendida"),
-]
-
-NUM_CITA_CHOICES = [
-    ('Primera','Primera'),
-    ('Segunda','Segunda'),
-    ('Tercera','Tercera'),
-    ('Cuarta','Cuarta'),
-    ('Quinta','Quinta'),
-]
-
-ESTATUS_SEGUIMIENTO_CHOICES = [
-    ("Esperando respuesta del cliente", "Esperando respuesta del cliente"),
-    ("Agendar nueva cita", "Agendar nueva cita"),
-    ("Solicitud de propuesta", "Solicitud de propuesta"),
-    ("Elaboración de propuesta", "Elaboración de propuesta"),
-    ("Propuesta enviada", "Propuesta enviada"),
-    ("Se envió auditoría Laboral", "Se envió auditoría Laboral"),
-    ("Stand by", "Stand by"),
-    ("Pendiente de cierre", "Pendiente de cierre"),
-    ("En activación", "En activación"),
-    ("Reclutando", "Reclutando"),
-    ("Cerrado", "Cerrado"),
-    ("No está interesado en este servicio", "No está interesado en este servicio"),
-    ("Fuera de su presupuesto", "Fuera de su presupuesto"),
-]
-
-LUGAR_CHOICES = [
-    ("Oficina de Arau", "Oficina de Arau"),
-    ("Oficina del cliente", "Oficina del cliente"),
-    ("Zoom", "Zoom"),
-    ("Teléfono", "Teléfono"),
-    ("Correo", "Correo"),
-]
-
-MES_CHOICES = [
-    (1, "Enero"),
-    (2, "Febrero"),
-    (3, "Marzo"),
-    (4, "Abril"),
-    (5, "Mayo"),
-    (6, "Junio"),
-    (7, "Julio"),
-    (8, "Agosto"),
-    (9, "Septiembre"),
-    (10, "Octubre"),
-    (11, "Noviembre"),
-    (12, "Diciembre"),
-]
-
+from core.choices import (
+    TIPO_CHOICES,
+    MEDIO_CHOICES,
+    SERVICIO_CHOICES,
+    VENDEDOR_CHOICES,
+    ESTATUS_CITA_CHOICES,
+    NUM_CITA_CHOICES,
+    ESTATUS_SEGUIMIENTO_CHOICES,
+    LUGAR_CHOICES,
+    MES_CHOICES
+)
 
 class Cita(models.Model):
     prospecto = models.CharField(max_length=150)

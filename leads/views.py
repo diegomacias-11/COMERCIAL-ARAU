@@ -13,6 +13,8 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import MetaLead, MetaLeadField
+from comercial.models import Cita
+from core.choices import LEAD_ESTATUS_CHOICES, SERVICIO_CHOICES
 
 logger = logging.getLogger(__name__)
 META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
@@ -73,6 +75,24 @@ def _parse_created_time(created_value, entry_time):
     return timezone.now()
 
 
+def _normalize_phone(value):
+    if not value:
+        return None
+    digits = "".join(ch for ch in str(value) if ch.isdigit())
+    if len(digits) >= 10:
+        return digits[-10:]
+    return digits or None
+
+
+def _pick_vendedor(user):
+    first_name = (getattr(user, "first_name", "") or "").strip()
+    if not first_name:
+        return "Giovanni"
+    if first_name.lower().startswith("daniel"):
+        return "Daniel S."
+    return "Giovanni"
+
+
 def fetch_and_save_meta_lead(leadgen_id: str):
     """
     Fetch full lead data from Meta Graph API and persist it.
@@ -120,20 +140,7 @@ def fetch_and_save_meta_lead(leadgen_id: str):
     if created_dt and timezone.is_naive(created_dt):
         created_dt = timezone.make_aware(created_dt, timezone.utc)
 
-    form_name = data.get("form_name") or ""
     form_id = data.get("form_id") or ""
-    if form_id and not form_name:
-        try:
-            form_resp = requests.get(
-                f"https://graph.facebook.com/v24.0/{form_id}",
-                params={"access_token": META_PAGE_TOKEN, "fields": "name"},
-                timeout=10,
-            )
-            form_resp.raise_for_status()
-            form_payload = form_resp.json() or {}
-            form_name = form_payload.get("name") or form_name
-        except Exception:
-            logger.warning("No se pudo obtener el nombre del formulario %s", form_id)
 
     defaults = {
         "created_time": created_dt or timezone.now(),
@@ -144,12 +151,14 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "campaign_id": data.get("campaign_id") or "",
         "campaign_name": data.get("campaign_name") or "",
         "form_id": form_id,
-        "form_name": form_name,
+        "form_name": data.get("form_name") or "",
         "is_organic": data.get("is_organic") or False,
         "platform": data.get("platform") or "",
         "full_name": raw_fields.get("full_name"),
         "email": raw_fields.get("email"),
         "phone_number": raw_fields.get("phone_number"),
+        "job_title": raw_fields.get("job_title"),
+        "company_name": raw_fields.get("company_name"),
         "raw_fields": raw_fields,
         "raw_payload": data,
     }
@@ -206,16 +215,73 @@ def lead_delete(request, pk: int):
 def lead_detail(request, pk: int):
     lead = get_object_or_404(MetaLead, pk=pk)
     back_url = request.GET.get("next") or "/leads/"
+    can_edit = request.user.is_superuser or request.user.groups.filter(name="Dirección Comercial").exists()
+
+    if request.method == "POST":
+        if not can_edit:
+            return HttpResponse(status=403)
+
+        lead.contactado = request.POST.get("contactado") == "on"
+        lead.estatus = request.POST.get("estatus") or None
+        lead.servicio = request.POST.get("servicio") or None
+        lead.notas = request.POST.get("notas") or None
+
+        cita_value = request.POST.get("cita_agendada") or ""
+        cita_dt = parse_datetime(cita_value) if cita_value else None
+        if cita_dt and timezone.is_naive(cita_dt):
+            cita_dt = timezone.make_aware(cita_dt, timezone.utc)
+
+        lead.cita_agendada = cita_dt
+        lead.save(update_fields=["contactado", "estatus", "servicio", "notas", "cita_agendada"])
+
+        if cita_dt:
+            if lead.cita_id:
+                cita = lead.cita
+                cita.fecha_cita = cita_dt
+            else:
+                cita = Cita(fecha_cita=cita_dt)
+
+            cita.prospecto = lead.company_name or ""
+            cita.medio = "Lead"
+            cita.servicio = lead.servicio or "Pendiente"
+            cita.contacto = lead.full_name or ""
+            cita.puesto = lead.job_title or ""
+            cita.telefono = _normalize_phone(lead.phone_number)
+            cita.correo = lead.email or ""
+            cita.estatus_cita = "Agendada"
+            cita.numero_cita = "Primera"
+            cita.vendedor = _pick_vendedor(request.user)
+
+            cita.save()
+            if not lead.cita_id:
+                lead.cita = cita
+                lead.save(update_fields=["cita"])
     field_rows = []
     for field in lead.fields.all():
         label = " ".join((field.name or "").replace("_", " ").split())
         value = field.value or ""
-        value = " ".join(str(value).replace("_", " ").split())
+        value_str = str(value)
+        if "@" in value_str:
+            value = value_str
+        else:
+            value = " ".join(value_str.replace("_", " ").split())
         field_rows.append({"label": label or "Campo", "value": value})
     return render(
         request,
         "leads/detalle.html",
-        {"lead": lead, "back_url": back_url, "field_rows": field_rows},
+        {
+            "lead": lead,
+            "back_url": back_url,
+            "field_rows": field_rows,
+            "can_edit": can_edit,
+            "cita_agendada_value": (
+                timezone.localtime(lead.cita_agendada).strftime("%Y-%m-%dT%H:%M")
+                if lead.cita_agendada
+                else ""
+            ),
+            "lead_estatus_choices": LEAD_ESTATUS_CHOICES,
+            "servicio_choices": SERVICIO_CHOICES,
+        },
     )
 
 
