@@ -57,6 +57,29 @@
       {{ form.estatus_pago|default_if_none:"" }}
     </div>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const clienteSelect = document.getElementById('{{ form.cliente.id_for_label }}');
+      const display = document.getElementById('id_comision_porcentaje_display');
+      if (!clienteSelect || !display) return;
+
+      const normalizePercent = (rate) => {
+        if (Number.isNaN(rate)) return 0;
+        return rate <= 1 ? rate * 100 : rate;
+      };
+
+      const updateDisplay = () => {
+        const option = clienteSelect.options[clienteSelect.selectedIndex];
+        const raw = option ? option.getAttribute('data-comision') : '';
+        const rate = raw ? parseFloat(String(raw).replace(',', '.')) : 0;
+        const percent = normalizePercent(rate);
+        display.value = `${percent.toFixed(2)}%`;
+      };
+
+      clienteSelect.addEventListener('change', updateDisplay);
+      updateDisplay();
+    });
+  </script>
 {% endblock %}
 
 {% block extra_actions %}
