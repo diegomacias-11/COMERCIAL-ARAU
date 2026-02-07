@@ -1020,7 +1020,10 @@ html, body { height: 100%; }
   justify-self: center;
 }
 .kanban-citas-row-filters .btn-view {
-  justify-self: start;
+  justify-self: start !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin-left: 0 !important;
 }
 .kanban-citas-row-filters .kanban-citas-btn:last-child {
   justify-self: end;
@@ -1197,7 +1200,8 @@ html, body { height: 100%; }
 
 .btn-submit,
 .btn-detalle,
-.btn-filter {
+.btn-filter,
+.btn-view {
   display: inline-flex;
   align-items: center;
   justify-content: center; /* centrar texto en botones largos */
@@ -2345,10 +2349,11 @@ html, body { height: 100%; }
   text-align: right;
 }
 
-/* === Unificación botones Volver/Filtro === */
+/* === Unificación botones Volver/Filtro/Vista === */
 /* Botones filtro/volver unificados en blanco */
 .btn-filter,
 .filter-container .btn-filter,
+.btn-view,
 .btn-volver,
 .btn-volver-bottom,
 .filter-container > a.btn-filter:only-child {
@@ -2362,6 +2367,7 @@ html, body { height: 100%; }
 }
 .btn-filter:hover,
 .filter-container .btn-filter:hover,
+.btn-view:hover,
 .btn-volver:hover,
 .btn-volver-bottom:hover,
 .filter-container > a.btn-filter:only-child:hover {
@@ -2393,3 +2399,50 @@ html, body { height: 100%; }
 .eval-muy-bueno { background: #c4e7c5; color: #1f4b26; }
 .eval-regular { background: #f7e099; color: #6b5112; }
 .eval-malo { background: #f3b0b0; color: #5d1111; }
+
+/* Dashboard ventas */
+.dashboard-container {
+  width: 100%;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #d6dee8;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem 1rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-title {
+  font-weight: 700;
+  color: #2b313f;
+  margin: 0 0 0.6rem 0;
+  font-size: 0.98rem;
+  text-align: center;
+}
+.dashboard-canvas {
+  width: 100% !important;
+  height: 280px !important;
+}
+.dashboard-empty {
+  text-align: center;
+  font-weight: 600;
+  color: #2b313f;
+  padding: 1.5rem 0;
+}
+
+/* Fix Vista placement in Citas kanban filter row */
+.filter-container .kanban-citas-row-filters .btn-view {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  align-self: center !important;
+  margin-left: 0 !important;
+}

@@ -29,7 +29,7 @@
         const confirmEnabled = !(confirmFlag === '0' || confirmFlag === 'false' || confirmFlag === 'no');
         if (confirmEnabled) {
           if (form.dataset.confirmDone === '1') return;
-          const ok = confirm(confirmMessage || '?Guardar cambios?');
+          const ok = confirm(confirmMessage || '¿Guardar cambios?');
           if (!ok) {
             ev.preventDefault();
             return;
@@ -43,7 +43,7 @@
         const hasInlineConfirm = (btn.getAttribute('onclick') || '').toLowerCase().includes('confirm(');
         if (hasInlineConfirm) return;
         btn.addEventListener('click', (ev) => {
-          const ok = confirm('¿Eliminar este registro?');
+          const ok = confirm('\u00bfEliminar este registro?');
           if (!ok) ev.preventDefault();
         });
       });

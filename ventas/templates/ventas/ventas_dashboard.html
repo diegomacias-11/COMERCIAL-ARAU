@@ -1,0 +1,223 @@
+{% extends "dashboard.html" %}
+
+{% block title %}Dashboard Ventas{% endblock %}
+
+{% block extra_head %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block filtros_left %}
+  <a href="{% url 'ventas_venta_list' %}" class="btn-filter btn-view">Vista</a>
+{% endblock %}
+
+{% block filtros %}
+  <div class="ventas-filter-center">
+    <div class="filter-title">
+      {% if fecha_desde_label and fecha_hasta_label %}
+        {{ fecha_desde_label }} - {{ fecha_hasta_label }}
+      {% else %}
+        Rango de fechas
+      {% endif %}
+    </div>
+    <form action="{% url 'ventas_venta_dashboard' %}" method="get" class="filter-form-simple dispersiones-filter">
+      <div class="filter-stack">
+        <label for="fecha_desde">Desde</label>
+        <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+      </div>
+
+      <div class="filter-stack">
+        <label for="fecha_hasta">Hasta</label>
+        <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+      </div>
+
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="{% url 'ventas_venta_dashboard' %}" class="btn-filter">Limpiar</a>
+    </form>
+  </div>
+{% endblock %}
+
+{% block filtros_right %}
+  <a class="btn-primary btn-primary-inline" target="_blank" href="{% url 'ventas_venta_dashboard_resumen' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">Resumen</a>
+{% endblock %}
+
+{% block dashboard_content %}
+  {% if ventas_count == 0 %}
+    <div class="dashboard-empty">Sin ventas en el periodo.</div>
+  {% else %}
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <div class="dashboard-title">Ventas por servicio</div>
+        <canvas id="ventasPorServicio" class="dashboard-canvas" aria-label="Ventas por servicio"></canvas>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-title">Total pagado vs pendiente</div>
+        <canvas id="ventasPorEstatus" class="dashboard-canvas" aria-label="Ventas por estatus"></canvas>
+      </div>
+    </div>
+  {% endif %}
+
+  {{ chart_data|json_script:"ventas-dashboard-data" }}
+
+  <script>
+    (function () {
+      const raw = document.getElementById("ventas-dashboard-data");
+      if (!raw) return;
+      const data = JSON.parse(raw.textContent || "{}");
+      if (!data || !data.labels_servicio || data.labels_servicio.length === 0) return;
+
+      const labelColor = "#003b71";
+      const money = new Intl.NumberFormat("es-MX", {
+        style: "currency",
+        currency: "MXN",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      const palette = ["#0a7a4d", "#f3b0b0"];
+      const baseBlue = "#59b9c7";
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${money.format(ctx.parsed.y ?? ctx.parsed)}`
+            }
+          }
+        },
+        layout: {
+          padding: { top: 24 }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: labelColor,
+              font: { weight: "600" }
+            }
+          },
+          y: {
+            grace: "10%",
+            ticks: {
+              color: labelColor,
+              font: { weight: "600" },
+              callback: (value) => money.format(value)
+            }
+          }
+        }
+      };
+
+      const fixedLabels = {
+        id: "fixedLabels",
+        afterDatasetsDraw(chart) {
+          const ctx = chart.ctx;
+          const type = chart.config.type;
+          const dataset = chart.data.datasets[0] || {};
+          const dataArr = dataset.data || [];
+          if (!dataArr.length) return;
+
+          ctx.save();
+          ctx.fillStyle = labelColor;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = "600 12px Arial";
+
+          if (type === "doughnut") {
+            const total = data.total_general || 0;
+            const meta = chart.getDatasetMeta(0);
+            meta.data.forEach((arc, i) => {
+              const value = Number(dataArr[i] || 0);
+              if (!value) return;
+              const pct = total > 0 ? (value / total) * 100 : 0;
+              const pos = arc.tooltipPosition();
+              const label = chart.data.labels[i] || "";
+              const line1 = label;
+              const line2 = `${money.format(value)} (${pct.toFixed(1)}%)`;
+              ctx.fillText(line1, pos.x, pos.y - 8);
+              ctx.fillText(line2, pos.x, pos.y + 8);
+            });
+          }
+
+          if (type === "bar") {
+            const meta = chart.getDatasetMeta(0);
+            meta.data.forEach((bar, i) => {
+              const value = Number(dataArr[i] || 0);
+              const pos = bar.tooltipPosition();
+              ctx.fillText(money.format(value), pos.x, pos.y - 10);
+            });
+          }
+
+          ctx.restore();
+        }
+      };
+
+      const porServicio = document.getElementById("ventasPorServicio");
+      if (porServicio) {
+        const total = data.total_general || 0;
+        const toRgb = (hex) => {
+          const clean = hex.replace("#", "");
+          const num = parseInt(clean, 16);
+          return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255
+          };
+        };
+        const mix = (a, b, t) => Math.round(a + (b - a) * t);
+        const base = toRgb(baseBlue);
+        const white = { r: 255, g: 255, b: 255 };
+        const serviceColors = data.totales_servicio.map((value) => {
+          const pct = total > 0 ? Math.min(Math.max(value / total, 0), 1) : 0;
+          const r = mix(white.r, base.r, pct);
+          const g = mix(white.g, base.g, pct);
+          const b = mix(white.b, base.b, pct);
+          return `rgb(${r}, ${g}, ${b})`;
+        });
+
+        new Chart(porServicio, {
+          type: "doughnut",
+          data: {
+            labels: data.labels_servicio,
+            datasets: [{
+              data: data.totales_servicio,
+              backgroundColor: serviceColors,
+              borderColor: "#ffffff",
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: false }
+            }
+          },
+          plugins: [fixedLabels]
+        });
+      }
+
+      const porEstatus = document.getElementById("ventasPorEstatus");
+      if (porEstatus) {
+        new Chart(porEstatus, {
+          type: "bar",
+          data: {
+            labels: ["Pagado", "Pendiente"],
+            datasets: [{
+              data: data.totales_estatus || [0, 0],
+              backgroundColor: palette
+            }]
+          },
+          options: {
+            ...commonOptions,
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: false }
+            }
+          },
+          plugins: [fixedLabels]
+        });
+      }
+    })();
+  </script>
+{% endblock %}

@@ -3,7 +3,9 @@
 
 {% block title %}Ventas{% endblock %}
 
-{% block filtros_left %}{% endblock %}
+{% block filtros_left %}
+  <a href="{% url 'ventas_venta_dashboard' %}?mes={{ mes }}&anio={{ anio }}" class="btn-filter">Dashboard</a>
+{% endblock %}
 
 {% block filtros %}
   <div class="ventas-filter-center">

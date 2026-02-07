@@ -45,7 +45,7 @@
 {% endblock %}
 
 {% block filtros_left %}
-  <a class="btn-primary btn-primary-inline" href="{% url 'actividades_exp_actividadexp_kanban' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
+  <a class="btn-filter btn-view btn-primary-inline" href="{% url 'actividades_exp_actividadexp_kanban' %}?{% if request.GET %}{{ request.GET.urlencode }}{% endif %}">Vista</a>
 {% endblock %}
 
 {% block filtros_right %}

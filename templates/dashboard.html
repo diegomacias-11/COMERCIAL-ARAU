@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<main>
+  <section class="filter-container">
+    <div class="filter-bar">
+      <div class="filter-slot filter-slot-left">
+        {% block filtros_left %}{% endblock %}
+      </div>
+      <div class="filter-slot filter-slot-center">
+        {% block filtros %}{% endblock %}
+      </div>
+      <div class="filter-slot filter-slot-right">
+        {% block filtros_right %}{% endblock %}
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-container">
+    {% block dashboard_content %}{% endblock %}
+  </section>
+</main>
+{% endblock %}
