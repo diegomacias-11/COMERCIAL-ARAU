@@ -17,6 +17,8 @@ from reportlab.graphics.shapes import Drawing, String
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from .forms import VentaForm
@@ -205,6 +207,7 @@ def ventas_dashboard(request):
         "fecha_desde_label": fecha_desde_label,
         "fecha_hasta_label": fecha_hasta_label,
         "chart_data": chart_data,
+        "total_ventas_display": _format_money(resumen_data["total_general"]),
     }
     return render(request, "ventas/ventas_dashboard.html", context)
 
@@ -216,14 +219,73 @@ def _format_money(value):
         return "$0.00"
 
 
+def _format_fecha_larga(value):
+    if not value:
+        return "—"
+    meses = [
+        "enero",
+        "febrero",
+        "marzo",
+        "abril",
+        "mayo",
+        "junio",
+        "julio",
+        "agosto",
+        "septiembre",
+        "octubre",
+        "noviembre",
+        "diciembre",
+    ]
+    return f"{value.day:02d} de {meses[value.month - 1]} del {value.year}"
+
+
+def _try_register_poppins():
+    font_dir = settings.BASE_DIR / "static" / "fonts"
+    if not font_dir.exists():
+        return None, None
+
+    def pick(names):
+        for name in names:
+            path = font_dir / name
+            if path.exists():
+                return path
+        return None
+
+    regular_path = pick(["Poppins-Regular.ttf", "Poppins.ttf"])
+    bold_path = pick(["Poppins-Bold.ttf", "Poppins-SemiBold.ttf"])
+    italic_path = pick(["Poppins-Italic.ttf"])
+    bold_italic_path = pick(["Poppins-BoldItalic.ttf", "Poppins-Italic.ttf"])
+
+    try:
+        if regular_path:
+            pdfmetrics.registerFont(TTFont("Poppins", str(regular_path)))
+        if bold_path:
+            pdfmetrics.registerFont(TTFont("Poppins-Bold", str(bold_path)))
+        if italic_path:
+            pdfmetrics.registerFont(TTFont("Poppins-Italic", str(italic_path)))
+        if bold_italic_path:
+            pdfmetrics.registerFont(TTFont("Poppins-BoldItalic", str(bold_italic_path)))
+        if regular_path and bold_path:
+            pdfmetrics.registerFontFamily(
+                "Poppins",
+                normal="Poppins",
+                bold="Poppins-Bold",
+                italic="Poppins-Italic" if italic_path else "Poppins",
+                boldItalic="Poppins-BoldItalic" if bold_italic_path else "Poppins-Bold",
+            )
+        return ("Poppins" if regular_path else None, "Poppins-Bold" if bold_path else None)
+    except Exception:
+        return None, None
+
+
 def ventas_resumen_pdf(request):
     fecha_desde, fecha_hasta = _get_ventas_rango(request)
     ventas = list(_ventas_queryset_for_rango(fecha_desde, fecha_hasta))
     resumen_data = _ventas_resumen_data(ventas)
 
-    desde_txt = fecha_desde.strftime("%d/%m/%Y") if fecha_desde else "—"
-    hasta_txt = fecha_hasta.strftime("%d/%m/%Y") if fecha_hasta else "—"
-    subtitle_text = f"Fechas: {desde_txt} a {hasta_txt}"
+    desde_txt = _format_fecha_larga(fecha_desde)
+    hasta_txt = _format_fecha_larga(fecha_hasta)
+    subtitle_text = f"Fechas:<br/>{desde_txt}<br/>{hasta_txt}"
 
     template_path = settings.BASE_DIR / "static" / "img" / "MEMBRETE.pdf"
     pagesize = landscape(letter)
@@ -248,11 +310,20 @@ def ventas_resumen_pdf(request):
         topMargin=85.04,
         bottomMargin=85.04,
     )
+    poppins_regular, poppins_bold = _try_register_poppins()
+    font_regular = poppins_regular or "Helvetica"
+    font_bold = poppins_bold or "Helvetica-Bold"
     styles = getSampleStyleSheet()
     title_style = styles["Title"]
     title_style.alignment = 1
+    title_style.textColor = colors.HexColor("#003b71")
+    title_style.fontName = font_bold
     subtitle_style = styles["Heading2"]
-    subtitle_style.alignment = 1
+    subtitle_style.alignment = 2
+    subtitle_style.textColor = colors.HexColor("#003b71")
+    subtitle_style.fontName = font_regular
+    subtitle_style.fontSize = 10
+    subtitle_style.leading = 12
     chart_title_style = ParagraphStyle(
         "ChartTitle",
         parent=styles["Heading3"],
@@ -261,20 +332,112 @@ def ventas_resumen_pdf(request):
         fontSize=11,
         leading=12,
         spaceAfter=6,
+        fontName=font_bold,
     )
-
-    elements = [
-        Paragraph("Resumen de Ventas", title_style),
-        Paragraph(subtitle_text, subtitle_style),
-        Spacer(1, 10),
-    ]
 
     page_width = pagesize[0]
     available_width = page_width - doc.leftMargin - doc.rightMargin
+    total_general = resumen_data["total_general"]
+
+    total_box = Table(
+        [[f"Total ventas: {_format_money(total_general)}"]],
+        colWidths=[available_width * 0.32],
+    )
+    total_box.setStyle(
+        TableStyle(
+            [
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eef3f7")),
+                ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#003b71")),
+                ("FONTNAME", (0, 0), (-1, -1), font_bold),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("INNERPADDING", (0, 0), (-1, -1), 4),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#aebed2")),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ]
+        )
+    )
+
+    top_bar = Table([[""]], colWidths=[available_width], rowHeights=[16])
+    top_bar.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#59b9c7")),
+                ("INNERPADDING", (0, 0), (-1, -1), 0),
+                ("BOX", (0, 0), (-1, -1), 0, colors.white),
+            ]
+        )
+    )
+
+    right_stack = Table(
+        [
+            [Paragraph(subtitle_text, subtitle_style)],
+            [total_box],
+        ],
+        colWidths=[available_width * 0.35],
+    )
+    right_stack.setStyle(
+        TableStyle(
+            [
+                ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ]
+        )
+    )
+
+    header_table = Table(
+        [
+            [
+                Paragraph("Resumen de Ventas", title_style),
+                right_stack,
+            ]
+        ],
+        colWidths=[available_width * 0.65, available_width * 0.35],
+        rowHeights=[38],
+    )
+    header_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (0, 0), "CENTER"),
+                ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+
+    header_separator = Table([[""]], colWidths=[available_width])
+    header_separator.setStyle(
+        TableStyle(
+            [
+                ("LINEBELOW", (0, 0), (-1, -1), 0.8, colors.HexColor("#aebed2")),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+
+    header_spacer = Table([[""]], colWidths=[available_width], rowHeights=[6])
+
+    elements = [
+        top_bar,
+        Spacer(1, 12),
+        header_table,
+        header_spacer,
+        header_separator,
+        Spacer(1, 10),
+    ]
+
     chart_width = available_width
     chart_height = 200
-
-    total_general = resumen_data["total_general"]
     if total_general <= 0 or not resumen_data["totales_servicio"]:
         labels_servicio = ["Sin ventas"]
         totales_servicio = [1]
@@ -335,12 +498,12 @@ def ventas_resumen_pdf(request):
             y = center_y + label_r * math.sin(theta)
         pct = (value / total_general * 100) if total_general else 0
         t1 = String(x, y + (line_gap / 2), f"{label}")
-        t1.fontName = "Helvetica-Bold"
+        t1.fontName = font_bold
         t1.fontSize = 8
         t1.fillColor = colors.HexColor("#003b71")
         t1.textAnchor = "middle"
         t2 = String(x, y - (line_gap / 2), f"{_format_money(value)} ({pct:.1f}%)")
-        t2.fontName = "Helvetica"
+        t2.fontName = font_regular
         t2.fontSize = 8
         t2.fillColor = colors.HexColor("#003b71")
         t2.textAnchor = "middle"
@@ -357,9 +520,10 @@ def ventas_resumen_pdf(request):
     bar.categoryAxis.categoryNames = ["Pagado", "Pendiente"]
     bar.categoryAxis.labels.boxAnchor = "n"
     bar.categoryAxis.labels.dy = -2
-    bar.categoryAxis.labels.fontName = "Helvetica-Bold"
+    bar.categoryAxis.labels.fontName = font_bold
     bar.categoryAxis.labels.fontSize = 9
     bar.categoryAxis.labels.fillColor = colors.HexColor("#003b71")
+    bar.valueAxis.labels.fontName = font_regular
     bar.valueAxis.labelTextFormat = lambda v: _format_money(v)
     bar.valueAxis.labels.fontSize = 7
     bar.valueAxis.labels.fillColor = colors.HexColor("#003b71")
@@ -370,13 +534,16 @@ def ventas_resumen_pdf(request):
     bar.barWidth = 28
     bar.barSpacing = 12
     bar.groupSpacing = 18
+    bar.strokeColor = colors.transparent
     bar.barLabels.nudge = 6
-    bar.barLabels.fontName = "Helvetica-Bold"
+    bar.barLabels.fontName = font_bold
     bar.barLabels.fontSize = 8
     bar.barLabels.fillColor = colors.HexColor("#003b71")
     bar.barLabelFormat = lambda v: _format_money(v)
     bar.bars[(0, 0)].fillColor = colors.HexColor("#0a7a4d")
     bar.bars[(0, 1)].fillColor = colors.HexColor("#f3b0b0")
+    bar.bars[(0, 0)].strokeColor = colors.transparent
+    bar.bars[(0, 1)].strokeColor = colors.transparent
 
     bar_drawing = Drawing(chart_width, chart_height)
     bar_drawing.add(bar)
