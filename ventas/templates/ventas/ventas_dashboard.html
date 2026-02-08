@@ -140,12 +140,22 @@
               const value = Number(dataArr[i] || 0);
               if (!value) return;
               const pct = total > 0 ? (value / total) * 100 : 0;
-              const pos = arc.tooltipPosition();
+              const angle = (arc.startAngle + arc.endAngle) / 2;
+              const radius = arc.innerRadius + (arc.outerRadius - arc.innerRadius) * 0.6;
+              const pos = {
+                x: arc.x + Math.cos(angle) * radius,
+                y: arc.y + Math.sin(angle) * radius
+              };
               const label = chart.data.labels[i] || "";
-              ctx.fillStyle = pickTextColor(bgColors[i] || "#ffffff");
+              const fill = pickTextColor(bgColors[i] || "#ffffff");
+              ctx.fillStyle = fill;
+              ctx.strokeStyle = fill === "#ffffff" ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.6)";
+              ctx.lineWidth = 2;
               const line1 = label;
               const line2 = `${money.format(value)} (${pct.toFixed(1)}%)`;
+              ctx.strokeText(line1, pos.x, pos.y - 8);
               ctx.fillText(line1, pos.x, pos.y - 8);
+              ctx.strokeText(line2, pos.x, pos.y + 8);
               ctx.fillText(line2, pos.x, pos.y + 8);
             });
           }

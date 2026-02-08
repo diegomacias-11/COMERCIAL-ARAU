@@ -494,8 +494,26 @@ def ventas_resumen_pdf(request):
     center_y = pie.y + pie.height / 2
     outer_r = pie.width / 2
     inner_r = outer_r * (pie.innerRadiusFraction or 0)
-    label_r = inner_r + (outer_r - inner_r) * 0.55
+    label_r = inner_r + (outer_r - inner_r) * 0.6
     line_gap = 10
+    outline_dark = colors.HexColor("#003b71")
+    outline_light = colors.white
+
+    def _add_outlined_text(x, y, text, font_name, font_size, fill_color):
+        outline_color = outline_dark if fill_color == colors.white else outline_light
+        for dx, dy in [(-0.6, 0), (0.6, 0), (0, -0.6), (0, 0.6)]:
+            s = String(x + dx, y + dy, text)
+            s.fontName = font_name
+            s.fontSize = font_size
+            s.fillColor = outline_color
+            s.textAnchor = "middle"
+            pie_drawing.add(s)
+        s = String(x, y, text)
+        s.fontName = font_name
+        s.fontSize = font_size
+        s.fillColor = fill_color
+        s.textAnchor = "middle"
+        pie_drawing.add(s)
     single_slice = len(totales_servicio) == 1
     for idx, (label, value) in enumerate(zip(labels_servicio, label_values)):
         angle = (value / total_for_angles) * angle_range
@@ -518,18 +536,8 @@ def ventas_resumen_pdf(request):
         )
         label_fill = colors.white if lum < 0.55 else colors.HexColor("#003b71")
 
-        t1 = String(x, y + (line_gap / 2), f"{label}")
-        t1.fontName = font_bold
-        t1.fontSize = 8
-        t1.fillColor = label_fill
-        t1.textAnchor = "middle"
-        t2 = String(x, y - (line_gap / 2), f"{_format_money(value)} ({pct:.1f}%)")
-        t2.fontName = font_regular
-        t2.fontSize = 8
-        t2.fillColor = label_fill
-        t2.textAnchor = "middle"
-        pie_drawing.add(t1)
-        pie_drawing.add(t2)
+        _add_outlined_text(x, y + (line_gap / 2), f"{label}", font_bold, 8, label_fill)
+        _add_outlined_text(x, y - (line_gap / 2), f"{_format_money(value)} ({pct:.1f}%)", font_regular, 8, label_fill)
         start_angle = start_angle - angle if direction == "clockwise" else start_angle + angle
 
     bar = VerticalBarChart()
