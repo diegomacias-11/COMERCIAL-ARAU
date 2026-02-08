@@ -105,13 +105,15 @@ def _parse_date(value):
         return None
 
 
-def _get_ventas_rango(request):
+def _get_ventas_rango(request, allow_empty=False):
     fecha_desde_raw = request.GET.get("fecha_desde") or ""
     fecha_hasta_raw = request.GET.get("fecha_hasta") or ""
     fecha_desde = _parse_date(fecha_desde_raw)
     fecha_hasta = _parse_date(fecha_hasta_raw)
 
     if not fecha_desde and not fecha_hasta:
+        if allow_empty:
+            return None, None
         mes_q = request.GET.get("mes")
         anio_q = request.GET.get("anio")
         mes = None
@@ -185,7 +187,7 @@ def _ventas_resumen_data(ventas):
 
 
 def ventas_dashboard(request):
-    fecha_desde, fecha_hasta = _get_ventas_rango(request)
+    fecha_desde, fecha_hasta = _get_ventas_rango(request, allow_empty=True)
     ventas = list(_ventas_queryset_for_rango(fecha_desde, fecha_hasta))
     resumen_data = _ventas_resumen_data(ventas)
     chart_data = {
@@ -279,9 +281,15 @@ def _try_register_poppins():
 
 
 def ventas_resumen_pdf(request):
-    fecha_desde, fecha_hasta = _get_ventas_rango(request)
+    fecha_desde, fecha_hasta = _get_ventas_rango(request, allow_empty=True)
     ventas = list(_ventas_queryset_for_rango(fecha_desde, fecha_hasta))
     resumen_data = _ventas_resumen_data(ventas)
+
+    if not fecha_desde and not fecha_hasta:
+        fechas = [v.fecha for v in ventas if v.fecha]
+        if fechas:
+            fecha_desde = min(fechas)
+            fecha_hasta = max(fechas)
 
     desde_txt = _format_fecha_larga(fecha_desde)
     hasta_txt = _format_fecha_larga(fecha_hasta)
@@ -462,13 +470,18 @@ def ventas_resumen_pdf(request):
     pie.innerRadiusFraction = 0.55
 
     base_blue = colors.HexColor("#59b9c7")
+    dark_blue = colors.HexColor("#003b71")
+    slice_colors = []
     for i, value in enumerate(totales_servicio):
         pct = (value / total_general) if total_general else 0
         pct = max(min(pct, 1), 0)
-        r = colors.white.red + (base_blue.red - colors.white.red) * pct
-        g = colors.white.green + (base_blue.green - colors.white.green) * pct
-        b = colors.white.blue + (base_blue.blue - colors.white.blue) * pct
-        pie.slices[i].fillColor = colors.Color(r, g, b)
+        t = 0.25 + (0.75 * pct)
+        r = base_blue.red + (dark_blue.red - base_blue.red) * t
+        g = base_blue.green + (dark_blue.green - base_blue.green) * t
+        b = base_blue.blue + (dark_blue.blue - base_blue.blue) * t
+        color = colors.Color(r, g, b)
+        pie.slices[i].fillColor = color
+        slice_colors.append(color)
 
     pie_drawing = Drawing(chart_width, chart_height)
     pie_drawing.add(pie)
@@ -484,7 +497,7 @@ def ventas_resumen_pdf(request):
     label_r = inner_r + (outer_r - inner_r) * 0.55
     line_gap = 10
     single_slice = len(totales_servicio) == 1
-    for label, value in zip(labels_servicio, label_values):
+    for idx, (label, value) in enumerate(zip(labels_servicio, label_values)):
         angle = (value / total_for_angles) * angle_range
         if angle <= 0:
             continue
@@ -497,15 +510,23 @@ def ventas_resumen_pdf(request):
             x = center_x + label_r * math.cos(theta)
             y = center_y + label_r * math.sin(theta)
         pct = (value / total_general * 100) if total_general else 0
+        slice_color = slice_colors[idx] if idx < len(slice_colors) else colors.HexColor("#59b9c7")
+        lum = (
+            0.2126 * slice_color.red
+            + 0.7152 * slice_color.green
+            + 0.0722 * slice_color.blue
+        )
+        label_fill = colors.white if lum < 0.55 else colors.HexColor("#003b71")
+
         t1 = String(x, y + (line_gap / 2), f"{label}")
         t1.fontName = font_bold
         t1.fontSize = 8
-        t1.fillColor = colors.HexColor("#003b71")
+        t1.fillColor = label_fill
         t1.textAnchor = "middle"
         t2 = String(x, y - (line_gap / 2), f"{_format_money(value)} ({pct:.1f}%)")
         t2.fontName = font_regular
         t2.fontSize = 8
-        t2.fillColor = colors.HexColor("#003b71")
+        t2.fillColor = label_fill
         t2.textAnchor = "middle"
         pie_drawing.add(t1)
         pie_drawing.add(t2)
