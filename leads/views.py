@@ -209,7 +209,9 @@ def lead_delete(request, pk: int):
 def lead_detail(request, pk: int):
     lead = get_object_or_404(MetaLead, pk=pk)
     back_url = request.GET.get("next") or "/leads/"
-    can_edit = request.user.is_superuser or request.user.groups.filter(name="Dirección Comercial").exists()
+    can_edit = request.user.is_superuser or request.user.groups.filter(
+        name__in=["Dirección Comercial", "Apoyo Comercial"]
+    ).exists()
 
     if request.method == "POST":
         if not can_edit:

@@ -59,7 +59,8 @@
       const data = JSON.parse(raw.textContent || "{}");
       if (!data || !data.labels_servicio || data.labels_servicio.length === 0) return;
 
-      const labelColor = "#003b71";
+      const baseBlue = "#2b313f";
+      const labelColor = baseBlue;
       const money = new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency: "MXN",
@@ -67,8 +68,6 @@
         maximumFractionDigits: 2
       });
       const palette = ["#0a7a4d", "#f3b0b0"];
-      const baseBlue = "#59b9c7";
-      const darkBlue = "#003b71";
       const toRgb = (color) => {
         if (!color) return { r: 0, g: 0, b: 0 };
         if (color.startsWith("rgb")) {
@@ -133,31 +132,95 @@
           ctx.font = "600 12px Arial";
 
           if (type === "doughnut") {
-            const total = data.total_general || 0;
+            const total = dataArr.reduce((sum, value) => sum + Number(value || 0), 0);
             const meta = chart.getDatasetMeta(0);
             const bgColors = dataset.backgroundColor || [];
+            const chartArea = chart.chartArea;
+            const items = [];
+
             meta.data.forEach((arc, i) => {
               const value = Number(dataArr[i] || 0);
               if (!value) return;
               const pct = total > 0 ? (value / total) * 100 : 0;
               const angle = (arc.startAngle + arc.endAngle) / 2;
-              const radius = arc.innerRadius + (arc.outerRadius - arc.innerRadius) * 0.6;
-              const pos = {
-                x: arc.x + Math.cos(angle) * radius,
-                y: arc.y + Math.sin(angle) * radius
+              const side = Math.cos(angle) >= 0 ? 1 : -1;
+              const anchor = {
+                x: arc.x + Math.cos(angle) * arc.outerRadius,
+                y: arc.y + Math.sin(angle) * arc.outerRadius
               };
-              const label = chart.data.labels[i] || "";
-              const fill = pickTextColor(bgColors[i] || "#ffffff");
-              ctx.fillStyle = fill;
-              ctx.strokeStyle = fill === "#ffffff" ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.6)";
-              ctx.lineWidth = 2;
-              const line1 = label;
-              const line2 = `${money.format(value)} (${pct.toFixed(1)}%)`;
-              ctx.strokeText(line1, pos.x, pos.y - 8);
-              ctx.fillText(line1, pos.x, pos.y - 8);
-              ctx.strokeText(line2, pos.x, pos.y + 8);
-              ctx.fillText(line2, pos.x, pos.y + 8);
+              const y = arc.y + Math.sin(angle) * (arc.outerRadius + 18);
+              items.push({
+                side,
+                anchor,
+                y,
+                label: chart.data.labels[i] || "",
+                line2: `${money.format(value)} (${pct.toFixed(1)}%)`
+              });
             });
+
+            const minGap = 34;
+            const left = items.filter(i => i.side < 0).sort((a, b) => a.y - b.y);
+            const right = items.filter(i => i.side > 0).sort((a, b) => a.y - b.y);
+
+            const adjust = (arr) => {
+              let prev = null;
+              const top = chartArea.top + 28;
+              const bottom = chartArea.bottom - 28;
+              arr.forEach((it) => {
+                let y = Math.max(it.y, top);
+                if (prev !== null && y - prev < minGap) y = prev + minGap;
+                if (y > bottom) y = bottom;
+                it.y = y;
+                prev = y;
+              });
+            };
+            adjust(left);
+            adjust(right);
+
+            ctx.save();
+            ctx.beginPath();
+            const clipPad = 10;
+            ctx.rect(
+              chartArea.left - clipPad,
+              chartArea.top - clipPad,
+              (chartArea.right - chartArea.left) + (clipPad * 2),
+              (chartArea.bottom - chartArea.top) + (clipPad * 2)
+            );
+            ctx.clip();
+            const lineColor = "#59b9c7";
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 1;
+
+            const drawSide = (arr, side) => {
+              const textAlign = side > 0 ? "right" : "left";
+              const textX = side > 0 ? (chartArea.right - 10) : (chartArea.left + 10);
+              const textGap = 8;
+              arr.forEach((it) => {
+                const midX = Math.max(chartArea.left + 2, Math.min(it.anchor.x + side * 16, chartArea.right - 2));
+                const endX = Math.max(chartArea.left + 10, Math.min(textX, chartArea.right - 10));
+                ctx.beginPath();
+                ctx.moveTo(it.anchor.x, it.anchor.y);
+                ctx.lineTo(midX, it.y);
+                const lineEndX = endX + (side > 0 ? -textGap : textGap);
+                ctx.lineTo(lineEndX, it.y);
+                ctx.stroke();
+
+                ctx.textAlign = textAlign;
+                ctx.fillStyle = labelColor;
+                ctx.font = "600 11px Arial";
+                const maxTextWidth = (chartArea.right - chartArea.left) * 0.35;
+                const label = ctx.measureText(it.label).width > maxTextWidth ? `${it.label.slice(0, 12)}…` : it.label;
+                const textXAdj = endX + (side > 0 ? -2 : 2);
+                ctx.fillText(label, textXAdj, it.y - 8);
+                ctx.font = "500 10px Arial";
+                const line2 = ctx.measureText(it.line2).width > maxTextWidth ? `${it.line2.slice(0, 12)}…` : it.line2;
+                ctx.fillText(line2, textXAdj, it.y + 8);
+              });
+            };
+
+            drawSide(left, -1);
+            drawSide(right, 1);
+            ctx.restore();
           }
 
           if (type === "bar") {
@@ -176,25 +239,44 @@
 
       const porServicio = document.getElementById("ventasPorServicio");
       if (porServicio) {
-        const total = data.total_general || 0;
+        const rawLabels = data.labels_servicio || [];
+        const rawValues = data.totales_servicio || [];
+        const merged = rawLabels.map((label, i) => ({
+          label,
+          value: Number(rawValues[i] || 0)
+        })).filter(item => item.value > 0);
+
+        merged.sort((a, b) => b.value - a.value);
+        const maxSlices = 7;
+        const shown = [];
+        let otrosValue = 0;
+        merged.forEach((item, idx) => {
+          if (idx < maxSlices - 1) shown.push(item);
+          else otrosValue += item.value;
+        });
+        if (otrosValue > 0) shown.push({ label: "Otros", value: otrosValue });
+
+        const labels = shown.map(item => item.label);
+        const values = shown.map(item => item.value);
+
         const mix = (a, b, t) => Math.round(a + (b - a) * t);
         const base = toRgb(baseBlue);
-        const dark = toRgb(darkBlue);
-        const serviceColors = data.totales_servicio.map((value) => {
-          const pct = total > 0 ? Math.min(Math.max(value / total, 0), 1) : 0;
-          const t = 0.25 + 0.75 * pct;
-          const r = mix(base.r, dark.r, t);
-          const g = mix(base.g, dark.g, t);
-          const b = mix(base.b, dark.b, t);
+        const white = { r: 255, g: 255, b: 255 };
+        const serviceColors = values.map((_, i) => {
+          if (values.length === 1) return `rgb(${base.r}, ${base.g}, ${base.b})`;
+          const t = (i / (values.length - 1)) * 0.6;
+          const r = mix(base.r, white.r, t);
+          const g = mix(base.g, white.g, t);
+          const b = mix(base.b, white.b, t);
           return `rgb(${r}, ${g}, ${b})`;
         });
 
         new Chart(porServicio, {
           type: "doughnut",
           data: {
-            labels: data.labels_servicio,
+            labels,
             datasets: [{
-              data: data.totales_servicio,
+              data: values,
               backgroundColor: serviceColors,
               borderColor: "#ffffff",
               borderWidth: 1

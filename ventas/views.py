@@ -13,7 +13,7 @@ from django.urls import reverse
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.graphics.charts.piecharts import Pie
-from reportlab.graphics.shapes import Drawing, String
+from reportlab.graphics.shapes import Drawing, Line, String
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -324,11 +324,11 @@ def ventas_resumen_pdf(request):
     styles = getSampleStyleSheet()
     title_style = styles["Title"]
     title_style.alignment = 1
-    title_style.textColor = colors.HexColor("#003b71")
+    title_style.textColor = colors.HexColor("#2b313f")
     title_style.fontName = font_bold
     subtitle_style = styles["Heading2"]
     subtitle_style.alignment = 2
-    subtitle_style.textColor = colors.HexColor("#003b71")
+    subtitle_style.textColor = colors.HexColor("#2b313f")
     subtitle_style.fontName = font_regular
     subtitle_style.fontSize = 10
     subtitle_style.leading = 12
@@ -336,12 +336,39 @@ def ventas_resumen_pdf(request):
         "ChartTitle",
         parent=styles["Heading3"],
         alignment=1,
-        textColor=colors.HexColor("#003b71"),
+        textColor=colors.HexColor("#2b313f"),
         fontSize=11,
         leading=12,
         spaceAfter=6,
         fontName=font_bold,
     )
+
+    def _text_width(text, font_name, size):
+        return pdfmetrics.stringWidth(text, font_name, size)
+
+    def _truncate_text(text, max_width, font_name, size):
+        if _text_width(text, font_name, size) <= max_width:
+            return text
+        t = text
+        while t and _text_width(f"{t}…", font_name, size) > max_width:
+            t = t[:-1]
+        return f"{t}…" if t else ""
+
+    def _fit_two_lines(label, value, max_width, max_size=8, min_size=6):
+        size = max_size
+        while size >= min_size:
+            if (
+                _text_width(label, font_bold, size) <= max_width
+                and _text_width(value, font_regular, size) <= max_width
+            ):
+                return label, value, size, False
+            size -= 1
+        return (
+            _truncate_text(label, max_width, font_bold, min_size),
+            _truncate_text(value, max_width, font_regular, min_size),
+            min_size,
+            True,
+        )
 
     page_width = pagesize[0]
     available_width = page_width - doc.leftMargin - doc.rightMargin
@@ -357,7 +384,7 @@ def ventas_resumen_pdf(request):
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eef3f7")),
-                ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#003b71")),
+                ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#2b313f")),
                 ("FONTNAME", (0, 0), (-1, -1), font_bold),
                 ("FONTSIZE", (0, 0), (-1, -1), 9),
                 ("INNERPADDING", (0, 0), (-1, -1), 4),
@@ -469,16 +496,17 @@ def ventas_resumen_pdf(request):
     pie.slices.strokeWidth = 0.5
     pie.innerRadiusFraction = 0.55
 
-    base_blue = colors.HexColor("#59b9c7")
-    dark_blue = colors.HexColor("#003b71")
+    base_blue = colors.HexColor("#2b313f")
     slice_colors = []
+    count = max(len(totales_servicio), 1)
     for i, value in enumerate(totales_servicio):
-        pct = (value / total_general) if total_general else 0
-        pct = max(min(pct, 1), 0)
-        t = 0.25 + (0.75 * pct)
-        r = base_blue.red + (dark_blue.red - base_blue.red) * t
-        g = base_blue.green + (dark_blue.green - base_blue.green) * t
-        b = base_blue.blue + (dark_blue.blue - base_blue.blue) * t
+        if count == 1:
+            t = 0
+        else:
+            t = (i / (count - 1)) * 0.6
+        r = base_blue.red + (colors.white.red - base_blue.red) * t
+        g = base_blue.green + (colors.white.green - base_blue.green) * t
+        b = base_blue.blue + (colors.white.blue - base_blue.blue) * t
         color = colors.Color(r, g, b)
         pie.slices[i].fillColor = color
         slice_colors.append(color)
@@ -494,51 +522,117 @@ def ventas_resumen_pdf(request):
     center_y = pie.y + pie.height / 2
     outer_r = pie.width / 2
     inner_r = outer_r * (pie.innerRadiusFraction or 0)
-    label_r = inner_r + (outer_r - inner_r) * 0.6
-    line_gap = 10
-    outline_dark = colors.HexColor("#003b71")
-    outline_light = colors.white
-
-    def _add_outlined_text(x, y, text, font_name, font_size, fill_color):
-        outline_color = outline_dark if fill_color == colors.white else outline_light
-        for dx, dy in [(-0.6, 0), (0.6, 0), (0, -0.6), (0, 0.6)]:
-            s = String(x + dx, y + dy, text)
-            s.fontName = font_name
-            s.fontSize = font_size
-            s.fillColor = outline_color
-            s.textAnchor = "middle"
-            pie_drawing.add(s)
-        s = String(x, y, text)
-        s.fontName = font_name
-        s.fontSize = font_size
-        s.fillColor = fill_color
-        s.textAnchor = "middle"
-        pie_drawing.add(s)
-    single_slice = len(totales_servicio) == 1
+    items_left = []
+    items_right = []
     for idx, (label, value) in enumerate(zip(labels_servicio, label_values)):
         angle = (value / total_for_angles) * angle_range
         if angle <= 0:
             continue
-        if single_slice:
-            x = center_x
-            y = center_y
-        else:
-            mid = start_angle - (angle / 2) if direction == "clockwise" else start_angle + (angle / 2)
-            theta = math.radians(mid)
-            x = center_x + label_r * math.cos(theta)
-            y = center_y + label_r * math.sin(theta)
+        mid = start_angle - (angle / 2) if direction == "clockwise" else start_angle + (angle / 2)
+        theta = math.radians(mid)
+        side = 1 if math.cos(theta) >= 0 else -1
+        anchor_x = center_x + math.cos(theta) * outer_r
+        anchor_y = center_y + math.sin(theta) * outer_r
+        y = center_y + math.sin(theta) * (outer_r + 16)
         pct = (value / total_general * 100) if total_general else 0
-        slice_color = slice_colors[idx] if idx < len(slice_colors) else colors.HexColor("#59b9c7")
-        lum = (
-            0.2126 * slice_color.red
-            + 0.7152 * slice_color.green
-            + 0.0722 * slice_color.blue
-        )
-        label_fill = colors.white if lum < 0.55 else colors.HexColor("#003b71")
-
-        _add_outlined_text(x, y + (line_gap / 2), f"{label}", font_bold, 8, label_fill)
-        _add_outlined_text(x, y - (line_gap / 2), f"{_format_money(value)} ({pct:.1f}%)", font_regular, 8, label_fill)
+        line1 = f"{label}"
+        line2 = f"{_format_money(value)} ({pct:.1f}%)"
+        item = {
+            "side": side,
+            "anchor_x": anchor_x,
+            "anchor_y": anchor_y,
+            "y": y,
+            "line1": line1,
+            "line2": line2,
+        }
+        if side > 0:
+            items_right.append(item)
+        else:
+            items_left.append(item)
         start_angle = start_angle - angle if direction == "clockwise" else start_angle + angle
+
+    def _adjust(items, min_y, max_y, gap=22):
+        items.sort(key=lambda i: i["y"])
+        if len(items) <= 1:
+            return
+        available = max_y - min_y
+        gap = min(gap, available / (len(items) - 1))
+        prev = None
+        for it in items:
+            y = max(it["y"], min_y)
+            if prev is not None and y - prev < gap:
+                y = prev + gap
+            it["y"] = y
+            prev = y
+        last_y = items[-1]["y"]
+        if last_y > max_y:
+            shift = last_y - max_y
+            for it in items:
+                it["y"] = max(min_y, it["y"] - shift)
+
+    min_y = center_y - outer_r + 6
+    max_y = center_y + outer_r - 6
+    _adjust(items_left, min_y, max_y)
+    _adjust(items_right, min_y, max_y)
+
+    left_margin = 8
+    right_margin = chart_width - 8
+    left_text_x = max(left_margin + 20, center_x - outer_r - 40)
+    right_text_x = min(right_margin - 20, center_x + outer_r + 40)
+
+    def _draw_callouts(items, side):
+        if not items:
+            return
+        text_x_base = right_text_x if side > 0 else left_text_x
+        text_gap_top = 4
+        text_gap_bottom = 9
+        font_size = 8
+        for it in items:
+            mid_x = it["anchor_x"] + side * 10
+            pie_drawing.add(
+                Line(
+                    it["anchor_x"],
+                    it["anchor_y"],
+                    mid_x,
+                    it["y"],
+                    strokeColor=colors.HexColor("#59b9c7"),
+                    strokeWidth=0.6,
+                )
+            )
+            max_width = (right_margin - text_x_base) if side > 0 else (text_x_base - left_margin)
+            line1 = _truncate_text(it["line1"], max_width, font_bold, font_size)
+            line2 = _truncate_text(it["line2"], max_width, font_regular, font_size)
+            w1 = _text_width(line1, font_bold, font_size)
+            w2 = _text_width(line2, font_regular, font_size)
+            text_width = max(w1, w2)
+            if side > 0:
+                text_start = min(text_x_base, right_margin - text_width)
+                text_end = min(text_start + text_width, right_margin - 1)
+                anchor = "start"
+                text_x_final = text_start
+            else:
+                text_end = max(text_x_base, left_margin + text_width)
+                text_start = max(text_end - text_width, left_margin + 1)
+                anchor = "end"
+                text_x_final = text_end
+            end_x = text_start if side > 0 else text_end
+            pie_drawing.add(Line(mid_x, it["y"], end_x, it["y"], strokeColor=colors.HexColor("#59b9c7"), strokeWidth=0.6))
+            pie_drawing.add(Line(text_start, it["y"], text_end, it["y"], strokeColor=colors.HexColor("#59b9c7"), strokeWidth=0.6))
+            t1 = String(text_x_final, it["y"] + text_gap_top, line1)
+            t1.fontName = font_bold
+            t1.fontSize = font_size
+            t1.fillColor = colors.HexColor("#2b313f")
+            t1.textAnchor = anchor
+            t2 = String(text_x_final, it["y"] - text_gap_bottom, line2)
+            t2.fontName = font_regular
+            t2.fontSize = font_size
+            t2.fillColor = colors.HexColor("#2b313f")
+            t2.textAnchor = anchor
+            pie_drawing.add(t1)
+            pie_drawing.add(t2)
+
+    _draw_callouts(items_left, -1)
+    _draw_callouts(items_right, 1)
 
     bar = VerticalBarChart()
     bar.x = 32
@@ -551,11 +645,11 @@ def ventas_resumen_pdf(request):
     bar.categoryAxis.labels.dy = -2
     bar.categoryAxis.labels.fontName = font_bold
     bar.categoryAxis.labels.fontSize = 9
-    bar.categoryAxis.labels.fillColor = colors.HexColor("#003b71")
+    bar.categoryAxis.labels.fillColor = colors.HexColor("#2b313f")
     bar.valueAxis.labels.fontName = font_regular
     bar.valueAxis.labelTextFormat = lambda v: _format_money(v)
     bar.valueAxis.labels.fontSize = 7
-    bar.valueAxis.labels.fillColor = colors.HexColor("#003b71")
+    bar.valueAxis.labels.fillColor = colors.HexColor("#2b313f")
     bar.valueAxis.valueMin = 0
     max_val = max(resumen_data["total_pagado"], resumen_data["total_pendiente"], 1)
     bar.valueAxis.valueMax = max_val * 1.2
@@ -567,7 +661,7 @@ def ventas_resumen_pdf(request):
     bar.barLabels.nudge = 6
     bar.barLabels.fontName = font_bold
     bar.barLabels.fontSize = 8
-    bar.barLabels.fillColor = colors.HexColor("#003b71")
+    bar.barLabels.fillColor = colors.HexColor("#2b313f")
     bar.barLabelFormat = lambda v: _format_money(v)
     bar.bars[(0, 0)].fillColor = colors.HexColor("#0a7a4d")
     bar.bars[(0, 1)].fillColor = colors.HexColor("#f3b0b0")
