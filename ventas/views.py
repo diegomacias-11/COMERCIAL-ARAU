@@ -708,8 +708,21 @@ def ventas_resumen_pdf(request):
     else:
         pdf = content_pdf
 
+    def _safe_date_suffix(value):
+        return value.strftime("%d-%m-%y") if value else ""
+
+    if fecha_desde and fecha_hasta:
+        suffix = f"_({_safe_date_suffix(fecha_desde)}_{_safe_date_suffix(fecha_hasta)})"
+    elif fecha_desde:
+        suffix = f"_({_safe_date_suffix(fecha_desde)})"
+    elif fecha_hasta:
+        suffix = f"_({_safe_date_suffix(fecha_hasta)})"
+    else:
+        suffix = ""
+
+    filename = f"resumen_ventas{suffix}.pdf"
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'inline; filename="resumen_ventas.pdf"'
+    response["Content-Disposition"] = f'inline; filename="{filename}"'
     return response
 
 
