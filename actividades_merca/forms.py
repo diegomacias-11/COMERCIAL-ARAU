@@ -5,7 +5,7 @@ from clientes.models import Cliente
 from .models import ActividadMerca
 
 
-EXTRA_CLIENTES = ["ARAU", "ENROK", "HUNTERLOOP", "W DESARROLLOS", "COSTUMEER"]
+EXTRA_CLIENTES = ["ARAU", "ENROK", "HUNTERLOOP", "W DESARROLLOS", "CUSTOMEER"]
 
 
 def _cliente_choices():
