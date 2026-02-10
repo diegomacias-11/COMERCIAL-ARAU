@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -12,7 +14,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import MetaLead
+from .models import LinkedInLead, MetaLead
 from comercial.models import Cita
 from core.choices import LEAD_ESTATUS_CHOICES, SERVICIO_CHOICES
 
@@ -23,6 +25,40 @@ META_PAGE_TOKEN = os.getenv("META_PAGE_TOKEN")
 
 def _normalize_key(name: str) -> str:
     return (name or "").strip().lower().replace(" ", "_")
+
+
+def _find_first_value(payload, keys):
+    if isinstance(payload, dict):
+        for key in keys:
+            if key in payload and payload[key] not in (None, ""):
+                return payload[key]
+        for value in payload.values():
+            found = _find_first_value(value, keys)
+            if found not in (None, ""):
+                return found
+    elif isinstance(payload, list):
+        for item in payload:
+            found = _find_first_value(item, keys)
+            if found not in (None, ""):
+                return found
+    return None
+
+
+def _parse_epoch(value):
+    try:
+        ts = float(value)
+    except (TypeError, ValueError):
+        return None
+    if ts > 1e12:
+        ts = ts / 1000.0
+    try:
+        return datetime.utcfromtimestamp(ts).replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _linkedin_signature(secret, body_bytes):
+    return hmac.new(secret.encode("utf-8"), body_bytes, hashlib.sha256).hexdigest()
 
 
 def _split_field_data(field_data):
@@ -325,3 +361,93 @@ def meta_lead_webhook(request):
         return HttpResponse("ok")
 
     return HttpResponse(status=405)
+
+
+@csrf_exempt
+def linkedin_lead_webhook(request):
+    secret = os.getenv("LINKEDIN_CLIENT_SECRET") or ""
+
+    if request.method == "GET":
+        challenge_code = request.GET.get("challengeCode") or request.GET.get("challenge_code")
+        if not challenge_code:
+            return HttpResponse("Missing challengeCode", status=400)
+        if not secret:
+            return HttpResponse("Missing LINKEDIN_CLIENT_SECRET", status=500)
+        challenge_response = _linkedin_signature(secret, challenge_code.encode("utf-8"))
+        return JsonResponse(
+            {
+                "challengeCode": challenge_code,
+                "challengeResponse": challenge_response,
+            }
+        )
+
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    body_bytes = request.body or b""
+    signature = request.headers.get("X-LI-Signature") or request.META.get("HTTP_X_LI_SIGNATURE")
+    if not secret:
+        return HttpResponse("Missing LINKEDIN_CLIENT_SECRET", status=500)
+    if not signature:
+        return HttpResponse("Missing X-LI-Signature", status=400)
+    expected = _linkedin_signature(secret, body_bytes)
+    if not hmac.compare_digest(signature, expected):
+        return HttpResponse("Invalid signature", status=403)
+
+    try:
+        payload = json.loads(body_bytes.decode("utf-8") or "{}")
+    except Exception:
+        return HttpResponse("Invalid JSON", status=400)
+
+    events = payload.get("events")
+    if not isinstance(events, list):
+        events = [payload]
+
+    for event in events:
+        lead_id = _find_first_value(event, ["leadId", "lead_id", "leadgen_id", "leadgenId", "leadGenId"])
+        created_time = _parse_epoch(
+            _find_first_value(event, ["eventTime", "createdTime", "created_time", "timestamp"])
+        )
+
+        full_name = _find_first_value(event, ["fullName", "full_name", "name"])
+        email = _find_first_value(event, ["email", "emailAddress", "work_email"])
+        phone = _find_first_value(event, ["phoneNumber", "phone_number", "phone"])
+        job_title = _find_first_value(event, ["jobTitle", "job_title", "title"])
+        company = _find_first_value(event, ["companyName", "company_name", "company"])
+
+        campaign_id = _find_first_value(event, ["campaignId", "campaign_id"])
+        campaign_name = _find_first_value(event, ["campaignName", "campaign_name"])
+        form_id = _find_first_value(event, ["formId", "form_id", "leadGenFormId", "leadGenForm"])
+        ad_id = _find_first_value(event, ["adId", "ad_id"])
+        ad_name = _find_first_value(event, ["adName", "ad_name"])
+        adset_id = _find_first_value(event, ["adsetId", "adset_id"])
+        adset_name = _find_first_value(event, ["adsetName", "adset_name"])
+
+        raw_fields = event.get("raw_fields") if isinstance(event, dict) else None
+        if not isinstance(raw_fields, dict):
+            raw_fields = {}
+
+        defaults = {
+            "created_time": created_time or timezone.now(),
+            "campaign_id": campaign_id or "",
+            "campaign_name": campaign_name or "",
+            "form_id": form_id or "",
+            "ad_id": ad_id or "",
+            "ad_name": ad_name or "",
+            "adset_id": adset_id or "",
+            "adset_name": adset_name or "",
+            "full_name": full_name,
+            "email": email,
+            "phone_number": phone,
+            "job_title": job_title,
+            "company_name": company,
+            "raw_fields": raw_fields,
+            "raw_payload": event if isinstance(event, dict) else payload,
+        }
+
+        if lead_id:
+            LinkedInLead.objects.update_or_create(lead_id=str(lead_id), defaults=defaults)
+        else:
+            LinkedInLead.objects.create(**defaults)
+
+    return HttpResponse("OK")
