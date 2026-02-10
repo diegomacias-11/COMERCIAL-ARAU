@@ -370,8 +370,10 @@ def linkedin_lead_webhook(request):
     if request.method == "GET":
         challenge_code = request.GET.get("challengeCode") or request.GET.get("challenge_code")
         if not challenge_code:
+            logger.warning("LinkedIn webhook GET sin challengeCode")
             return HttpResponse("Missing challengeCode", status=400)
         if not secret:
+            logger.error("LinkedIn webhook GET sin LINKEDIN_CLIENT_SECRET")
             return HttpResponse("Missing LINKEDIN_CLIENT_SECRET", status=500)
         challenge_response = _linkedin_signature(secret, challenge_code.encode("utf-8"))
         return JsonResponse(
@@ -387,17 +389,23 @@ def linkedin_lead_webhook(request):
     body_bytes = request.body or b""
     signature = request.headers.get("X-LI-Signature") or request.META.get("HTTP_X_LI_SIGNATURE")
     if not secret:
+        logger.error("LinkedIn webhook POST sin LINKEDIN_CLIENT_SECRET")
         return HttpResponse("Missing LINKEDIN_CLIENT_SECRET", status=500)
     if not signature:
+        logger.warning("LinkedIn webhook POST sin X-LI-Signature")
         return HttpResponse("Missing X-LI-Signature", status=400)
     expected = _linkedin_signature(secret, body_bytes)
     if not hmac.compare_digest(signature, expected):
+        logger.warning("LinkedIn webhook POST con firma invalida")
         return HttpResponse("Invalid signature", status=403)
 
     try:
         payload = json.loads(body_bytes.decode("utf-8") or "{}")
     except Exception:
+        logger.warning("LinkedIn webhook POST JSON invalido")
         return HttpResponse("Invalid JSON", status=400)
+
+    logger.info("LinkedIn webhook POST recibido: %s", body_bytes[:500])
 
     events = payload.get("events")
     if not isinstance(events, list):

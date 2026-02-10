@@ -61,15 +61,15 @@ ESTATUS_SEGUIMIENTO_CHOICES = [
     ("Esperando respuesta del cliente", "Esperando respuesta del cliente"),
     ("Agendar nueva cita", "Agendar nueva cita"),
     ("Solicitud de propuesta", "Solicitud de propuesta"),
-    ("ElaboraciÃ³n de propuesta", "ElaboraciÃ³n de propuesta"),
+    ("Elaboración de propuesta", "Elaboración de propuesta"),
     ("Propuesta enviada", "Propuesta enviada"),
-    ("Se enviÃ³ auditorÃ­a Laboral", "Se enviÃ³ auditorÃ­a Laboral"),
+    ("Se envió auditoría Laboral", "Se envió auditoría Laboral"),
     ("Stand by", "Stand by"),
     ("Pendiente de cierre", "Pendiente de cierre"),
-    ("En activaciÃ³n", "En activaciÃ³n"),
+    ("En activación", "En activación"),
     ("Reclutando", "Reclutando"),
     ("Cerrado", "Cerrado"),
-    ("No estÃ¡ interesado en este servicio", "No estÃ¡ interesado en este servicio"),
+    ("No está interesado en este servicio", "No está interesado en este servicio"),
     ("Fuera de su presupuesto", "Fuera de su presupuesto"),
 ]
 
@@ -77,7 +77,7 @@ LUGAR_CHOICES = [
     ("Oficina de Arau", "Oficina de Arau"),
     ("Oficina del cliente", "Oficina del cliente"),
     ("Zoom", "Zoom"),
-    ("TelÃ©fono", "TelÃ©fono"),
+    ("Teléfono", "Teléfono"),
     ("Correo", "Correo"),
 ]
 
