@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import MetaLead, MetaLeadField
+from .models import MetaLead
 from comercial.models import Cita
 from core.choices import LEAD_ESTATUS_CHOICES, SERVICIO_CHOICES
 
@@ -161,21 +161,6 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         leadgen_id=str(leadgen_id),
         defaults=defaults,
     )
-    if raw_fields:
-        MetaLeadField.objects.filter(lead=lead).delete()
-        fields_to_create = []
-        for idx, (name, value) in enumerate(raw_fields.items()):
-            if isinstance(value, list):
-                value = ", ".join(str(v) for v in value if v is not None)
-            fields_to_create.append(
-                MetaLeadField(
-                    lead=lead,
-                    name=str(name),
-                    value=str(value) if value is not None else "",
-                    position=idx,
-                )
-            )
-        MetaLeadField.objects.bulk_create(fields_to_create)
     logger.info("Lead %s guardado desde Graph API", leadgen_id)
 
 
@@ -267,9 +252,13 @@ def lead_detail(request, pk: int):
                 lead.cita = cita
                 lead.save(update_fields=["cita"])
     field_rows = []
-    for field in lead.fields.all():
-        label = " ".join((field.name or "").replace("_", " ").split())
-        value = field.value or ""
+    raw_items = lead.raw_fields or {}
+
+    for name, raw_value in raw_items.items():
+        label = " ".join((name or "").replace("_", " ").split())
+        value = raw_value or ""
+        if isinstance(value, list):
+            value = ", ".join(str(v) for v in value if v is not None)
         value_str = str(value)
         if "@" in value_str:
             value = value_str

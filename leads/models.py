@@ -49,16 +49,3 @@ class MetaLead(models.Model):
 
     def __str__(self):
         return f"{self.full_name or 'Lead'} - {self.campaign_name}"
-
-
-class MetaLeadField(models.Model):
-    lead = models.ForeignKey(MetaLead, on_delete=models.CASCADE, related_name="fields")
-    name = models.CharField(max_length=255)
-    value = models.TextField(blank=True)
-    position = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ["position", "id"]
-
-    def __str__(self):
-        return f"{self.lead_id}:{self.name}"
