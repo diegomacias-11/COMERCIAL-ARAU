@@ -16,7 +16,6 @@ class MetaLead(models.Model):
     campaign_name = models.CharField(max_length=200)
 
     form_id = models.CharField(max_length=50)
-    form_name = models.CharField(max_length=200)
 
     is_organic = models.BooleanField(default=False)
     platform = models.CharField(max_length=50)
