@@ -62,8 +62,14 @@ def _linkedin_signature(secret, body_bytes):
 
 
 def _linkedin_signature_variants(secret, body_bytes):
-    digest = _linkedin_signature(secret, body_bytes)
-    return {digest, f"hmacsha256={digest}"}
+    secret_bytes = secret.encode("utf-8")
+    hmac_digest = _linkedin_signature(secret, body_bytes)
+    return {
+        "hmac_sha256": hmac_digest,
+        "hmac_sha256_prefixed": f"hmacsha256={hmac_digest}",
+        "sha256_secret_plus_body": hashlib.sha256(secret_bytes + body_bytes).hexdigest(),
+        "sha256_body_plus_secret": hashlib.sha256(body_bytes + secret_bytes).hexdigest(),
+    }
 
 
 def _linkedin_secret_candidates():
@@ -436,27 +442,35 @@ def linkedin_lead_webhook(request):
         return HttpResponse("Missing X-LI-Signature", status=400)
 
     provided_signature = signature.strip().strip('"').lower()
-    expected_for_log = None
+    expected_for_log = {}
+    matched_strategy = None
     is_valid_signature = False
     for secret in secrets:
         expected_signatures = _linkedin_signature_variants(secret, body_bytes)
-        if expected_for_log is None:
-            expected_for_log = _linkedin_signature(secret, body_bytes)
-        if any(hmac.compare_digest(provided_signature, expected_sig) for expected_sig in expected_signatures):
-            is_valid_signature = True
+        if not expected_for_log:
+            expected_for_log = expected_signatures
+        for strategy, expected_sig in expected_signatures.items():
+            if hmac.compare_digest(provided_signature, expected_sig):
+                is_valid_signature = True
+                matched_strategy = strategy
+                break
+        if is_valid_signature:
             break
     if not is_valid_signature:
         logger.warning(
             (
                 "LinkedIn webhook POST con firma invalida. "
-                "provided=%s expected=%s body_len=%s secret_len=%s"
+                "provided=%s hmac=%s s+b=%s b+s=%s body_len=%s secret_len=%s"
             ),
             provided_signature[:80],
-            (expected_for_log or "")[:80],
+            (expected_for_log.get("hmac_sha256", ""))[:80],
+            (expected_for_log.get("sha256_secret_plus_body", ""))[:80],
+            (expected_for_log.get("sha256_body_plus_secret", ""))[:80],
             len(body_bytes),
             len(secrets[0]) if secrets else 0,
         )
         return HttpResponse("Invalid signature", status=403)
+    logger.warning("LinkedIn webhook firma valida con estrategia=%s", matched_strategy)
 
     try:
         payload = json.loads(body_bytes.decode("utf-8") or "{}")
