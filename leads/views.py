@@ -377,6 +377,11 @@ def meta_lead_webhook(request):
 
 @csrf_exempt
 def linkedin_lead_webhook(request):
+    logger.warning(
+        "LinkedIn webhook hit: method=%s path=%s",
+        request.method,
+        request.path,
+    )
     secret = os.getenv("LINKEDIN_CLIENT_SECRET") or ""
 
     if request.method == "GET":
@@ -506,4 +511,5 @@ def linkedin_lead_webhook(request):
         else:
             LinkedInLead.objects.create(**defaults)
 
+    logger.warning("LinkedIn webhook procesado OK. events=%s", len(events))
     return HttpResponse("OK")
