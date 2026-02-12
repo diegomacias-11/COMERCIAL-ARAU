@@ -164,6 +164,21 @@ def _pick_vendedor(user):
     return "Giovanni"
 
 
+def _lead_sort_datetime(value):
+    if not value:
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    if timezone.is_naive(value):
+        return timezone.make_aware(value, timezone.utc)
+    return value
+
+
+def _prepare_lead_for_list(lead, *, detail_url_name, source_label, identifier_value):
+    lead.detail_url_name = detail_url_name
+    lead.source_label = source_label
+    lead.identifier_value = identifier_value or ""
+    return lead
+
+
 def fetch_and_save_meta_lead(leadgen_id: str):
     """
     Fetch full lead data from Meta Graph API and persist it.
@@ -237,31 +252,110 @@ def fetch_and_save_meta_lead(leadgen_id: str):
 @login_required
 def leads_lista(request):
     q = request.GET.get("q", "").strip()
-    leads = MetaLead.objects.all().order_by("-created_time")
+    meta_leads = MetaLead.objects.all()
+    linkedin_leads = LinkedInLead.objects.all()
 
     if q:
-        leads = leads.filter(
+        meta_leads = meta_leads.filter(
             Q(leadgen_id__icontains=q)
             | Q(form_id__icontains=q)
             | Q(campaign_name__icontains=q)
+            | Q(full_name__icontains=q)
+            | Q(email__icontains=q)
+            | Q(phone_number__icontains=q)
+            | Q(company_name__icontains=q)
         )
+        linkedin_leads = linkedin_leads.filter(
+            Q(lead_id__icontains=q)
+            | Q(form_id__icontains=q)
+            | Q(campaign_name__icontains=q)
+            | Q(full_name__icontains=q)
+            | Q(email__icontains=q)
+            | Q(phone_number__icontains=q)
+            | Q(company_name__icontains=q)
+        )
+
+    leads = []
+    for lead in meta_leads:
+        leads.append(
+            _prepare_lead_for_list(
+                lead,
+                detail_url_name="leads_metalead_detail",
+                source_label="Meta",
+                identifier_value=lead.leadgen_id,
+            )
+        )
+    for lead in linkedin_leads:
+        leads.append(
+            _prepare_lead_for_list(
+                lead,
+                detail_url_name="leads_metalead_detail_linkedin",
+                source_label="LinkedIn",
+                identifier_value=lead.lead_id,
+            )
+        )
+
+    leads.sort(
+        key=lambda item: _lead_sort_datetime(getattr(item, "created_time", None)),
+        reverse=True,
+    )
 
     return render(request, "leads/lista.html", {"leads": leads, "q": q})
 
 
-@login_required
-def lead_delete(request, pk: int):
+def _lead_delete(request, pk: int, lead_model):
     if request.method != "POST":
         return HttpResponse(status=405)
-    lead = get_object_or_404(MetaLead, pk=pk)
+    lead = get_object_or_404(lead_model, pk=pk)
     lead.delete()
     back_url = request.POST.get("next") or "/leads/"
     return redirect(back_url)
 
 
 @login_required
-def lead_detail(request, pk: int):
-    lead = get_object_or_404(MetaLead, pk=pk)
+def lead_delete(request, pk: int):
+    return _lead_delete(request, pk, MetaLead)
+
+
+@login_required
+def linkedin_lead_delete(request, pk: int):
+    return _lead_delete(request, pk, LinkedInLead)
+
+
+def _build_field_rows(lead):
+    field_rows = []
+    raw_items = lead.raw_fields or {}
+
+    for name, raw_value in raw_items.items():
+        label = " ".join((name or "").replace("_", " ").split())
+        value = raw_value or ""
+        if isinstance(value, list):
+            value = ", ".join(str(v) for v in value if v is not None)
+        value_str = str(value)
+        if "@" in value_str:
+            value = value_str
+        else:
+            value = " ".join(value_str.replace("_", " ").split())
+        field_rows.append({"label": label or "Campo", "value": value})
+
+    if field_rows:
+        return field_rows
+
+    fallback_fields = [
+        ("Nombre", lead.full_name),
+        ("Email", lead.email),
+        ("Telefono", lead.phone_number),
+        ("Cargo", lead.job_title),
+        ("Empresa", lead.company_name),
+    ]
+    for label, value in fallback_fields:
+        if value not in (None, ""):
+            field_rows.append({"label": label, "value": str(value)})
+    return field_rows
+
+
+def _lead_detail(request, pk: int, *, lead_model, delete_url_name, lead_identifier_attr, source_label):
+    lead = get_object_or_404(lead_model, pk=pk)
     back_url = request.GET.get("next") or "/leads/"
     can_edit = request.user.is_superuser or request.user.groups.filter(
         name__in=["Dirección Comercial", "Apoyo Comercial"]
@@ -320,20 +414,9 @@ def lead_detail(request, pk: int):
             if not lead.cita_id:
                 lead.cita = cita
                 lead.save(update_fields=["cita"])
-    field_rows = []
-    raw_items = lead.raw_fields or {}
-
-    for name, raw_value in raw_items.items():
-        label = " ".join((name or "").replace("_", " ").split())
-        value = raw_value or ""
-        if isinstance(value, list):
-            value = ", ".join(str(v) for v in value if v is not None)
-        value_str = str(value)
-        if "@" in value_str:
-            value = value_str
-        else:
-            value = " ".join(value_str.replace("_", " ").split())
-        field_rows.append({"label": label or "Campo", "value": value})
+    field_rows = _build_field_rows(lead)
+    platform_value = (lead.platform or source_label).strip()
+    lead_identifier = getattr(lead, lead_identifier_attr, "") or ""
     return render(
         request,
         "leads/detalle.html",
@@ -342,6 +425,10 @@ def lead_detail(request, pk: int):
             "back_url": back_url,
             "field_rows": field_rows,
             "can_edit": can_edit,
+            "delete_url_name": delete_url_name,
+            "show_is_organic": lead_model is MetaLead,
+            "lead_identifier": lead_identifier,
+            "platform_label": platform_value,
             "cita_agendada_value": (
                 timezone.localtime(lead.cita_agendada).strftime("%Y-%m-%dT%H:%M")
                 if lead.cita_agendada
@@ -350,6 +437,30 @@ def lead_detail(request, pk: int):
             "lead_estatus_choices": LEAD_ESTATUS_CHOICES,
             "servicio_choices": SERVICIO_CHOICES,
         },
+    )
+
+
+@login_required
+def lead_detail(request, pk: int):
+    return _lead_detail(
+        request,
+        pk,
+        lead_model=MetaLead,
+        delete_url_name="leads_metalead_delete",
+        lead_identifier_attr="leadgen_id",
+        source_label="Meta",
+    )
+
+
+@login_required
+def linkedin_lead_detail(request, pk: int):
+    return _lead_detail(
+        request,
+        pk,
+        lead_model=LinkedInLead,
+        delete_url_name="leads_metalead_delete_linkedin",
+        lead_identifier_attr="lead_id",
+        source_label="LinkedIn",
     )
 
 
@@ -476,7 +587,8 @@ def linkedin_lead_webhook(request):
         if not skip_signature_check:
             return HttpResponse("Invalid signature", status=403)
         logger.warning("LinkedIn webhook: firma invalida pero omitida por LINKEDIN_SKIP_SIGNATURE_CHECK=true")
-    logger.warning("LinkedIn webhook firma valida con estrategia=%s", matched_strategy)
+    elif matched_strategy:
+        logger.warning("LinkedIn webhook firma valida con estrategia=%s", matched_strategy)
 
     try:
         payload = json.loads(body_bytes.decode("utf-8") or "{}")
@@ -512,6 +624,10 @@ def linkedin_lead_webhook(request):
         notification_id = _find_first_value(event, ["notificationId", "notification_id"])
         if not lead_id and notification_id not in (None, ""):
             lead_id = f"notification:{notification_id}"
+        if not lead_id:
+            canonical_event = event if isinstance(event, dict) else {"event": event}
+            event_json = json.dumps(canonical_event, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            lead_id = f"event:{hashlib.sha256(event_json.encode('utf-8')).hexdigest()[:40]}"
 
         created_time = _parse_epoch(
             _find_first_value(
@@ -559,10 +675,7 @@ def linkedin_lead_webhook(request):
             "raw_payload": event if isinstance(event, dict) else payload,
         }
 
-        if lead_id:
-            LinkedInLead.objects.update_or_create(lead_id=str(lead_id), defaults=defaults)
-        else:
-            LinkedInLead.objects.create(**defaults)
+        LinkedInLead.objects.update_or_create(lead_id=str(lead_id), defaults=defaults)
 
     logger.warning("LinkedIn webhook procesado OK. events=%s", len(events))
     return HttpResponse("OK")

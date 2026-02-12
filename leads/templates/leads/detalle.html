@@ -1,4 +1,4 @@
-{% extends "form.html" %}
+﻿{% extends "form.html" %}
 
 {% block title %}Detalle lead{% endblock %}
 
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extra_actions %}
-  <button type="submit" class="btn-delete" formaction="{% url 'leads_metalead_delete' lead.id %}" formmethod="post" onclick="return confirm('¿Eliminar este lead?');">Eliminar</button>
+  <button type="submit" class="btn-delete" formaction="{% url delete_url_name lead.id %}" formmethod="post" onclick="return confirm('Eliminar este lead?');">Eliminar</button>
 {% endblock %}
 
 {% block form_fields %}
@@ -27,16 +27,18 @@
   <div class="lead-meta-grid">
     <div class="lead-meta-item">
       <span class="lead-meta-label">Plataforma</span>
-      <span class="lead-meta-value">{{ lead.platform|default_if_none:"" }}</span>
+      <span class="lead-meta-value">{{ platform_label|default_if_none:"" }}</span>
     </div>
     <div class="lead-meta-item">
-      <span class="lead-meta-label">Campaña</span>
+      <span class="lead-meta-label">Campana</span>
       <span class="lead-meta-value">{{ lead.campaign_name|default_if_none:"" }}</span>
     </div>
-    <div class="lead-meta-item">
-      <span class="lead-meta-label">Orgánico</span>
-      <span class="lead-meta-value">{{ lead.is_organic|yesno:"Si,No" }}</span>
-    </div>
+    {% if show_is_organic %}
+      <div class="lead-meta-item">
+        <span class="lead-meta-label">Organico</span>
+        <span class="lead-meta-value">{{ lead.is_organic|yesno:"Si,No" }}</span>
+      </div>
+    {% endif %}
     <div class="lead-meta-item">
       <span class="lead-meta-label">Adset</span>
       <span class="lead-meta-value">{{ lead.adset_name|default_if_none:"" }}</span>
@@ -53,7 +55,7 @@
 
   <div class="lead-meta-center">
     <span class="lead-meta-label">Lead ID</span>
-    <span class="lead-meta-value">{{ lead.leadgen_id }}</span>
+    <span class="lead-meta-value">{{ lead_identifier|default_if_none:"" }}</span>
   </div>
 
   <div class="lead-detail-grid">
