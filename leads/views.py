@@ -61,6 +61,20 @@ def _linkedin_signature(secret, body_bytes):
     return hmac.new(secret.encode("utf-8"), body_bytes, hashlib.sha256).hexdigest()
 
 
+def _linkedin_signature_variants(secret, body_bytes):
+    digest = _linkedin_signature(secret, body_bytes)
+    return {digest, f"hmacsha256={digest}"}
+
+
+def _extract_urn_id(value):
+    if value in (None, ""):
+        return None
+    text = str(value).strip()
+    if text.startswith("urn:li:"):
+        return text.rsplit(":", 1)[-1].strip(")")
+    return text
+
+
 def _split_field_data(field_data):
     raw_fields = {}
     normalized = {}
@@ -181,7 +195,6 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "campaign_id": data.get("campaign_id") or "",
         "campaign_name": data.get("campaign_name") or "",
         "form_id": form_id,
-        "form_name": data.get("form_name") or "",
         "is_organic": data.get("is_organic") or False,
         "platform": data.get("platform") or "",
         "full_name": raw_fields.get("full_name") or _pick_first(normalized_fields, ["full_name", "nombre_completo", "nombre", "name"]),
@@ -209,7 +222,6 @@ def leads_lista(request):
         leads = leads.filter(
             Q(leadgen_id__icontains=q)
             | Q(form_id__icontains=q)
-            | Q(form_name__icontains=q)
             | Q(campaign_name__icontains=q)
         )
 
@@ -394,9 +406,18 @@ def linkedin_lead_webhook(request):
     if not signature:
         logger.warning("LinkedIn webhook POST sin X-LI-Signature")
         return HttpResponse("Missing X-LI-Signature", status=400)
-    expected = _linkedin_signature(secret, body_bytes)
-    if not hmac.compare_digest(signature, expected):
-        logger.warning("LinkedIn webhook POST con firma invalida")
+
+    provided_signature = signature.strip().strip('"').lower()
+    expected_signatures = _linkedin_signature_variants(secret, body_bytes)
+    is_valid_signature = any(
+        hmac.compare_digest(provided_signature, expected_sig)
+        for expected_sig in expected_signatures
+    )
+    if not is_valid_signature:
+        logger.warning(
+            "LinkedIn webhook POST con firma invalida. signature=%s",
+            provided_signature[:80],
+        )
         return HttpResponse("Invalid signature", status=403)
 
     try:
@@ -409,12 +430,36 @@ def linkedin_lead_webhook(request):
 
     events = payload.get("events")
     if not isinstance(events, list):
-        events = [payload]
+        if isinstance(payload.get("notifications"), list):
+            events = payload.get("notifications")
+        elif isinstance(payload.get("elements"), list):
+            events = payload.get("elements")
+        else:
+            events = [payload]
 
     for event in events:
-        lead_id = _find_first_value(event, ["leadId", "lead_id", "leadgen_id", "leadgenId", "leadGenId"])
+        lead_id = _find_first_value(
+            event,
+            [
+                "leadId",
+                "lead_id",
+                "leadgen_id",
+                "leadgenId",
+                "leadGenId",
+                "leadGenFormResponse",
+                "leadFormResponse",
+            ],
+        )
+        lead_id = _extract_urn_id(lead_id)
+        notification_id = _find_first_value(event, ["notificationId", "notification_id"])
+        if not lead_id and notification_id not in (None, ""):
+            lead_id = f"notification:{notification_id}"
+
         created_time = _parse_epoch(
-            _find_first_value(event, ["eventTime", "createdTime", "created_time", "timestamp"])
+            _find_first_value(
+                event,
+                ["eventTime", "createdTime", "created_time", "timestamp", "occurredAt", "lastModifiedAt"],
+            )
         )
 
         full_name = _find_first_value(event, ["fullName", "full_name", "name"])
@@ -425,7 +470,10 @@ def linkedin_lead_webhook(request):
 
         campaign_id = _find_first_value(event, ["campaignId", "campaign_id"])
         campaign_name = _find_first_value(event, ["campaignName", "campaign_name"])
-        form_id = _find_first_value(event, ["formId", "form_id", "leadGenFormId", "leadGenForm"])
+        form_id = _find_first_value(
+            event,
+            ["formId", "form_id", "leadGenFormId", "leadGenForm", "versionedForm"],
+        )
         ad_id = _find_first_value(event, ["adId", "ad_id"])
         ad_name = _find_first_value(event, ["adName", "ad_name"])
         adset_id = _find_first_value(event, ["adsetId", "adset_id"])

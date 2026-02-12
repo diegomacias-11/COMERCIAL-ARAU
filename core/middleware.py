@@ -11,6 +11,14 @@ import re
 from .models import UserSessionActivity
 
 
+def _is_public_webhook_path(path: str) -> bool:
+    return (
+        path.startswith("/webhooks/")
+        or path.startswith("/leads/webhooks/meta/")
+        or path.startswith("/leads/webhooks/linkedin/")
+    )
+
+
 class GroupPermissionMiddleware(MiddlewareMixin):
     """
     Enforce CRUD permisos por grupo sin configurar vista por vista.
@@ -94,7 +102,7 @@ class GroupPermissionMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         # Excepcion: permitir webhooks externos (Meta, Stripe, etc.)
-        if request.path.startswith("/webhooks/") or request.path.startswith("/leads/webhooks/"):
+        if _is_public_webhook_path(request.path):
             return None
         if request.path.startswith("/actividades_merca/solicitud/"):
             return None
@@ -189,7 +197,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
 
         # Excepcion: permitir webhooks externos
-        if request.path.startswith("/webhooks/") or request.path.startswith("/leads/webhooks/"):
+        if _is_public_webhook_path(request.path):
             return None
 
         user = getattr(request, "user", None)
