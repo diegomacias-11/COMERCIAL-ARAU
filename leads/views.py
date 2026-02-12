@@ -442,6 +442,10 @@ def linkedin_lead_webhook(request):
         return HttpResponse("Missing X-LI-Signature", status=400)
 
     provided_signature = signature.strip().strip('"').lower()
+    skip_signature_check = (
+        (os.getenv("LINKEDIN_SKIP_SIGNATURE_CHECK") or "").strip().lower()
+        in {"1", "true", "yes", "on"}
+    )
     expected_for_log = {}
     matched_strategy = None
     is_valid_signature = False
@@ -469,7 +473,9 @@ def linkedin_lead_webhook(request):
             len(body_bytes),
             len(secrets[0]) if secrets else 0,
         )
-        return HttpResponse("Invalid signature", status=403)
+        if not skip_signature_check:
+            return HttpResponse("Invalid signature", status=403)
+        logger.warning("LinkedIn webhook: firma invalida pero omitida por LINKEDIN_SKIP_SIGNATURE_CHECK=true")
     logger.warning("LinkedIn webhook firma valida con estrategia=%s", matched_strategy)
 
     try:
