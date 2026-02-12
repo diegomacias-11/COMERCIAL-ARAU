@@ -378,14 +378,21 @@ def meta_lead_webhook(request):
 @csrf_exempt
 def linkedin_lead_webhook(request):
     logger.warning(
-        "LinkedIn webhook hit: method=%s path=%s",
+        "LinkedIn webhook hit: method=%s path=%s ua=%s ip=%s",
         request.method,
         request.path,
+        request.META.get("HTTP_USER_AGENT", ""),
+        request.META.get("REMOTE_ADDR", ""),
     )
     secret = os.getenv("LINKEDIN_CLIENT_SECRET") or ""
 
     if request.method == "GET":
         challenge_code = request.GET.get("challengeCode") or request.GET.get("challenge_code")
+        logger.warning(
+            "LinkedIn webhook GET challengeCode_present=%s len=%s",
+            bool(challenge_code),
+            len(challenge_code or ""),
+        )
         if not challenge_code:
             logger.warning("LinkedIn webhook GET sin challengeCode")
             return HttpResponse("Missing challengeCode", status=400)

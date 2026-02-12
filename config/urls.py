@@ -19,10 +19,13 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.views.generic import RedirectView
 from core.views import root_redirect
+from leads.views import linkedin_lead_webhook, meta_lead_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('favicon.ico', RedirectView.as_view(url='/static/img/favicon.png', permanent=True)),
+    path('webhooks/meta/lead/', meta_lead_webhook, name='webhook_meta_lead_root'),
+    path('webhooks/linkedin/lead/', linkedin_lead_webhook, name='webhook_linkedin_lead_root'),
     path('', root_redirect, name='root'),
     path('', include('core.urls')),
     path('comercial/', include('comercial.urls')),
