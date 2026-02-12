@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from urllib.parse import quote
 
 import requests
 from django.contrib.auth.decorators import login_required
@@ -85,6 +86,122 @@ def _linkedin_secret_candidates():
         if value and value not in candidates:
             candidates.append(value)
     return candidates
+
+
+def _linkedin_access_token():
+    return (
+        os.getenv("LINKEDIN_ACCESS_TOKEN")
+        or os.getenv("LINKEDIN_TOKEN")
+        or os.getenv("LINKEDIN_OAUTH_TOKEN")
+        or ""
+    ).strip()
+
+
+def _linkedin_api_version():
+    return (os.getenv("LINKEDIN_API_VERSION") or os.getenv("LINKEDIN_VERSION") or "202601").strip()
+
+
+def _linkedin_is_fetchable_lead_id(lead_id: str) -> bool:
+    if not lead_id:
+        return False
+    return not (lead_id.startswith("notification:") or lead_id.startswith("event:"))
+
+
+def _linkedin_extract_answer_value(answer):
+    if not isinstance(answer, dict):
+        return None
+
+    accepted = answer.get("accepted")
+    rejected = answer.get("rejected")
+    candidate = accepted if isinstance(accepted, dict) else rejected if isinstance(rejected, dict) else {}
+
+    simple = _find_first_value(
+        candidate,
+        [
+            "answer",
+            "value",
+            "text",
+            "email",
+            "phoneNumber",
+            "phone",
+            "companyName",
+            "title",
+        ],
+    )
+    if simple not in (None, ""):
+        return simple
+
+    options = _find_first_value(
+        candidate,
+        ["selectedOptions", "options", "optionIds", "optionUrns"],
+    )
+    if isinstance(options, list):
+        cleaned = [str(v) for v in options if v not in (None, "")]
+        if cleaned:
+            return ", ".join(cleaned)
+    return None
+
+
+def _linkedin_raw_fields_from_response(payload):
+    answers = _find_first_value(payload, ["answers"]) or []
+    if not isinstance(answers, list):
+        return {}
+
+    raw_fields = {}
+    for idx, answer in enumerate(answers):
+        if not isinstance(answer, dict):
+            continue
+        question_name = (
+            answer.get("name")
+            or answer.get("question")
+            or f"question_{answer.get('questionId') or idx + 1}"
+        )
+        value = _linkedin_extract_answer_value(answer)
+        if value not in (None, ""):
+            raw_fields[str(question_name)] = value
+    return raw_fields
+
+
+def _linkedin_fetch_full_response(lead_id):
+    if not _linkedin_is_fetchable_lead_id(str(lead_id)):
+        return None
+
+    token = _linkedin_access_token()
+    if not token:
+        logger.warning("LinkedIn: sin token de acceso; se omite fetch de leadFormResponses para lead_id=%s", lead_id)
+        return None
+
+    version = _linkedin_api_version()
+    lead_id_url = quote(str(lead_id), safe="")
+    url = f"https://api.linkedin.com/rest/leadFormResponses/{lead_id_url}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Linkedin-Version": version,
+        "X-Restli-Protocol-Version": "2.0.0",
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        payload = response.json()
+        answers = _find_first_value(payload, ["answers"])
+        logger.info(
+            "LinkedIn leadFormResponses OK lead_id=%s answers=%s",
+            lead_id,
+            len(answers) if isinstance(answers, list) else 0,
+        )
+        return payload
+    except requests.HTTPError as exc:
+        body = getattr(exc.response, "text", "")
+        logger.warning(
+            "LinkedIn leadFormResponses HTTP %s para lead_id=%s. body=%s",
+            getattr(exc.response, "status_code", "unknown"),
+            lead_id,
+            (body or "")[:400],
+        )
+    except Exception as exc:
+        logger.warning("LinkedIn leadFormResponses fallo para lead_id=%s error=%s", lead_id, exc)
+    return None
 
 
 def _extract_urn_id(value):
@@ -247,6 +364,90 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         defaults=defaults,
     )
     logger.info("Lead %s guardado desde Graph API", leadgen_id)
+
+
+def _linkedin_defaults_from_full_response(full_payload, fallback_defaults):
+    defaults = dict(fallback_defaults or {})
+    lead_metadata = full_payload.get("leadMetadata") if isinstance(full_payload, dict) else {}
+    if not isinstance(lead_metadata, dict):
+        lead_metadata = {}
+    lead_metadata_info = full_payload.get("leadMetadataInfo") if isinstance(full_payload, dict) else {}
+    if not isinstance(lead_metadata_info, dict):
+        lead_metadata_info = {}
+    sponsored_metadata = lead_metadata.get("sponsoredLeadMetadata") if isinstance(lead_metadata, dict) else {}
+    if not isinstance(sponsored_metadata, dict):
+        sponsored_metadata = {}
+    sponsored_metadata_info = (
+        lead_metadata_info.get("sponsoredLeadMetadataInfo") if isinstance(lead_metadata_info, dict) else {}
+    )
+    if not isinstance(sponsored_metadata_info, dict):
+        sponsored_metadata_info = {}
+    associated_entity = full_payload.get("associatedEntity") if isinstance(full_payload, dict) else {}
+    if not isinstance(associated_entity, dict):
+        associated_entity = {}
+    associated_entity_info = full_payload.get("associatedEntityInfo") if isinstance(full_payload, dict) else {}
+    if not isinstance(associated_entity_info, dict):
+        associated_entity_info = {}
+    associated_creative_info = (
+        associated_entity_info.get("associatedCreativeInfo") if isinstance(associated_entity_info, dict) else {}
+    )
+    if not isinstance(associated_creative_info, dict):
+        associated_creative_info = {}
+
+    submitted_at = _find_first_value(full_payload, ["submittedAt", "createdTime", "eventTime", "timestamp"])
+    created_time = _parse_epoch(submitted_at)
+    if created_time:
+        defaults["created_time"] = created_time
+
+    campaign_urn = sponsored_metadata.get("campaign")
+    campaign_name = _find_first_value(sponsored_metadata_info.get("campaign"), ["name"])
+    if campaign_urn:
+        defaults["campaign_id"] = _extract_urn_id(campaign_urn) or defaults.get("campaign_id", "")
+    if campaign_name:
+        defaults["campaign_name"] = campaign_name
+
+    form_urn = _find_first_value(full_payload, ["versionedLeadGenFormUrn", "leadGenFormUrn", "formUrn"])
+    if form_urn:
+        defaults["form_id"] = str(form_urn)
+
+    creative_urn = (
+        associated_entity.get("associatedCreative")
+        or associated_entity.get("sponsoredCreative")
+        or associated_entity.get("creative")
+    )
+    creative_name = associated_creative_info.get("name")
+    if creative_urn:
+        defaults["ad_id"] = _extract_urn_id(creative_urn) or defaults.get("ad_id", "")
+    if creative_name:
+        defaults["ad_name"] = creative_name
+
+    raw_fields = _linkedin_raw_fields_from_response(full_payload)
+    normalized = {_normalize_key(k): v for k, v in raw_fields.items()}
+
+    first_name = _pick_first(normalized, ["first_name", "nombre"])
+    last_name = _pick_first(normalized, ["last_name", "apellido", "apellidos"])
+    full_name = (
+        _pick_first(normalized, ["full_name", "nombre_completo", "name"])
+        or " ".join(part for part in [first_name, last_name] if part).strip()
+        or defaults.get("full_name")
+    )
+    email = _pick_first(normalized, ["email", "correo", "correo_electronico", "work_email"]) or defaults.get("email")
+    phone = _pick_first(normalized, ["phone_number", "telefono", "tel", "celular", "mobile", "phone"]) or defaults.get("phone_number")
+    job_title = _pick_first(normalized, ["job_title", "puesto", "cargo", "title"]) or defaults.get("job_title")
+    company = _pick_first(normalized, ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa"]) or defaults.get("company_name")
+
+    defaults.update(
+        {
+            "full_name": full_name,
+            "email": email,
+            "phone_number": phone,
+            "job_title": job_title,
+            "company_name": company,
+            "raw_fields": raw_fields or defaults.get("raw_fields") or {},
+            "raw_payload": full_payload or defaults.get("raw_payload") or {},
+        }
+    )
+    return defaults
 
 
 @login_required
@@ -674,6 +875,10 @@ def linkedin_lead_webhook(request):
             "raw_fields": raw_fields,
             "raw_payload": event if isinstance(event, dict) else payload,
         }
+
+        full_payload = _linkedin_fetch_full_response(lead_id)
+        if full_payload:
+            defaults = _linkedin_defaults_from_full_response(full_payload, defaults)
 
         LinkedInLead.objects.update_or_create(lead_id=str(lead_id), defaults=defaults)
 
