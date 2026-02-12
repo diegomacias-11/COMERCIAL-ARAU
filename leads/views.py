@@ -66,6 +66,21 @@ def _linkedin_signature_variants(secret, body_bytes):
     return {digest, f"hmacsha256={digest}"}
 
 
+def _linkedin_secret_candidates():
+    raw = os.getenv("LINKEDIN_CLIENT_SECRET")
+    if not raw:
+        return []
+    candidates = []
+    for value in (
+        raw,
+        raw.strip(),
+        raw.strip().strip('"').strip("'"),
+    ):
+        if value and value not in candidates:
+            candidates.append(value)
+    return candidates
+
+
 def _extract_urn_id(value):
     if value in (None, ""):
         return None
@@ -384,7 +399,8 @@ def linkedin_lead_webhook(request):
         request.META.get("HTTP_USER_AGENT", ""),
         request.META.get("REMOTE_ADDR", ""),
     )
-    secret = os.getenv("LINKEDIN_CLIENT_SECRET") or ""
+    secrets = _linkedin_secret_candidates()
+    primary_secret = secrets[0] if secrets else ""
 
     if request.method == "GET":
         challenge_code = request.GET.get("challengeCode") or request.GET.get("challenge_code")
@@ -396,10 +412,10 @@ def linkedin_lead_webhook(request):
         if not challenge_code:
             logger.warning("LinkedIn webhook GET sin challengeCode")
             return HttpResponse("Missing challengeCode", status=400)
-        if not secret:
+        if not primary_secret:
             logger.error("LinkedIn webhook GET sin LINKEDIN_CLIENT_SECRET")
             return HttpResponse("Missing LINKEDIN_CLIENT_SECRET", status=500)
-        challenge_response = _linkedin_signature(secret, challenge_code.encode("utf-8"))
+        challenge_response = _linkedin_signature(primary_secret, challenge_code.encode("utf-8"))
         return JsonResponse(
             {
                 "challengeCode": challenge_code,
@@ -412,7 +428,7 @@ def linkedin_lead_webhook(request):
 
     body_bytes = request.body or b""
     signature = request.headers.get("X-LI-Signature") or request.META.get("HTTP_X_LI_SIGNATURE")
-    if not secret:
+    if not secrets:
         logger.error("LinkedIn webhook POST sin LINKEDIN_CLIENT_SECRET")
         return HttpResponse("Missing LINKEDIN_CLIENT_SECRET", status=500)
     if not signature:
@@ -420,15 +436,25 @@ def linkedin_lead_webhook(request):
         return HttpResponse("Missing X-LI-Signature", status=400)
 
     provided_signature = signature.strip().strip('"').lower()
-    expected_signatures = _linkedin_signature_variants(secret, body_bytes)
-    is_valid_signature = any(
-        hmac.compare_digest(provided_signature, expected_sig)
-        for expected_sig in expected_signatures
-    )
+    expected_for_log = None
+    is_valid_signature = False
+    for secret in secrets:
+        expected_signatures = _linkedin_signature_variants(secret, body_bytes)
+        if expected_for_log is None:
+            expected_for_log = _linkedin_signature(secret, body_bytes)
+        if any(hmac.compare_digest(provided_signature, expected_sig) for expected_sig in expected_signatures):
+            is_valid_signature = True
+            break
     if not is_valid_signature:
         logger.warning(
-            "LinkedIn webhook POST con firma invalida. signature=%s",
+            (
+                "LinkedIn webhook POST con firma invalida. "
+                "provided=%s expected=%s body_len=%s secret_len=%s"
+            ),
             provided_signature[:80],
+            (expected_for_log or "")[:80],
+            len(body_bytes),
+            len(secrets[0]) if secrets else 0,
         )
         return HttpResponse("Invalid signature", status=403)
 
