@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime
 from io import BytesIO
 from django.db.models import Q
 from django.http import HttpResponse
@@ -13,6 +13,7 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
+from core.choices import URGENCIA_CHOICES
 from .forms import _cliente_choices, ActividadMercaForm
 from .models import ActividadMerca, _business_days_between
 
@@ -23,7 +24,6 @@ ESTATUS_CHOICES = [
     "Se entregó tarde",
     "Entregada a tiempo",
 ]
-
 
 def _parse_date(val: str | None):
     if not val:
@@ -331,15 +331,17 @@ def reporte_actividades(request):
 
 def solicitud_publica(request):
     cliente_options = ["ENROK", "ARAU", "HUNTERLOOP"]
+    urgencia_options = list(URGENCIA_CHOICES)
     errors = {}
     success = False
+    success_dias = None
     initial = {
         "cliente": request.POST.get("cliente", ""),
         "tipo": request.POST.get("tipo", ""),
         "formato": request.POST.get("formato", ""),
         "mensaje": request.POST.get("mensaje", ""),
         "url": request.POST.get("url", ""),
-        "fecha_entrega": request.POST.get("fecha_entrega", ""),
+        "urgencia": request.POST.get("urgencia", ""),
         "quien": request.POST.get("quien", ""),
         "departamento": request.POST.get("departamento", ""),
     }
@@ -350,50 +352,42 @@ def solicitud_publica(request):
         formato = (request.POST.get("formato") or "").strip()
         mensaje = (request.POST.get("mensaje") or "").strip()
         url = (request.POST.get("url") or "").strip()
-        fecha_entrega_raw = (request.POST.get("fecha_entrega") or "").strip()
+        urgencia = (request.POST.get("urgencia") or "").strip()
         quien = (request.POST.get("quien") or "").strip()
         departamento = (request.POST.get("departamento") or "").strip()
 
-        # Validaciones
         if cliente not in cliente_options:
-            errors["cliente"] = "Selecciona un cliente válido."
+            errors["cliente"] = "Selecciona un cliente valido."
         if not tipo:
             errors["tipo"] = "Campo requerido."
         if not formato:
             errors["formato"] = "Campo requerido."
         if not mensaje:
             errors["mensaje"] = "Campo requerido."
-        if not fecha_entrega_raw:
-            errors["fecha_entrega"] = "Campo requerido."
+        urgencia_labels = dict(URGENCIA_CHOICES)
+        if urgencia not in urgencia_labels:
+            errors["urgencia"] = "Selecciona una urgencia valida."
         if not quien:
             errors["quien"] = "Campo requerido."
         if not departamento:
             errors["departamento"] = "Campo requerido."
 
-        fecha_entrega = None
-        if fecha_entrega_raw:
-            try:
-                fecha_entrega = datetime.strptime(fecha_entrega_raw, "%Y-%m-%d").date()
-            except ValueError:
-                errors["fecha_entrega"] = "Fecha inválida (YYYY-MM-DD)."
-
         if not errors:
             hoy = timezone.now().date()
-            dias = 0
-            if fecha_entrega and fecha_entrega > hoy:
-                dias = _business_days_between(hoy, fecha_entrega) or 0
-            # Construir tarea
+            dias = int(urgencia)
+            success_dias = dias
             tarea_parts = [
                 f"Tipo: {tipo}",
                 f"Formato: {formato}",
                 f"Mensaje: {mensaje}",
-                f"Quién solicita: {quien}",
+                f"Urgencia: {urgencia_labels[urgencia]}",
+                f"Quien solicita: {quien}",
                 f"Departamento: {departamento}",
             ]
             tarea_text = " | ".join(tarea_parts)
             ActividadMerca.objects.create(
                 cliente=cliente,
-                area="Internas",
+                area="Extras",
                 fecha_inicio=hoy,
                 tarea=tarea_text,
                 url=url or None,
@@ -404,27 +398,28 @@ def solicitud_publica(request):
             )
             success = True
             initial = {
-            "cliente": "",
-            "tipo": "",
-            "formato": "",
-            "mensaje": "",
-            "url": "",
-            "fecha_entrega": "",
-            "quien": "",
-            "departamento": "",
-        }
+                "cliente": "",
+                "tipo": "",
+                "formato": "",
+                "mensaje": "",
+                "url": "",
+                "urgencia": "",
+                "quien": "",
+                "departamento": "",
+            }
 
     return render(
         request,
         "actividades_merca/solicitud_publica.html",
         {
             "cliente_options": cliente_options,
+            "urgencia_options": urgencia_options,
             "errors": errors,
             "success": success,
+            "success_dias": success_dias,
             **initial,
         },
     )
-
 
 def crear_actividad(request):
     back_url = request.GET.get("next") or "/actividades_merca/"

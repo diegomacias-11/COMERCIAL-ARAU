@@ -34,9 +34,14 @@
       <input type="url" id="url" name="url" value="{{ url }}" maxlength="500" placeholder="https://..." />
       {% if errors.url %}<div class="error">{{ errors.url }}</div>{% endif %}
 
-      <label for="fecha_entrega">Fecha de entrega</label>
-      <input type="date" id="fecha_entrega" name="fecha_entrega" value="{{ fecha_entrega }}" required>
-      {% if errors.fecha_entrega %}<div class="error">{{ errors.fecha_entrega }}</div>{% endif %}
+      <label for="urgencia">Urgencia</label>
+      <select id="urgencia" name="urgencia" required>
+        <option value="">Selecciona</option>
+        {% for value, label in urgencia_options %}
+          <option value="{{ value }}" {% if urgencia == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.urgencia %}<div class="error">{{ errors.urgencia }}</div>{% endif %}
 
       <label for="quien">Quién solicita</label>
       <input type="text" id="quien" name="quien" value="{{ quien }}" maxlength="150" required>
@@ -58,7 +63,7 @@
         defaultBtn.classList.add('btn-primary');
       }
       {% if success %}
-      alert('El departamento de marketing de Grupo Arau ha recibido tu solicitud con éxito, espera la entrega en la fecha indicada.');
+            alert('El departamento de marketing recibio tu solicitud. Se entregara en {{ success_dias }} dias.');
       {% endif %}
     });
   </script>

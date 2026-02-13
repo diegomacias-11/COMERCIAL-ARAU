@@ -30,6 +30,14 @@ SERVICIO_CHOICES = [
     ("REPSE", "REPSE"),
 ]
 
+CHOICES_INTERNAS = [
+    ("ARAU", "ARAU"),
+    ("ENROK", "ENROK"),
+    ("HUNTERLOOP", "HUNTERLOOP"),
+    ("W DESARROLLOS", "W DESARROLLOS"),
+    ("CUSTOMEER", "CUSTOMEER"),
+]
+
 LEAD_ESTATUS_CHOICES = [
     ("Perdido", "Perdido"),
     ("No calificado", "No calificado"),
@@ -108,6 +116,7 @@ AREA_CHOICES = [
     ("Página Web Diseño/Mtto", "Página Web Diseño/Mtto"),
     ("Parrilla", "Parrilla"),
     ("Performance Mkt", "Performance Mkt"),
+    ("Reportes", "Reportes"),
     ("Vídeos", "Vídeos"),
 ]
 
@@ -212,7 +221,7 @@ GASTOS_MERCA_PLATAFORMA_CHOICES = [
 GASTOS_MERCA_MARCA_CHOICES = [
     ("ENROK", "ENROK"),
     ("HunterLoop", "HunterLoop"),
-    ("Capheues", "Capheues"),
+    ("Capheus", "Caphues"),
     ("ARAU", "ARAU"),
 ]
 
@@ -241,4 +250,10 @@ CONTROL_PERIODICIDAD_CHOICES = [
     ('trimestral', 'Trimestral'),
     ('semestral', 'Semestral'),
     ('anual', 'Anual'),
+]
+
+URGENCIA_CHOICES = [
+    ("1", "Alta"),
+    ("3", "Media"),
+    ("5", "Baja"),
 ]

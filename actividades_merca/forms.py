@@ -2,11 +2,8 @@ from django import forms
 import unicodedata
 
 from clientes.models import Cliente
+from core.choices import CHOICES_INTERNAS
 from .models import ActividadMerca
-
-
-EXTRA_CLIENTES = ["ARAU", "ENROK", "HUNTERLOOP", "W DESARROLLOS", "CUSTOMEER"]
-
 
 def _cliente_choices():
     qs = (
@@ -16,8 +13,8 @@ def _cliente_choices():
     )
     vistos = set()
     choices = []
-    for nombre in EXTRA_CLIENTES:
-        val = nombre.strip().upper()
+    for nombre, _ in CHOICES_INTERNAS:
+        val = (nombre or "").strip().upper()
         if val and val not in vistos:
             choices.append((val, val))
             vistos.add(val)
