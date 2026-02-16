@@ -3,10 +3,12 @@ import hmac
 import json
 import logging
 import os
+import uuid
 from datetime import datetime
 from urllib.parse import quote
 
 import requests
+from django import forms
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
@@ -22,6 +24,15 @@ from core.choices import LEAD_ESTATUS_CHOICES, SERVICIO_CHOICES
 logger = logging.getLogger(__name__)
 META_VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN")
 META_PAGE_TOKEN = os.getenv("META_PAGE_TOKEN")
+
+
+class WhatsAppLeadCaptureForm(forms.Form):
+    full_name = forms.CharField(label="Nombre completo", max_length=200)
+    email = forms.EmailField(label="Email", required=False)
+    phone_number = forms.CharField(label="Telefono", required=False, max_length=50)
+    job_title = forms.CharField(label="Cargo", required=False, max_length=150)
+    company_name = forms.CharField(label="Nombre de la empresa", required=False, max_length=200)
+    is_organic = forms.BooleanField(label="Organico", required=False)
 
 
 def _normalize_key(name: str) -> str:
@@ -760,11 +771,94 @@ def _lead_sort_datetime(value):
     return value
 
 
+def _coerce_lead_text(value):
+    if value in (None, ""):
+        return ""
+    if isinstance(value, list):
+        for item in value:
+            text = _coerce_lead_text(item)
+            if text:
+                return text
+        return ""
+    if isinstance(value, dict):
+        for key in ("value", "text", "label", "name", "answer"):
+            text = _coerce_lead_text(value.get(key))
+            if text:
+                return text
+        return ""
+    return str(value).strip()
+
+
+def _lead_display_name(lead):
+    full_name = _coerce_lead_text(getattr(lead, "full_name", ""))
+    if full_name:
+        return full_name
+
+    raw_fields = getattr(lead, "raw_fields", None) or {}
+    if isinstance(raw_fields, dict):
+        normalized = {_normalize_key(k): v for k, v in raw_fields.items()}
+        direct_name = _pick_first(normalized, ["full_name", "nombre_completo", "name", "nombre"])
+        if _coerce_lead_text(direct_name):
+            return _coerce_lead_text(direct_name)
+
+        first_name = _pick_first(normalized, ["first_name", "nombre"])
+        last_name = _pick_first(normalized, ["last_name", "apellido", "apellidos"])
+        composed = " ".join(part for part in [_coerce_lead_text(first_name), _coerce_lead_text(last_name)] if part).strip()
+        if composed:
+            return composed
+
+        # LinkedIn: algunos formularios guardan question_<id>; intentamos detectar el campo de nombre por etiqueta.
+        payload_labels = _linkedin_question_labels_from_payload(getattr(lead, "raw_payload", {}) or {})
+        if payload_labels:
+            name_value = ""
+            for key, value in raw_fields.items():
+                question_id = _extract_question_id_from_key(key)
+                label = (
+                    payload_labels.get(str(key))
+                    or payload_labels.get((str(key) or "").replace(" ", "_"))
+                    or payload_labels.get((str(key) or "").replace("_", " "))
+                    or (payload_labels.get(question_id) if question_id else None)
+                    or ""
+                )
+                normalized_label = _normalize_key(label)
+                if any(token in normalized_label for token in ("full_name", "nombre_completo", "first_name", "last_name", "nombre", "apellido", "name")):
+                    candidate = _coerce_lead_text(value)
+                    if candidate:
+                        name_value = candidate
+                        break
+            if name_value:
+                return name_value
+
+    email = _coerce_lead_text(getattr(lead, "email", ""))
+    if email:
+        return email
+
+    company_name = _coerce_lead_text(getattr(lead, "company_name", ""))
+    if company_name:
+        return company_name
+
+    phone = _coerce_lead_text(getattr(lead, "phone_number", ""))
+    if phone:
+        return phone
+
+    lead_identifier = _coerce_lead_text(getattr(lead, "leadgen_id", "") or getattr(lead, "lead_id", ""))
+    return lead_identifier or "Sin nombre"
+
+
 def _prepare_lead_for_list(lead, *, detail_url_name, source_label, identifier_value):
     lead.detail_url_name = detail_url_name
     lead.source_label = source_label
     lead.identifier_value = identifier_value or ""
+    lead.display_name = _lead_display_name(lead)
     return lead
+
+
+def _generate_manual_leadgen_id():
+    for _ in range(5):
+        candidate = f"manual-whatsapp-{uuid.uuid4().hex[:20]}"
+        if not MetaLead.objects.filter(leadgen_id=candidate).exists():
+            return candidate
+    return f"manual-whatsapp-{uuid.uuid4().hex}"
 
 
 def fetch_and_save_meta_lead(leadgen_id: str):
@@ -933,6 +1027,7 @@ def leads_lista(request):
             | Q(form_id__icontains=q)
             | Q(campaign_name__icontains=q)
             | Q(full_name__icontains=q)
+            | Q(raw_fields__icontains=q)
             | Q(email__icontains=q)
             | Q(phone_number__icontains=q)
             | Q(company_name__icontains=q)
@@ -942,6 +1037,7 @@ def leads_lista(request):
             | Q(form_id__icontains=q)
             | Q(campaign_name__icontains=q)
             | Q(full_name__icontains=q)
+            | Q(raw_fields__icontains=q)
             | Q(email__icontains=q)
             | Q(phone_number__icontains=q)
             | Q(company_name__icontains=q)
@@ -973,6 +1069,67 @@ def leads_lista(request):
     )
 
     return render(request, "leads/lista.html", {"leads": leads, "q": q})
+
+
+@login_required
+def leads_whatsapp_form(request):
+    back_url = request.GET.get("next") or request.POST.get("next") or "/leads/"
+
+    if request.method == "POST":
+        form = WhatsAppLeadCaptureForm(request.POST)
+        if form.is_valid():
+            full_name = (form.cleaned_data.get("full_name") or "").strip()
+            email = (form.cleaned_data.get("email") or "").strip()
+            phone_number = (form.cleaned_data.get("phone_number") or "").strip()
+            job_title = (form.cleaned_data.get("job_title") or "").strip()
+            company_name = (form.cleaned_data.get("company_name") or "").strip()
+            is_organic = bool(form.cleaned_data.get("is_organic"))
+
+            raw_fields = {
+                "full_name": full_name,
+                "email": email,
+                "phone_number": phone_number,
+                "job_title": job_title,
+                "company_name": company_name,
+                "is_organic": is_organic,
+            }
+
+            lead = MetaLead.objects.create(
+                leadgen_id=_generate_manual_leadgen_id(),
+                created_time=timezone.now(),
+                ad_id="",
+                ad_name="",
+                adset_id="",
+                adset_name="",
+                campaign_id="",
+                campaign_name="",
+                form_id="manual_whatsapp",
+                is_organic=is_organic,
+                platform="WhatsApp",
+                full_name=full_name or None,
+                email=email or None,
+                phone_number=phone_number or None,
+                job_title=job_title or None,
+                company_name=company_name or None,
+                raw_fields={k: v for k, v in raw_fields.items() if v not in (None, "")},
+                raw_payload={
+                    "source": "manual_whatsapp",
+                    "captured_from": "leads_ui",
+                    "fields": {k: v for k, v in raw_fields.items() if v not in (None, "")},
+                },
+            )
+            return redirect(f"/leads/{lead.id}/?next={back_url}")
+    else:
+        form = WhatsAppLeadCaptureForm()
+
+    return render(
+        request,
+        "leads/whatsapp_form.html",
+        {
+            "form": form,
+            "back_url": back_url,
+        },
+    )
 
 
 def _lead_delete(request, pk: int, lead_model):

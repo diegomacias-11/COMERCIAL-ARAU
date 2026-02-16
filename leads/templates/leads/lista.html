@@ -28,6 +28,10 @@
   </form>
 {% endblock %}
 
+{% block filtros_right %}
+  <a href="{% url 'leads_metalead_whatsapp_form' %}?next={{ request.get_full_path|urlencode }}" class="btn-primary btn-primary-inline">Agregar lead</a>
+{% endblock %}
+
 {% block tabla_head %}
   <tr>
     <th>Detalle</th>
@@ -46,7 +50,7 @@
       </td>
       <td>{{ lead.source_label|default_if_none:"" }}</td>
       <td>{{ lead.created_time|date:"d/m/Y H:i"|default_if_none:"" }}</td>
-      <td>{{ lead.full_name|default_if_none:"" }}</td>
+      <td>{{ lead.display_name|default_if_none:"" }}</td>
       <td>{{ lead.contactado|yesno:"Si,No" }}</td>
     </tr>
   {% empty %}

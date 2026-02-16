@@ -24,12 +24,20 @@
       if (!form) return;
 
       form.addEventListener('submit', (ev) => {
+        const submitter = ev.submitter || null;
+        const deleteSubmit = submitter && submitter.classList && submitter.classList.contains('btn-delete');
+        const skipSaveConfirm = form.dataset.skipSaveConfirm === '1';
+        if (deleteSubmit || skipSaveConfirm) {
+          form.dataset.skipSaveConfirm = '0';
+          return;
+        }
+
         const confirmMessage = form.getAttribute('data-confirm-message');
         const confirmFlag = (form.dataset.confirm || '').toLowerCase();
         const confirmEnabled = !(confirmFlag === '0' || confirmFlag === 'false' || confirmFlag === 'no');
         if (confirmEnabled) {
           if (form.dataset.confirmDone === '1') return;
-          const ok = confirm(confirmMessage || '¿Guardar cambios?');
+          const ok = confirm(confirmMessage || '\u00bfGuardar cambios?');
           if (!ok) {
             ev.preventDefault();
             return;
@@ -40,14 +48,24 @@
 
       const deleteButtons = Array.from(document.querySelectorAll('.btn-delete'));
       deleteButtons.forEach((btn) => {
-        const hasInlineConfirm = (btn.getAttribute('onclick') || '').toLowerCase().includes('confirm(');
-        if (hasInlineConfirm) return;
+        // Mensaje global de eliminacion para todos los formularios.
+        const deleteConfirmMessage = '\u00bfEliminar este registro?';
+
+        // Centraliza la confirmacion de borrado y evita doble confirmacion.
+        if (btn.hasAttribute('onclick')) {
+          btn.removeAttribute('onclick');
+        }
         btn.addEventListener('click', (ev) => {
-          const ok = confirm('\u00bfEliminar este registro?');
-          if (!ok) ev.preventDefault();
+          const ok = confirm(deleteConfirmMessage);
+          if (!ok) {
+            ev.preventDefault();
+            return;
+          }
+          form.dataset.skipSaveConfirm = '1';
         });
       });
 
     });
   </script>
 {% endblock %}
+

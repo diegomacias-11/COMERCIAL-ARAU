@@ -1,0 +1,45 @@
+{% extends "form.html" %}
+
+{% block title %}Registrar lead WhatsApp{% endblock %}
+
+{% block back_link %}
+  <section class="filter-container">
+    <a href="{{ back_url }}" class="btn-filter btn-volver">Volver</a>
+  </section>
+{% endblock %}
+
+{% block form_fields %}
+  <input type="hidden" name="next" value="{{ back_url }}">
+  {% if form.non_field_errors %}
+    <div class="error">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+  <div class="form-grid">
+    <div class="form-col">
+      <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }}</label>
+      {{ form.full_name }}
+      {% if form.full_name.errors %}<div class="error">{{ form.full_name.errors }}</div>{% endif %}
+
+      <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+      {{ form.email }}
+      {% if form.email.errors %}<div class="error">{{ form.email.errors }}</div>{% endif %}
+
+      <label for="{{ form.phone_number.id_for_label }}">{{ form.phone_number.label }}</label>
+      {{ form.phone_number }}
+      {% if form.phone_number.errors %}<div class="error">{{ form.phone_number.errors }}</div>{% endif %}
+
+      <label for="{{ form.job_title.id_for_label }}">{{ form.job_title.label }}</label>
+      {{ form.job_title }}
+      {% if form.job_title.errors %}<div class="error">{{ form.job_title.errors }}</div>{% endif %}
+
+      <label for="{{ form.company_name.id_for_label }}">{{ form.company_name.label }}</label>
+      {{ form.company_name }}
+      {% if form.company_name.errors %}<div class="error">{{ form.company_name.errors }}</div>{% endif %}
+
+      <label for="{{ form.is_organic.id_for_label }}">{{ form.is_organic.label }}</label>
+      {{ form.is_organic }}
+      {% if form.is_organic.errors %}<div class="error">{{ form.is_organic.errors }}</div>{% endif %}
+    </div>
+  </div>
+{% endblock %}
