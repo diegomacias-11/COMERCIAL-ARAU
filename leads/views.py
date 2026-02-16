@@ -142,6 +142,29 @@ def _linkedin_lead_ref_candidates(lead_ref):
     return [c for c in candidates if _linkedin_is_fetchable_lead_id(c)]
 
 
+def _linkedin_extract_form_id(form_ref):
+    if form_ref in (None, ""):
+        return None
+    text = str(form_ref).strip()
+    if not text:
+        return None
+    if text.isdigit():
+        return text
+
+    marker = "urn:li:leadGenForm:"
+    if marker in text:
+        tail = text.split(marker, 1)[1]
+        digits = []
+        for ch in tail:
+            if ch.isdigit():
+                digits.append(ch)
+            else:
+                break
+        if digits:
+            return "".join(digits)
+    return None
+
+
 def _linkedin_extract_answer_value(answer):
     def _coerce_scalar(value):
         if value in (None, ""):
@@ -446,6 +469,98 @@ def _linkedin_question_labels_from_payload(payload):
             _store_label(question_id, question_label)
 
     return label_map
+
+
+def _linkedin_fetch_form_schema(form_ref):
+    form_id = _linkedin_extract_form_id(form_ref)
+    if not form_id:
+        return {}, {}
+
+    token = _linkedin_access_token()
+    if not token:
+        return {}, {}
+
+    version = _linkedin_api_version()
+    form_id_url = quote(str(form_id), safe="")
+    url = f"https://api.linkedin.com/rest/leadForms/{form_id_url}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Linkedin-Version": version,
+        "X-Restli-Protocol-Version": "2.0.0",
+    }
+    payload = None
+    for variant in (
+        {"params": {"fields": "content,creationLocale,name,id"}, "label": "with_fields"},
+        {"params": None, "label": "without_fields"},
+    ):
+        try:
+            response = requests.get(url, headers=headers, params=variant["params"], timeout=15)
+            response.raise_for_status()
+            payload = response.json()
+            break
+        except Exception as exc:
+            logger.warning(
+                "LinkedIn leadForms fallo form_id=%s mode=%s error=%s",
+                form_id,
+                variant["label"],
+                exc,
+            )
+    if not isinstance(payload, dict):
+        return {}, {}
+
+    question_labels = {}
+    option_labels_by_question = {}
+
+    question_lists = _find_all_values(payload, ["questions"])
+    for question_list in question_lists:
+        if not isinstance(question_list, list):
+            continue
+
+        for question in question_list:
+            if not isinstance(question, dict):
+                continue
+
+            qid = question.get("questionId") or question.get("id")
+            if qid in (None, ""):
+                qid = _extract_urn_id(_find_first_value(question, ["question", "questionUrn", "urn", "entityUrn"]))
+            if qid in (None, ""):
+                continue
+            qid_str = str(qid).strip()
+            if not qid_str:
+                continue
+
+            qlabel = (
+                _stringify_label_candidate(question.get("question"))
+                or _stringify_label_candidate(question.get("label"))
+                or _stringify_label_candidate(question.get("name"))
+            )
+            if qlabel:
+                question_labels.setdefault(f"question_{qid_str}", qlabel)
+                question_labels.setdefault(f"question {qid_str}", qlabel)
+                question_labels.setdefault(qid_str, qlabel)
+
+            option_labels = {}
+            option_lists = _find_all_values(question, ["options"])
+            for opt_list in option_lists:
+                if not isinstance(opt_list, list):
+                    continue
+                for opt in opt_list:
+                    if not isinstance(opt, dict):
+                        continue
+                    opt_id = opt.get("id")
+                    if opt_id in (None, ""):
+                        continue
+                    opt_label = (
+                        _stringify_label_candidate(opt.get("text"))
+                        or _stringify_label_candidate(opt.get("label"))
+                        or _stringify_label_candidate(opt.get("name"))
+                    )
+                    if opt_label:
+                        option_labels[str(opt_id).strip()] = opt_label
+            if option_labels:
+                option_labels_by_question[qid_str] = option_labels
+
+    return question_labels, option_labels_by_question
 
 
 def _linkedin_fetch_full_response(lead_ref):
@@ -883,6 +998,8 @@ def _build_field_rows(lead):
     field_rows = []
     raw_items = lead.raw_fields or {}
     payload_question_labels = {}
+    form_question_labels = {}
+    form_option_labels = {}
     is_linkedin = (lead.platform or "").strip().lower() == "linkedin"
 
     if is_linkedin and isinstance(raw_items, dict):
@@ -927,21 +1044,52 @@ def _build_field_rows(lead):
                             "No se pudo actualizar datos LinkedIn para lead_id=%s",
                             getattr(lead, "lead_id", ""),
                         )
+        form_question_labels, form_option_labels = _linkedin_fetch_form_schema(lead.form_id)
+
+    resolved_question_labels = {}
+    if payload_question_labels:
+        resolved_question_labels.update(payload_question_labels)
+    if form_question_labels:
+        # El schema del form tiene prioridad porque es el texto exacto configurado.
+        resolved_question_labels.update(form_question_labels)
+
+    def _translate_choice_value(question_id, raw_value):
+        if not question_id:
+            return raw_value
+        choices = form_option_labels.get(str(question_id))
+        if not isinstance(choices, dict) or not choices:
+            return raw_value
+
+        values = []
+        if isinstance(raw_value, list):
+            values = [str(v).strip() for v in raw_value if v not in (None, "")]
+        elif raw_value not in (None, ""):
+            text = str(raw_value).strip()
+            if "," in text:
+                values = [part.strip() for part in text.split(",") if part.strip()]
+            else:
+                values = [text]
+        if not values:
+            return raw_value
+
+        translated = [choices.get(v, v) for v in values]
+        return ", ".join(translated)
 
     for name, raw_value in raw_items.items():
         label = " ".join((name or "").replace("_", " ").split())
         question_id = _extract_question_id_from_key(name)
-        if payload_question_labels:
+        if resolved_question_labels:
             label = (
-                payload_question_labels.get(str(name))
-                or payload_question_labels.get((str(name) or "").replace(" ", "_"))
-                or payload_question_labels.get((str(name) or "").replace("_", " "))
-                or (payload_question_labels.get(question_id) if question_id else None)
+                resolved_question_labels.get(str(name))
+                or resolved_question_labels.get((str(name) or "").replace(" ", "_"))
+                or resolved_question_labels.get((str(name) or "").replace("_", " "))
+                or (resolved_question_labels.get(question_id) if question_id else None)
                 or label
             )
         if question_id and label.lower().strip() in {f"question_{question_id}", f"question {question_id}"}:
             label = f"Pregunta {question_id}"
-        value = raw_value or ""
+        value = _translate_choice_value(question_id, raw_value)
+        value = value or ""
         if isinstance(value, list):
             value = ", ".join(str(v) for v in value if v is not None)
         value_str = str(value)
@@ -968,17 +1116,18 @@ def _build_field_rows(lead):
             for name, raw_value in payload_fields.items():
                 label = " ".join((name or "").replace("_", " ").split())
                 question_id = _extract_question_id_from_key(name)
-                if payload_question_labels:
+                if resolved_question_labels:
                     label = (
-                        payload_question_labels.get(str(name))
-                        or payload_question_labels.get((str(name) or "").replace(" ", "_"))
-                        or payload_question_labels.get((str(name) or "").replace("_", " "))
-                        or (payload_question_labels.get(question_id) if question_id else None)
+                        resolved_question_labels.get(str(name))
+                        or resolved_question_labels.get((str(name) or "").replace(" ", "_"))
+                        or resolved_question_labels.get((str(name) or "").replace("_", " "))
+                        or (resolved_question_labels.get(question_id) if question_id else None)
                         or label
                     )
                 if question_id and label.lower().strip() in {f"question_{question_id}", f"question {question_id}"}:
                     label = f"Pregunta {question_id}"
-                value = raw_value or ""
+                value = _translate_choice_value(question_id, raw_value)
+                value = value or ""
                 if isinstance(value, list):
                     value = ", ".join(str(v) for v in value if v is not None)
                 value_str = str(value)
