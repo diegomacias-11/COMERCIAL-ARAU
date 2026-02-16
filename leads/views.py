@@ -789,6 +789,55 @@ def _coerce_lead_text(value):
     return str(value).strip()
 
 
+def _extract_name_from_labeled_fields(raw_fields, label_map):
+    if not isinstance(raw_fields, dict):
+        return ""
+
+    first_name = ""
+    last_name = ""
+    full_name = ""
+
+    for key, raw_value in raw_fields.items():
+        value = _coerce_lead_text(raw_value)
+        if not value:
+            continue
+
+        question_id = _extract_question_id_from_key(key)
+        label = (
+            (label_map or {}).get(str(key))
+            or (label_map or {}).get((str(key) or "").replace(" ", "_"))
+            or (label_map or {}).get((str(key) or "").replace("_", " "))
+            or ((label_map or {}).get(question_id) if question_id else None)
+            or ""
+        )
+        normalized_label = _normalize_key(label)
+
+        if not full_name and (
+            normalized_label in {"full_name", "nombre_completo", "name"}
+            or ("nombre_completo" in normalized_label)
+        ):
+            full_name = value
+            continue
+
+        if not first_name and (
+            normalized_label in {"first_name", "nombre", "name"}
+            or ("first_name" in normalized_label)
+            or (normalized_label.startswith("nombre") and "empresa" not in normalized_label and "apellido" not in normalized_label)
+        ):
+            first_name = value
+            continue
+
+        if not last_name and (
+            normalized_label in {"last_name", "apellido", "apellidos", "surname"}
+            or ("apellido" in normalized_label)
+            or ("last_name" in normalized_label)
+        ):
+            last_name = value
+
+    composed = " ".join(part for part in [first_name, last_name] if part).strip()
+    return composed or full_name
+
+
 def _lead_display_name(lead):
     full_name = _coerce_lead_text(getattr(lead, "full_name", ""))
     if full_name:
@@ -809,23 +858,15 @@ def _lead_display_name(lead):
 
         # LinkedIn: algunos formularios guardan question_<id>; intentamos detectar el campo de nombre por etiqueta.
         payload_labels = _linkedin_question_labels_from_payload(getattr(lead, "raw_payload", {}) or {})
-        if payload_labels:
-            name_value = ""
-            for key, value in raw_fields.items():
-                question_id = _extract_question_id_from_key(key)
-                label = (
-                    payload_labels.get(str(key))
-                    or payload_labels.get((str(key) or "").replace(" ", "_"))
-                    or payload_labels.get((str(key) or "").replace("_", " "))
-                    or (payload_labels.get(question_id) if question_id else None)
-                    or ""
-                )
-                normalized_label = _normalize_key(label)
-                if any(token in normalized_label for token in ("full_name", "nombre_completo", "first_name", "last_name", "nombre", "apellido", "name")):
-                    candidate = _coerce_lead_text(value)
-                    if candidate:
-                        name_value = candidate
-                        break
+        name_value = _extract_name_from_labeled_fields(raw_fields, payload_labels)
+        if name_value:
+            return name_value
+
+        # Si en raw_payload no hay labels, intentar resolver con el schema del form de LinkedIn.
+        platform = (getattr(lead, "platform", "") or "").strip().lower()
+        if platform == "linkedin":
+            form_labels, _ = _linkedin_fetch_form_schema(getattr(lead, "form_id", ""))
+            name_value = _extract_name_from_labeled_fields(raw_fields, form_labels)
             if name_value:
                 return name_value
 
