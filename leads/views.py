@@ -281,6 +281,7 @@ def _stringify_label_candidate(value):
         for key in (
             "questionText",
             "questionLabel",
+            "question",
             "label",
             "name",
             "text",
@@ -296,6 +297,11 @@ def _stringify_label_candidate(value):
         for localized_key in ("localized", "localizedValue", "localizedText"):
             localized = value.get(localized_key)
             label = _stringify_label_candidate(localized)
+            if label:
+                return label
+        # Fallback para objetos localized como {"en_US": "..."} o estructuras similares.
+        for nested in value.values():
+            label = _stringify_label_candidate(nested)
             if label:
                 return label
     return None
@@ -379,6 +385,7 @@ def _linkedin_question_labels_from_payload(payload):
                 _find_first_value(
                     question,
                     [
+                        "question",
                         "questionText",
                         "questionLabel",
                         "label",
@@ -411,21 +418,31 @@ def _linkedin_fetch_full_response(lead_id):
     version = _linkedin_api_version()
     lead_id_url = quote(str(lead_id), safe="")
     url = f"https://api.linkedin.com/rest/leadFormResponses/{lead_id_url}"
+    fields_projection = (
+        "ownerInfo,associatedEntityInfo,leadMetadataInfo,leadType,versionedLeadGenFormUrn,"
+        "id,submittedAt,testLead,formResponse,form:(hiddenFields,creationLocale,name,id,content)"
+    )
     headers = {
         "Authorization": f"Bearer {token}",
         "Linkedin-Version": version,
         "X-Restli-Protocol-Version": "2.0.0",
     }
+    params = {
+        "fields": fields_projection,
+    }
 
     try:
-        response = requests.get(url, headers=headers, timeout=15)
+        response = requests.get(url, headers=headers, params=params, timeout=15)
         response.raise_for_status()
         payload = response.json()
         answers = _find_first_value(payload, ["answers"])
         logger.info(
-            "LinkedIn leadFormResponses OK lead_id=%s answers=%s",
+            "LinkedIn leadFormResponses OK lead_id=%s answers=%s form_questions=%s",
             lead_id,
             len(answers) if isinstance(answers, list) else 0,
+            len(_find_first_value(payload, ["questions"]) or [])
+            if isinstance(_find_first_value(payload, ["questions"]), list)
+            else 0,
         )
         return payload
     except requests.HTTPError as exc:
@@ -795,9 +812,20 @@ def _build_field_rows(lead):
     field_rows = []
     raw_items = lead.raw_fields or {}
     payload_question_labels = {}
+    is_linkedin = (lead.platform or "").strip().lower() == "linkedin"
 
-    if isinstance(raw_items, dict) and (lead.platform or "").strip().lower() == "linkedin":
+    if isinstance(raw_items, dict) and is_linkedin:
         payload_question_labels = _linkedin_question_labels_from_payload(lead.raw_payload or {})
+        if not payload_question_labels:
+            refreshed_payload = _linkedin_fetch_full_response(getattr(lead, "lead_id", "") or "")
+            if isinstance(refreshed_payload, dict):
+                payload_question_labels = _linkedin_question_labels_from_payload(refreshed_payload)
+                if payload_question_labels:
+                    lead.raw_payload = refreshed_payload
+                    try:
+                        lead.save(update_fields=["raw_payload"])
+                    except Exception:
+                        logger.warning("No se pudo actualizar raw_payload para lead_id=%s", getattr(lead, "lead_id", ""))
 
     for name, raw_value in raw_items.items():
         label = " ".join((name or "").replace("_", " ").split())
