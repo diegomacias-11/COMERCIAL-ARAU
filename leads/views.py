@@ -108,57 +108,149 @@ def _linkedin_is_fetchable_lead_id(lead_id: str) -> bool:
 
 
 def _linkedin_extract_answer_value(answer):
-    if not isinstance(answer, dict):
+    def _coerce_scalar(value):
+        if value in (None, ""):
+            return None
+        if isinstance(value, str):
+            value = value.strip()
+            return value or None
+        if isinstance(value, (int, float, bool)):
+            return str(value)
+        if isinstance(value, list):
+            cleaned = []
+            for item in value:
+                scalar = _coerce_scalar(item)
+                if scalar not in (None, ""):
+                    cleaned.append(str(scalar))
+            return ", ".join(cleaned) if cleaned else None
+        if isinstance(value, dict):
+            for key in (
+                "answer",
+                "value",
+                "text",
+                "label",
+                "name",
+                "email",
+                "phoneNumber",
+                "phone",
+                "companyName",
+                "title",
+                "id",
+                "urn",
+            ):
+                scalar = _coerce_scalar(value.get(key))
+                if scalar not in (None, ""):
+                    return scalar
         return None
 
-    accepted = answer.get("accepted")
-    rejected = answer.get("rejected")
-    candidate = accepted if isinstance(accepted, dict) else rejected if isinstance(rejected, dict) else {}
+    if not isinstance(answer, dict):
+        return _coerce_scalar(answer)
 
-    simple = _find_first_value(
-        candidate,
-        [
-            "answer",
-            "value",
-            "text",
-            "email",
-            "phoneNumber",
-            "phone",
-            "companyName",
-            "title",
-        ],
-    )
-    if simple not in (None, ""):
-        return simple
+    candidates = []
+    for key in ("accepted", "rejected", "answer", "response", "value"):
+        candidate = answer.get(key)
+        if isinstance(candidate, dict):
+            candidates.append(candidate)
+    candidates.append(answer)
 
-    options = _find_first_value(
-        candidate,
-        ["selectedOptions", "options", "optionIds", "optionUrns"],
-    )
-    if isinstance(options, list):
-        cleaned = [str(v) for v in options if v not in (None, "")]
-        if cleaned:
-            return ", ".join(cleaned)
+    for candidate in candidates:
+        simple = _find_first_value(
+            candidate,
+            [
+                "answer",
+                "value",
+                "text",
+                "email",
+                "phoneNumber",
+                "phone",
+                "companyName",
+                "title",
+                "stringValue",
+                "freeTextAnswer",
+                "singleLineAnswer",
+                "multiLineAnswer",
+                "inputValue",
+            ],
+        )
+        scalar = _coerce_scalar(simple)
+        if scalar not in (None, ""):
+            return scalar
+
+        options = _find_first_value(
+            candidate,
+            [
+                "selectedOptions",
+                "options",
+                "optionIds",
+                "optionUrns",
+                "selectedValues",
+                "choices",
+            ],
+        )
+        scalar = _coerce_scalar(options)
+        if scalar not in (None, ""):
+            return scalar
     return None
 
 
-def _linkedin_raw_fields_from_response(payload):
-    answers = _find_first_value(payload, ["answers"]) or []
-    if not isinstance(answers, list):
-        return {}
+def _linkedin_extract_question_name(answer, idx):
+    if not isinstance(answer, dict):
+        return f"question_{idx + 1}"
 
+    for key in ("name", "question", "questionText", "questionLabel", "label", "fieldName", "field"):
+        value = answer.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        if isinstance(value, dict):
+            nested = _find_first_value(value, ["name", "question", "text", "label", "title"])
+            if isinstance(nested, str) and nested.strip():
+                return nested.strip()
+
+    question_id = answer.get("questionId") or answer.get("id")
+    if question_id not in (None, ""):
+        return f"question_{question_id}"
+    return f"question_{idx + 1}"
+
+
+def _linkedin_raw_fields_from_response(payload):
     raw_fields = {}
-    for idx, answer in enumerate(answers):
-        if not isinstance(answer, dict):
-            continue
-        question_name = (
-            answer.get("name")
-            or answer.get("question")
-            or f"question_{answer.get('questionId') or idx + 1}"
-        )
-        value = _linkedin_extract_answer_value(answer)
-        if value not in (None, ""):
-            raw_fields[str(question_name)] = value
+
+    answers = _find_first_value(payload, ["answers", "responses", "questionsAndAnswers"])
+    if isinstance(answers, list):
+        for idx, answer in enumerate(answers):
+            question_name = _linkedin_extract_question_name(answer, idx)
+            value = _linkedin_extract_answer_value(answer)
+            if value not in (None, ""):
+                raw_fields[str(question_name)] = value
+
+    generic_fields = _find_first_value(payload, ["field_data", "fieldData", "fields", "formFields"])
+    if isinstance(generic_fields, list):
+        for idx, field in enumerate(generic_fields):
+            if not isinstance(field, dict):
+                continue
+            question_name = (
+                field.get("name")
+                or field.get("label")
+                or field.get("question")
+                or field.get("field")
+                or field.get("key")
+                or f"field_{idx + 1}"
+            )
+            value = (
+                field.get("value")
+                if field.get("value") not in (None, "")
+                else field.get("values")
+                if field.get("values") not in (None, "")
+                else field.get("answer")
+                if field.get("answer") not in (None, "")
+                else field.get("response")
+                if field.get("response") not in (None, "")
+                else field.get("text")
+            )
+            parsed_value = _linkedin_extract_answer_value({"value": value})
+            if parsed_value not in (None, ""):
+                raw_fields[str(question_name)] = parsed_value
+
     return raw_fields
 
 
@@ -207,7 +299,38 @@ def _linkedin_fetch_full_response(lead_id):
 def _extract_urn_id(value):
     if value in (None, ""):
         return None
+
+    if isinstance(value, dict):
+        nested = _find_first_value(
+            value,
+            [
+                "id",
+                "$id",
+                "urn",
+                "entityUrn",
+                "resource",
+                "leadId",
+                "lead_id",
+                "leadgen_id",
+                "leadGenId",
+                "leadGenFormResponse",
+                "leadFormResponse",
+            ],
+        )
+        if nested is value:
+            return None
+        return _extract_urn_id(nested)
+
+    if isinstance(value, list):
+        for item in value:
+            extracted = _extract_urn_id(item)
+            if extracted:
+                return extracted
+        return None
+
     text = str(value).strip()
+    if not text:
+        return None
     if text.startswith("urn:li:"):
         return text.rsplit(":", 1)[-1].strip(")")
     return text
@@ -857,6 +980,8 @@ def linkedin_lead_webhook(request):
         raw_fields = event.get("raw_fields") if isinstance(event, dict) else None
         if not isinstance(raw_fields, dict):
             raw_fields = {}
+        if not raw_fields and isinstance(event, dict):
+            raw_fields = _linkedin_raw_fields_from_response(event)
 
         defaults = {
             "created_time": created_time or timezone.now(),
@@ -875,6 +1000,28 @@ def linkedin_lead_webhook(request):
             "raw_fields": raw_fields,
             "raw_payload": event if isinstance(event, dict) else payload,
         }
+        if raw_fields:
+            normalized_event = {_normalize_key(k): v for k, v in raw_fields.items()}
+            first_name = _pick_first(normalized_event, ["first_name", "nombre"])
+            last_name = _pick_first(normalized_event, ["last_name", "apellido", "apellidos"])
+            defaults["full_name"] = (
+                defaults.get("full_name")
+                or _pick_first(normalized_event, ["full_name", "nombre_completo", "name"])
+                or " ".join(part for part in [first_name, last_name] if part).strip()
+            )
+            defaults["email"] = defaults.get("email") or _pick_first(
+                normalized_event, ["email", "correo", "correo_electronico", "work_email"]
+            )
+            defaults["phone_number"] = defaults.get("phone_number") or _pick_first(
+                normalized_event, ["phone_number", "telefono", "tel", "celular", "mobile", "phone"]
+            )
+            defaults["job_title"] = defaults.get("job_title") or _pick_first(
+                normalized_event, ["job_title", "puesto", "cargo", "title"]
+            )
+            defaults["company_name"] = defaults.get("company_name") or _pick_first(
+                normalized_event,
+                ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa", "razon_social"],
+            )
 
         full_payload = _linkedin_fetch_full_response(lead_id)
         if full_payload:
