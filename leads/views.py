@@ -107,6 +107,27 @@ def _linkedin_is_fetchable_lead_id(lead_id: str) -> bool:
     return not (lead_id.startswith("notification:") or lead_id.startswith("event:"))
 
 
+def _linkedin_lead_ref_candidates(lead_ref):
+    candidates = []
+
+    def _add(value):
+        if value in (None, ""):
+            return
+        text = str(value).strip()
+        if text and text not in candidates:
+            candidates.append(text)
+
+    _add(lead_ref)
+    extracted = _extract_urn_id(lead_ref)
+    _add(extracted)
+
+    if extracted and not str(extracted).startswith("urn:li:"):
+        _add(f"urn:li:leadFormResponse:{extracted}")
+        _add(f"urn:li:leadGenFormResponse:{extracted}")
+
+    return [c for c in candidates if _linkedin_is_fetchable_lead_id(c)]
+
+
 def _linkedin_extract_answer_value(answer):
     def _coerce_scalar(value):
         if value in (None, ""):
@@ -406,18 +427,20 @@ def _linkedin_question_labels_from_payload(payload):
     return label_map
 
 
-def _linkedin_fetch_full_response(lead_id):
-    if not _linkedin_is_fetchable_lead_id(str(lead_id)):
+def _linkedin_fetch_full_response(lead_ref):
+    ref_candidates = _linkedin_lead_ref_candidates(lead_ref)
+    if not ref_candidates:
         return None
 
     token = _linkedin_access_token()
     if not token:
-        logger.warning("LinkedIn: sin token de acceso; se omite fetch de leadFormResponses para lead_id=%s", lead_id)
+        logger.warning(
+            "LinkedIn: sin token de acceso; se omite fetch de leadFormResponses para lead_ref=%s",
+            lead_ref,
+        )
         return None
 
     version = _linkedin_api_version()
-    lead_id_url = quote(str(lead_id), safe="")
-    url = f"https://api.linkedin.com/rest/leadFormResponses/{lead_id_url}"
     fields_projection = (
         "ownerInfo,associatedEntityInfo,leadMetadataInfo,leadType,versionedLeadGenFormUrn,"
         "id,submittedAt,testLead,formResponse,form:(hiddenFields,creationLocale,name,id,content)"
@@ -427,34 +450,61 @@ def _linkedin_fetch_full_response(lead_id):
         "Linkedin-Version": version,
         "X-Restli-Protocol-Version": "2.0.0",
     }
-    params = {
-        "fields": fields_projection,
-    }
+    request_variants = [
+        {"params": {"fields": fields_projection}, "label": "with_fields"},
+        {"params": None, "label": "without_fields"},
+    ]
 
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=15)
-        response.raise_for_status()
-        payload = response.json()
-        answers = _find_first_value(payload, ["answers"])
-        logger.info(
-            "LinkedIn leadFormResponses OK lead_id=%s answers=%s form_questions=%s",
-            lead_id,
-            len(answers) if isinstance(answers, list) else 0,
-            len(_find_first_value(payload, ["questions"]) or [])
-            if isinstance(_find_first_value(payload, ["questions"]), list)
-            else 0,
-        )
-        return payload
-    except requests.HTTPError as exc:
-        body = getattr(exc.response, "text", "")
-        logger.warning(
-            "LinkedIn leadFormResponses HTTP %s para lead_id=%s. body=%s",
-            getattr(exc.response, "status_code", "unknown"),
-            lead_id,
-            (body or "")[:400],
-        )
-    except Exception as exc:
-        logger.warning("LinkedIn leadFormResponses fallo para lead_id=%s error=%s", lead_id, exc)
+    last_error = None
+    for candidate in ref_candidates:
+        lead_id_url = quote(str(candidate), safe="")
+        url = f"https://api.linkedin.com/rest/leadFormResponses/{lead_id_url}"
+
+        for variant in request_variants:
+            try:
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    params=variant["params"],
+                    timeout=15,
+                )
+                response.raise_for_status()
+                payload = response.json()
+                answers = _find_first_value(payload, ["answers", "responses"])
+                logger.info(
+                    "LinkedIn leadFormResponses OK candidate=%s mode=%s answers=%s",
+                    candidate,
+                    variant["label"],
+                    len(answers) if isinstance(answers, list) else 0,
+                )
+                return payload
+            except requests.HTTPError as exc:
+                status = getattr(exc.response, "status_code", None)
+                body = getattr(exc.response, "text", "")
+                last_error = f"http_{status}"
+                if status in (400, 404) and variant["label"] == "with_fields":
+                    continue
+                logger.warning(
+                    "LinkedIn leadFormResponses HTTP %s candidate=%s mode=%s body=%s",
+                    status or "unknown",
+                    candidate,
+                    variant["label"],
+                    (body or "")[:400],
+                )
+            except Exception as exc:
+                last_error = str(exc)
+                logger.warning(
+                    "LinkedIn leadFormResponses fallo candidate=%s mode=%s error=%s",
+                    candidate,
+                    variant["label"],
+                    exc,
+                )
+    logger.warning(
+        "LinkedIn leadFormResponses sin exito para lead_ref=%s candidates=%s last_error=%s",
+        lead_ref,
+        ref_candidates[:4],
+        last_error,
+    )
     return None
 
 
@@ -819,7 +869,20 @@ def _build_field_rows(lead):
         # Si el lead no tiene respuestas o no tenemos etiquetas, intenta rehidratar desde API.
         should_refresh = (not raw_items) or (not payload_question_labels)
         if should_refresh:
-            refreshed_payload = _linkedin_fetch_full_response(getattr(lead, "lead_id", "") or "")
+            payload_lead_ref = _find_first_value(
+                lead.raw_payload or {},
+                [
+                    "leadId",
+                    "lead_id",
+                    "leadgen_id",
+                    "leadgenId",
+                    "leadGenId",
+                    "leadGenFormResponse",
+                    "leadFormResponse",
+                    "id",
+                ],
+            )
+            refreshed_payload = _linkedin_fetch_full_response(payload_lead_ref or getattr(lead, "lead_id", "") or "")
             if isinstance(refreshed_payload, dict):
                 refreshed_raw_fields = _linkedin_raw_fields_from_response(refreshed_payload)
                 refreshed_question_labels = _linkedin_question_labels_from_payload(refreshed_payload)
@@ -1170,7 +1233,7 @@ def linkedin_lead_webhook(request):
             events = [payload]
 
     for event in events:
-        lead_id = _find_first_value(
+        lead_ref = _find_first_value(
             event,
             [
                 "leadId",
@@ -1182,7 +1245,7 @@ def linkedin_lead_webhook(request):
                 "leadFormResponse",
             ],
         )
-        lead_id = _extract_urn_id(lead_id)
+        lead_id = _extract_urn_id(lead_ref)
         notification_id = _find_first_value(event, ["notificationId", "notification_id"])
         if not lead_id and notification_id not in (None, ""):
             lead_id = f"notification:{notification_id}"
@@ -1283,7 +1346,7 @@ def linkedin_lead_webhook(request):
                 ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa", "razon_social"],
             )
 
-        full_payload = _linkedin_fetch_full_response(lead_id)
+        full_payload = _linkedin_fetch_full_response(lead_ref or lead_id)
         if full_payload:
             defaults = _linkedin_defaults_from_full_response(full_payload, defaults)
 
