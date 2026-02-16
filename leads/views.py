@@ -45,6 +45,20 @@ def _find_first_value(payload, keys):
     return None
 
 
+def _find_all_values(payload, keys):
+    found = []
+    keyset = set(keys or [])
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            if key in keyset and value not in (None, ""):
+                found.append(value)
+            found.extend(_find_all_values(value, keyset))
+    elif isinstance(payload, list):
+        for item in payload:
+            found.extend(_find_all_values(item, keyset))
+    return found
+
+
 def _parse_epoch(value):
     try:
         ts = float(value)
@@ -279,6 +293,8 @@ def _extract_question_id_from_key(raw_key):
     text = str(raw_key or "").strip().lower()
     if not text:
         return None
+    if text.startswith("urn:li:"):
+        return _extract_urn_id(text)
     if text.startswith("question_"):
         candidate = text[len("question_"):].strip()
         return candidate or None
@@ -333,8 +349,26 @@ def _linkedin_question_labels_from_payload(payload):
     if not isinstance(payload, dict):
         return label_map
 
-    answers = _find_first_value(payload, ["answers", "responses", "questionsAndAnswers"])
-    if isinstance(answers, list):
+    def _store_label(qid, label):
+        if qid in (None, "") or label in (None, ""):
+            return
+        qid_str = str(qid).strip()
+        label_str = str(label).strip()
+        if not qid_str or not label_str:
+            return
+        lower = label_str.lower()
+        if lower.startswith("urn:li:"):
+            return
+        if lower in {f"question_{qid_str.lower()}", f"question {qid_str.lower()}"}:
+            return
+        label_map.setdefault(f"question_{qid_str}", label_str)
+        label_map.setdefault(f"question {qid_str}", label_str)
+        label_map.setdefault(qid_str, label_str)
+
+    answer_lists = _find_all_values(payload, ["answers", "responses", "questionsAndAnswers"])
+    for answers in answer_lists:
+        if not isinstance(answers, list):
+            continue
         for idx, answer in enumerate(answers):
             if not isinstance(answer, dict):
                 continue
@@ -350,6 +384,7 @@ def _linkedin_question_labels_from_payload(payload):
                             "question",
                             "questionRef",
                             "questionReference",
+                            "id",
                         ],
                     )
                 )
@@ -373,40 +408,29 @@ def _linkedin_question_labels_from_payload(payload):
                     ],
                 )
             ) or _linkedin_extract_question_name(answer, idx)
+            _store_label(question_id, question_label)
 
-            if not question_label:
-                continue
-
-            # Evitar guardar etiquetas genericas tipo "question_123" cuando no hay texto real.
-            if question_id and question_label.lower().strip() in {
-                f"question_{question_id.lower()}",
-                f"question {question_id.lower()}",
-            }:
-                continue
-
-            if question_id:
-                label_map[f"question_{question_id}"] = question_label
-                label_map[f"question {question_id}"] = question_label
-                label_map[question_id] = question_label
-
-    form_questions = _find_first_value(payload, ["questions", "formQuestions", "leadFormQuestions"])
-    if isinstance(form_questions, list):
+    question_lists = _find_all_values(payload, ["questions", "formQuestions", "leadFormQuestions"])
+    for form_questions in question_lists:
+        if not isinstance(form_questions, list):
+            continue
         for question in form_questions:
             if not isinstance(question, dict):
                 continue
             question_id = (
                 question.get("questionId")
                 or question.get("id")
-                or _extract_urn_id(_find_first_value(question, ["questionUrn", "urn", "entityUrn"]))
+                or _extract_urn_id(
+                    _find_first_value(
+                        question,
+                        ["question", "questionUrn", "question_urn", "urn", "entityUrn", "questionRef"],
+                    )
+                )
             )
-            if question_id in (None, ""):
-                continue
-            question_id = str(question_id).strip()
             question_label = _stringify_label_candidate(
                 _find_first_value(
                     question,
                     [
-                        "question",
                         "questionText",
                         "questionLabel",
                         "label",
@@ -415,14 +439,11 @@ def _linkedin_question_labels_from_payload(payload):
                         "title",
                         "localizedName",
                         "localizedText",
+                        "prompt",
                     ],
                 )
             )
-            if not question_label:
-                continue
-            label_map.setdefault(f"question_{question_id}", question_label)
-            label_map.setdefault(f"question {question_id}", question_label)
-            label_map.setdefault(question_id, question_label)
+            _store_label(question_id, question_label)
 
     return label_map
 
