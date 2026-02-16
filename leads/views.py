@@ -83,6 +83,38 @@ def _parse_epoch(value):
         return None
 
 
+def _linkedin_lead_type_value(payload):
+    lead_type = _find_first_value(payload, ["lead_type", "leadType", "type"])
+    if isinstance(lead_type, dict):
+        lead_type = _find_first_value(lead_type, ["value", "type", "name", "code"])
+    if lead_type in (None, ""):
+        return ""
+    return str(lead_type).strip().upper()
+
+
+def _linkedin_is_organic_value(payload):
+    explicit = _find_first_value(payload, ["is_organic", "isOrganic", "organic"])
+    if isinstance(explicit, bool):
+        return explicit
+    if isinstance(explicit, (int, float)):
+        return bool(explicit)
+    if isinstance(explicit, str):
+        normalized = explicit.strip().lower()
+        if normalized in {"1", "true", "yes", "si", "organic", "organico"}:
+            return True
+        if normalized in {"0", "false", "no", "sponsored", "patrocinado"}:
+            return False
+
+    lead_type = _linkedin_lead_type_value(payload)
+    if not lead_type:
+        return None
+    if "ORGANIC" in lead_type:
+        return True
+    if "SPONSORED" in lead_type:
+        return False
+    return None
+
+
 def _linkedin_signature(secret, body_bytes):
     return hmac.new(secret.encode("utf-8"), body_bytes, hashlib.sha256).hexdigest()
 
@@ -838,6 +870,122 @@ def _extract_name_from_labeled_fields(raw_fields, label_map):
     return composed or full_name
 
 
+def _resolve_label_from_maps(raw_key, label_map):
+    if not isinstance(label_map, dict):
+        return ""
+    question_id = _extract_question_id_from_key(raw_key)
+    return (
+        label_map.get(str(raw_key))
+        or label_map.get((str(raw_key) or "").replace(" ", "_"))
+        or label_map.get((str(raw_key) or "").replace("_", " "))
+        or (label_map.get(question_id) if question_id else None)
+        or ""
+    )
+
+
+def _linkedin_extract_core_fields(raw_fields, label_map=None):
+    if not isinstance(raw_fields, dict):
+        return {
+            "full_name": "",
+            "email": "",
+            "phone_number": "",
+            "job_title": "",
+            "company_name": "",
+        }
+
+    normalized_keys = {}
+    for key, raw_value in raw_fields.items():
+        value = _coerce_lead_text(raw_value)
+        if value:
+            normalized_keys[_normalize_key(key)] = value
+
+    full_name = _coerce_lead_text(_pick_first(normalized_keys, ["full_name", "nombre_completo", "name"]))
+    first_name = _coerce_lead_text(_pick_first(normalized_keys, ["first_name", "nombre"]))
+    last_name = _coerce_lead_text(_pick_first(normalized_keys, ["last_name", "apellido", "apellidos", "surname"]))
+    email = _coerce_lead_text(_pick_first(normalized_keys, ["email", "correo", "correo_electronico", "work_email"]))
+    phone = _coerce_lead_text(
+        _pick_first(normalized_keys, ["phone_number", "telefono", "tel", "celular", "mobile", "movil", "phone"])
+    )
+    job_title = _coerce_lead_text(_pick_first(normalized_keys, ["job_title", "puesto", "cargo", "title"]))
+    company_name = _coerce_lead_text(
+        _pick_first(
+            normalized_keys,
+            ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa", "razon_social", "business_name"],
+        )
+    )
+
+    if not full_name:
+        full_name = _extract_name_from_labeled_fields(raw_fields, label_map or {})
+
+    for key, raw_value in raw_fields.items():
+        value = _coerce_lead_text(raw_value)
+        if not value:
+            continue
+        normalized_label = _normalize_key(_resolve_label_from_maps(key, label_map or {}) or key)
+
+        if not full_name and (
+            normalized_label in {"full_name", "nombre_completo", "name"}
+            or "nombre_completo" in normalized_label
+        ):
+            full_name = value
+            continue
+
+        if not first_name and (
+            normalized_label in {"first_name", "nombre", "name"}
+            or "first_name" in normalized_label
+            or (
+                normalized_label.startswith("nombre")
+                and "empresa" not in normalized_label
+                and "apellido" not in normalized_label
+            )
+        ):
+            first_name = value
+            continue
+
+        if not last_name and (
+            normalized_label in {"last_name", "apellido", "apellidos", "surname"}
+            or "apellido" in normalized_label
+            or "last_name" in normalized_label
+        ):
+            last_name = value
+            continue
+
+        if not email and ("email" in normalized_label or "correo" in normalized_label):
+            email = value
+            continue
+
+        if not phone and any(
+            token in normalized_label for token in ("telefono", "phone", "tel", "celular", "mobile", "movil")
+        ):
+            phone = value
+            continue
+
+        if not company_name and any(
+            token in normalized_label for token in ("company", "empresa", "razon_social", "business_name")
+        ):
+            company_name = value
+            continue
+
+        if not job_title and (
+            normalized_label in {"job_title", "puesto", "cargo", "title"}
+            or normalized_label.startswith("cargo")
+            or normalized_label.startswith("puesto")
+            or normalized_label.startswith("title")
+        ):
+            job_title = value
+
+    composed = " ".join(part for part in [first_name, last_name] if part).strip()
+    full_name = full_name or composed
+
+    return {
+        "full_name": full_name,
+        "email": email,
+        "phone_number": phone,
+        "job_title": job_title,
+        "company_name": company_name,
+    }
+
+
 def _lead_display_name(lead):
     full_name = _coerce_lead_text(getattr(lead, "full_name", ""))
     if full_name:
@@ -1004,6 +1152,9 @@ def _linkedin_defaults_from_full_response(full_payload, fallback_defaults):
     created_time = _parse_epoch(submitted_at)
     if created_time:
         defaults["created_time"] = created_time
+    organic_value = _linkedin_is_organic_value(full_payload)
+    if organic_value is not None:
+        defaults["is_organic"] = bool(organic_value)
 
     campaign_urn = sponsored_metadata.get("campaign")
     campaign_name = _find_first_value(sponsored_metadata_info.get("campaign"), ["name"])
@@ -1028,19 +1179,13 @@ def _linkedin_defaults_from_full_response(full_payload, fallback_defaults):
         defaults["ad_name"] = creative_name
 
     raw_fields = _linkedin_raw_fields_from_response(full_payload)
-    normalized = {_normalize_key(k): v for k, v in raw_fields.items()}
-
-    first_name = _pick_first(normalized, ["first_name", "nombre"])
-    last_name = _pick_first(normalized, ["last_name", "apellido", "apellidos"])
-    full_name = (
-        _pick_first(normalized, ["full_name", "nombre_completo", "name"])
-        or " ".join(part for part in [first_name, last_name] if part).strip()
-        or defaults.get("full_name")
-    )
-    email = _pick_first(normalized, ["email", "correo", "correo_electronico", "work_email"]) or defaults.get("email")
-    phone = _pick_first(normalized, ["phone_number", "telefono", "tel", "celular", "mobile", "phone"]) or defaults.get("phone_number")
-    job_title = _pick_first(normalized, ["job_title", "puesto", "cargo", "title"]) or defaults.get("job_title")
-    company = _pick_first(normalized, ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa"]) or defaults.get("company_name")
+    payload_labels = _linkedin_question_labels_from_payload(full_payload)
+    inferred_core = _linkedin_extract_core_fields(raw_fields, payload_labels)
+    full_name = inferred_core.get("full_name") or defaults.get("full_name")
+    email = inferred_core.get("email") or defaults.get("email")
+    phone = inferred_core.get("phone_number") or defaults.get("phone_number")
+    job_title = inferred_core.get("job_title") or defaults.get("job_title")
+    company = inferred_core.get("company_name") or defaults.get("company_name")
 
     defaults.update(
         {
@@ -1242,6 +1387,16 @@ def _build_field_rows(lead):
                             "No se pudo actualizar datos LinkedIn para lead_id=%s",
                             getattr(lead, "lead_id", ""),
                         )
+        organic_value = _linkedin_is_organic_value(lead.raw_payload or {})
+        if organic_value is not None and bool(getattr(lead, "is_organic", False)) != bool(organic_value):
+            try:
+                lead.is_organic = bool(organic_value)
+                lead.save(update_fields=["is_organic"])
+            except Exception:
+                logger.warning(
+                    "No se pudo sincronizar is_organic LinkedIn para lead_id=%s",
+                    getattr(lead, "lead_id", ""),
+                )
         form_question_labels, form_option_labels = _linkedin_fetch_form_schema(lead.form_id)
 
     resolved_question_labels = {}
@@ -1250,6 +1405,24 @@ def _build_field_rows(lead):
     if form_question_labels:
         # El schema del form tiene prioridad porque es el texto exacto configurado.
         resolved_question_labels.update(form_question_labels)
+
+    if is_linkedin and isinstance(raw_items, dict) and raw_items:
+        inferred_core = _linkedin_extract_core_fields(raw_items, resolved_question_labels)
+        core_updates = []
+        for field_name in ("full_name", "email", "phone_number", "job_title", "company_name"):
+            current = _coerce_lead_text(getattr(lead, field_name, ""))
+            incoming = _coerce_lead_text(inferred_core.get(field_name))
+            if incoming and not current:
+                setattr(lead, field_name, incoming)
+                core_updates.append(field_name)
+        if core_updates:
+            try:
+                lead.save(update_fields=core_updates)
+            except Exception:
+                logger.warning(
+                    "No se pudo sincronizar campos base LinkedIn para lead_id=%s",
+                    getattr(lead, "lead_id", ""),
+                )
 
     def _translate_choice_value(question_id, raw_value):
         if not question_id:
@@ -1419,7 +1592,7 @@ def _lead_detail(request, pk: int, *, lead_model, delete_url_name, lead_identifi
             "field_rows": field_rows,
             "can_edit": can_edit,
             "delete_url_name": delete_url_name,
-            "show_is_organic": lead_model is MetaLead,
+            "show_is_organic": hasattr(lead, "is_organic"),
             "lead_identifier": lead_identifier,
             "platform_label": platform_value,
             "cita_agendada_value": (
@@ -1646,6 +1819,7 @@ def linkedin_lead_webhook(request):
         ad_name = _find_first_value(event, ["adName", "ad_name"])
         adset_id = _find_first_value(event, ["adsetId", "adset_id"])
         adset_name = _find_first_value(event, ["adsetName", "adset_name"])
+        event_is_organic = _linkedin_is_organic_value(event if isinstance(event, dict) else {})
 
         raw_fields = event.get("raw_fields") if isinstance(event, dict) else None
         if not isinstance(raw_fields, dict):
@@ -1665,6 +1839,7 @@ def linkedin_lead_webhook(request):
             "ad_name": ad_name or "",
             "adset_id": adset_id or "",
             "adset_name": adset_name or "",
+            "is_organic": bool(event_is_organic) if event_is_organic is not None else False,
             "full_name": full_name,
             "email": email,
             "phone_number": phone,
@@ -1685,6 +1860,8 @@ def linkedin_lead_webhook(request):
             defaults["ad_name"] = defaults["ad_name"] or (existing_lead.ad_name or "")
             defaults["adset_id"] = defaults["adset_id"] or (existing_lead.adset_id or "")
             defaults["adset_name"] = defaults["adset_name"] or (existing_lead.adset_name or "")
+            if event_is_organic is None:
+                defaults["is_organic"] = bool(getattr(existing_lead, "is_organic", False))
             defaults["full_name"] = defaults["full_name"] or existing_lead.full_name
             defaults["email"] = defaults["email"] or existing_lead.email
             defaults["phone_number"] = defaults["phone_number"] or existing_lead.phone_number
@@ -1692,27 +1869,13 @@ def linkedin_lead_webhook(request):
             defaults["company_name"] = defaults["company_name"] or existing_lead.company_name
 
         if raw_fields:
-            normalized_event = {_normalize_key(k): v for k, v in raw_fields.items()}
-            first_name = _pick_first(normalized_event, ["first_name", "nombre"])
-            last_name = _pick_first(normalized_event, ["last_name", "apellido", "apellidos"])
-            defaults["full_name"] = (
-                defaults.get("full_name")
-                or _pick_first(normalized_event, ["full_name", "nombre_completo", "name"])
-                or " ".join(part for part in [first_name, last_name] if part).strip()
-            )
-            defaults["email"] = defaults.get("email") or _pick_first(
-                normalized_event, ["email", "correo", "correo_electronico", "work_email"]
-            )
-            defaults["phone_number"] = defaults.get("phone_number") or _pick_first(
-                normalized_event, ["phone_number", "telefono", "tel", "celular", "mobile", "phone"]
-            )
-            defaults["job_title"] = defaults.get("job_title") or _pick_first(
-                normalized_event, ["job_title", "puesto", "cargo", "title"]
-            )
-            defaults["company_name"] = defaults.get("company_name") or _pick_first(
-                normalized_event,
-                ["company_name", "company", "empresa", "nombre_empresa", "nombre_de_empresa", "razon_social"],
-            )
+            payload_labels = _linkedin_question_labels_from_payload(event if isinstance(event, dict) else {})
+            inferred_core = _linkedin_extract_core_fields(raw_fields, payload_labels)
+            defaults["full_name"] = defaults.get("full_name") or inferred_core.get("full_name")
+            defaults["email"] = defaults.get("email") or inferred_core.get("email")
+            defaults["phone_number"] = defaults.get("phone_number") or inferred_core.get("phone_number")
+            defaults["job_title"] = defaults.get("job_title") or inferred_core.get("job_title")
+            defaults["company_name"] = defaults.get("company_name") or inferred_core.get("company_name")
 
         full_payload = _linkedin_fetch_full_response(lead_ref or lead_id)
         if full_payload:

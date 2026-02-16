@@ -62,6 +62,7 @@ class LinkedInLead(models.Model):
     campaign_id = models.CharField(max_length=80, blank=True, null=True)
     campaign_name = models.CharField(max_length=200, blank=True, null=True)
     form_id = models.CharField(max_length=80, blank=True, null=True)
+    is_organic = models.BooleanField(default=False)
 
     platform = models.CharField(max_length=50, default="linkedin")
 

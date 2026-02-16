@@ -31,7 +31,7 @@
     </div>
     <div class="lead-meta-item">
       <span class="lead-meta-label">Campana</span>
-      <span class="lead-meta-value">{{ lead.campaign_name|default_if_none:"" }}</span>
+      <span class="lead-meta-value">{{ lead.campaign_name|default:lead.campaign_id|default_if_none:"" }}</span>
     </div>
     {% if show_is_organic %}
       <div class="lead-meta-item">
@@ -41,11 +41,11 @@
     {% endif %}
     <div class="lead-meta-item">
       <span class="lead-meta-label">Adset</span>
-      <span class="lead-meta-value">{{ lead.adset_name|default_if_none:"" }}</span>
+      <span class="lead-meta-value">{{ lead.adset_name|default:lead.adset_id|default_if_none:"" }}</span>
     </div>
     <div class="lead-meta-item">
       <span class="lead-meta-label">Ad</span>
-      <span class="lead-meta-value">{{ lead.ad_name|default_if_none:"" }}</span>
+      <span class="lead-meta-value">{{ lead.ad_name|default:lead.ad_id|default_if_none:"" }}</span>
     </div>
     <div class="lead-meta-item lead-meta-item-right">
       <span class="lead-meta-label">Form ID</span>
