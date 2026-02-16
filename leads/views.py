@@ -814,18 +814,35 @@ def _build_field_rows(lead):
     payload_question_labels = {}
     is_linkedin = (lead.platform or "").strip().lower() == "linkedin"
 
-    if isinstance(raw_items, dict) and is_linkedin:
+    if is_linkedin and isinstance(raw_items, dict):
         payload_question_labels = _linkedin_question_labels_from_payload(lead.raw_payload or {})
-        if not payload_question_labels:
+        # Si el lead no tiene respuestas o no tenemos etiquetas, intenta rehidratar desde API.
+        should_refresh = (not raw_items) or (not payload_question_labels)
+        if should_refresh:
             refreshed_payload = _linkedin_fetch_full_response(getattr(lead, "lead_id", "") or "")
             if isinstance(refreshed_payload, dict):
-                payload_question_labels = _linkedin_question_labels_from_payload(refreshed_payload)
-                if payload_question_labels:
+                refreshed_raw_fields = _linkedin_raw_fields_from_response(refreshed_payload)
+                refreshed_question_labels = _linkedin_question_labels_from_payload(refreshed_payload)
+
+                update_fields = []
+                if refreshed_raw_fields:
+                    raw_items = refreshed_raw_fields
+                    lead.raw_fields = refreshed_raw_fields
+                    update_fields.append("raw_fields")
+                if refreshed_payload:
                     lead.raw_payload = refreshed_payload
+                    update_fields.append("raw_payload")
+                if refreshed_question_labels:
+                    payload_question_labels = refreshed_question_labels
+
+                if update_fields:
                     try:
-                        lead.save(update_fields=["raw_payload"])
+                        lead.save(update_fields=update_fields)
                     except Exception:
-                        logger.warning("No se pudo actualizar raw_payload para lead_id=%s", getattr(lead, "lead_id", ""))
+                        logger.warning(
+                            "No se pudo actualizar datos LinkedIn para lead_id=%s",
+                            getattr(lead, "lead_id", ""),
+                        )
 
     for name, raw_value in raw_items.items():
         label = " ".join((name or "").replace("_", " ").split())
@@ -852,6 +869,39 @@ def _build_field_rows(lead):
 
     if field_rows:
         return field_rows
+
+    if is_linkedin:
+        payload_fields = _linkedin_raw_fields_from_response(lead.raw_payload or {})
+        if payload_fields:
+            lead.raw_fields = payload_fields
+            try:
+                lead.save(update_fields=["raw_fields"])
+            except Exception:
+                logger.warning(
+                    "No se pudo reconstruir raw_fields desde raw_payload para lead_id=%s",
+                    getattr(lead, "lead_id", ""),
+                )
+            for name, raw_value in payload_fields.items():
+                label = " ".join((name or "").replace("_", " ").split())
+                question_id = _extract_question_id_from_key(name)
+                if payload_question_labels:
+                    label = (
+                        payload_question_labels.get(str(name))
+                        or payload_question_labels.get((str(name) or "").replace(" ", "_"))
+                        or payload_question_labels.get((str(name) or "").replace("_", " "))
+                        or (payload_question_labels.get(question_id) if question_id else None)
+                        or label
+                    )
+                if question_id and label.lower().strip() in {f"question_{question_id}", f"question {question_id}"}:
+                    label = f"Pregunta {question_id}"
+                value = raw_value or ""
+                if isinstance(value, list):
+                    value = ", ".join(str(v) for v in value if v is not None)
+                value_str = str(value)
+                value = value_str if "@" in value_str else " ".join(value_str.replace("_", " ").split())
+                field_rows.append({"label": label or "Campo", "value": value})
+            if field_rows:
+                return field_rows
 
     fallback_fields = [
         ("Nombre", lead.full_name),
@@ -1140,6 +1190,7 @@ def linkedin_lead_webhook(request):
             canonical_event = event if isinstance(event, dict) else {"event": event}
             event_json = json.dumps(canonical_event, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
             lead_id = f"event:{hashlib.sha256(event_json.encode('utf-8')).hexdigest()[:40]}"
+        existing_lead = LinkedInLead.objects.filter(lead_id=str(lead_id)).first()
 
         created_time = _parse_epoch(
             _find_first_value(
@@ -1171,8 +1222,11 @@ def linkedin_lead_webhook(request):
         if not raw_fields and isinstance(event, dict):
             raw_fields = _linkedin_raw_fields_from_response(event)
 
+        if not raw_fields and existing_lead and isinstance(existing_lead.raw_fields, dict):
+            raw_fields = existing_lead.raw_fields
+
         defaults = {
-            "created_time": created_time or timezone.now(),
+            "created_time": created_time or (existing_lead.created_time if existing_lead else None) or timezone.now(),
             "campaign_id": campaign_id or "",
             "campaign_name": campaign_name or "",
             "form_id": form_id or "",
@@ -1186,8 +1240,26 @@ def linkedin_lead_webhook(request):
             "job_title": job_title,
             "company_name": company,
             "raw_fields": raw_fields,
-            "raw_payload": event if isinstance(event, dict) else payload,
+            "raw_payload": (
+                (event if isinstance(event, dict) else payload)
+                if raw_fields
+                else (existing_lead.raw_payload if existing_lead and isinstance(existing_lead.raw_payload, dict) else (event if isinstance(event, dict) else payload))
+            ),
         }
+        if existing_lead:
+            defaults["campaign_id"] = defaults["campaign_id"] or (existing_lead.campaign_id or "")
+            defaults["campaign_name"] = defaults["campaign_name"] or (existing_lead.campaign_name or "")
+            defaults["form_id"] = defaults["form_id"] or (existing_lead.form_id or "")
+            defaults["ad_id"] = defaults["ad_id"] or (existing_lead.ad_id or "")
+            defaults["ad_name"] = defaults["ad_name"] or (existing_lead.ad_name or "")
+            defaults["adset_id"] = defaults["adset_id"] or (existing_lead.adset_id or "")
+            defaults["adset_name"] = defaults["adset_name"] or (existing_lead.adset_name or "")
+            defaults["full_name"] = defaults["full_name"] or existing_lead.full_name
+            defaults["email"] = defaults["email"] or existing_lead.email
+            defaults["phone_number"] = defaults["phone_number"] or existing_lead.phone_number
+            defaults["job_title"] = defaults["job_title"] or existing_lead.job_title
+            defaults["company_name"] = defaults["company_name"] or existing_lead.company_name
+
         if raw_fields:
             normalized_event = {_normalize_key(k): v for k, v in raw_fields.items()}
             first_name = _pick_first(normalized_event, ["first_name", "nombre"])
