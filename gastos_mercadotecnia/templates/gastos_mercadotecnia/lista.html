@@ -3,9 +3,19 @@
 
 {% block title %}Gastos de Mercadotecnia{% endblock %}
 
+{% block extra_head %}
+  <style>
+    .gastos-total-pill {
+      margin: 0;
+      align-self: center;
+    }
+  </style>
+{% endblock %}
+
 {% block filtros_left %}{% endblock %}
 
 {% block filtros %}
+  <div class="dashboard-total gastos-total-pill">Total facturacion: {{ total_facturacion|currency }}</div>
   <form method="get" class="filter-form-simple">
     <div class="filter-block">
       <label for="fecha_desde">Fecha inicio</label>

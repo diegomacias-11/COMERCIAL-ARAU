@@ -4,6 +4,7 @@ import copy
 
 from django import forms
 from django.conf import settings
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -58,9 +59,11 @@ def gastos_lista(request):
         gastos = gastos.filter(fecha_facturacion__lte=fecha_hasta)
     if marca:
         gastos = gastos.filter(marca=marca)
+    total_facturacion = gastos.aggregate(total=Sum("facturacion"))["total"] or 0
 
     context = {
         "gastos": gastos,
+        "total_facturacion": total_facturacion,
         "fecha_desde": fecha_desde,
         "fecha_hasta": fecha_hasta,
         "marca": marca,
