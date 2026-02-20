@@ -31,7 +31,7 @@
       margin-bottom: 0.35rem;
     }
     .leads-kpi-value {
-      color: #003b71;
+      color: #2b313f;
       font-size: 2rem;
       font-weight: 800;
       line-height: 1;
@@ -147,6 +147,22 @@
       const estatusEmpty = document.getElementById("leadsEstatusEmpty");
       const serviciosEmpty = document.getElementById("leadsServiciosEmpty");
       const plataformasEmpty = document.getElementById("leadsPlataformasEmpty");
+      const blueTones = [
+        "#2b313f",
+        "#294369",
+        "#1f5ea8",
+        "#3b78b6",
+        "#4f93c8",
+        "#59b9c7",
+        "#80c9d4",
+        "#aebed2",
+        "#c7d5e5"
+      ];
+
+      const buildBluePalette = (count) => {
+        if (!count || count < 1) return [];
+        return Array.from({ length: count }, (_, idx) => blueTones[idx % blueTones.length]);
+      };
 
       const drawDoughnut = (canvas, labels, values, colors) => {
         if (!canvas) return;
@@ -182,7 +198,7 @@
           estatusCanvas,
           estatusLabels,
           estatusValues,
-          ["#2b313f", "#59b9c7", "#0a7a4d", "#f7c948", "#c7d5e5"]
+          buildBluePalette(estatusValues.length)
         );
       } else if (estatusCanvas) {
         estatusCanvas.hidden = true;
@@ -196,7 +212,7 @@
             labels: serviciosLabels,
             datasets: [{
               data: serviciosValues,
-              backgroundColor: "#59b9c7",
+              backgroundColor: buildBluePalette(serviciosValues.length),
               borderRadius: 6,
               borderSkipped: false
             }]
@@ -235,7 +251,7 @@
           plataformasCanvas,
           plataformasLabels,
           plataformasValues,
-          ["#003b71", "#59b9c7", "#0a7a4d", "#f7c948", "#2b313f", "#c7d5e5"]
+          buildBluePalette(plataformasValues.length)
         );
       } else if (plataformasCanvas) {
         plataformasCanvas.hidden = true;
