@@ -8,16 +8,16 @@
     .leads-kpi-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 1rem;
+      gap: 0.8rem;
+      margin-bottom: 0.65rem;
     }
     .leads-kpi-card {
       background: #ffffff;
       border: 1px solid #d6dee8;
       border-radius: 10px;
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-      padding: 0.9rem 1rem;
-      min-height: 120px;
+      padding: 0.6rem 0.85rem;
+      min-height: 86px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -26,15 +26,31 @@
     }
     .leads-kpi-title {
       color: #2b313f;
-      font-size: 0.92rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.2rem;
     }
     .leads-kpi-value {
       color: #2b313f;
-      font-size: 2rem;
+      font-size: 1.7rem;
       font-weight: 800;
       line-height: 1;
+    }
+    .leads-doughnut-wrap {
+      position: relative;
+      width: min(100%, 320px);
+      aspect-ratio: 1 / 1;
+      margin: 0.1rem auto 0.35rem;
+    }
+    .leads-doughnut-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .leads-bar-canvas {
+      width: 100% !important;
+      height: 280px !important;
     }
     .leads-chart-empty {
       color: #2b313f;
@@ -107,17 +123,21 @@
   <div class="dashboard-grid">
     <article class="dashboard-card">
       <h3 class="dashboard-title">Estatus de leads</h3>
-      <canvas id="leadsEstatusChart" class="dashboard-canvas" aria-label="Estatus de leads"></canvas>
+      <div class="leads-doughnut-wrap">
+        <canvas id="leadsEstatusChart" class="dashboard-canvas leads-doughnut-canvas" aria-label="Estatus de leads"></canvas>
+      </div>
       <div id="leadsEstatusEmpty" class="leads-chart-empty" hidden>Sin datos de estatus para el periodo.</div>
     </article>
     <article class="dashboard-card">
       <h3 class="dashboard-title">Servicios</h3>
-      <canvas id="leadsServiciosChart" class="dashboard-canvas" aria-label="Servicios de leads"></canvas>
+      <canvas id="leadsServiciosChart" class="dashboard-canvas leads-bar-canvas" aria-label="Servicios de leads"></canvas>
       <div id="leadsServiciosEmpty" class="leads-chart-empty" hidden>Sin datos de servicios para el periodo.</div>
     </article>
     <article class="dashboard-card">
       <h3 class="dashboard-title">Plataformas</h3>
-      <canvas id="leadsPlataformasChart" class="dashboard-canvas" aria-label="Plataformas de leads"></canvas>
+      <div class="leads-doughnut-wrap">
+        <canvas id="leadsPlataformasChart" class="dashboard-canvas leads-doughnut-canvas" aria-label="Plataformas de leads"></canvas>
+      </div>
       <div id="leadsPlataformasEmpty" class="leads-chart-empty" hidden>Sin datos de plataforma para el periodo.</div>
     </article>
   </div>
