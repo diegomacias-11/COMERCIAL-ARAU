@@ -4,7 +4,8 @@ import json
 import logging
 import os
 import uuid
-from datetime import datetime
+from collections import defaultdict
+from datetime import date, datetime
 from urllib.parse import quote
 
 import requests
@@ -1050,6 +1051,160 @@ def _generate_manual_leadgen_id():
     return f"manual-whatsapp-{uuid.uuid4().hex}"
 
 
+def _parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except Exception:
+        return None
+
+
+def _normalize_date_range(fecha_desde, fecha_hasta):
+    if fecha_desde and not fecha_hasta:
+        fecha_hasta = fecha_desde
+    if fecha_hasta and not fecha_desde:
+        fecha_desde = fecha_hasta
+    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+        fecha_desde, fecha_hasta = fecha_hasta, fecha_desde
+    return fecha_desde, fecha_hasta
+
+
+def _filter_leads_by_created_time(queryset, fecha_desde, fecha_hasta):
+    if fecha_desde and fecha_hasta:
+        return queryset.filter(created_time__date__range=(fecha_desde, fecha_hasta))
+    if fecha_desde:
+        return queryset.filter(created_time__date__gte=fecha_desde)
+    if fecha_hasta:
+        return queryset.filter(created_time__date__lte=fecha_hasta)
+    return queryset
+
+
+def _normalize_platform_label(raw_value, fallback=""):
+    platform_value = (raw_value or "").strip()
+    if not platform_value:
+        platform_value = (fallback or "").strip()
+    if not platform_value:
+        return "Sin plataforma"
+
+    lowered = platform_value.lower()
+    if "linkedin" in lowered:
+        return "LinkedIn"
+    if lowered in {"meta", "facebook", "fb", "instagram", "ig"} or "facebook" in lowered or "instagram" in lowered:
+        return "Meta"
+    if lowered in {"whatsapp", "whats app", "wa"}:
+        return "WhatsApp"
+    return platform_value
+
+
+def _apply_leads_dashboard_filters(queryset, estatus, servicio):
+    if estatus == "__pendiente__":
+        queryset = queryset.filter(
+            Q(estatus="Pendiente") | Q(estatus__isnull=True) | Q(estatus__exact="")
+        )
+    elif estatus:
+        queryset = queryset.filter(estatus=estatus)
+
+    if servicio == "Pendiente":
+        queryset = queryset.filter(
+            Q(servicio="Pendiente") | Q(servicio__isnull=True) | Q(servicio__exact="")
+        )
+    elif servicio:
+        queryset = queryset.filter(servicio=servicio)
+
+    return queryset
+
+
+def _collect_platform_choices(meta_rows, linkedin_rows):
+    labels = set()
+    has_missing = False
+
+    for row in meta_rows:
+        normalized = _normalize_platform_label(row.get("platform"), "Meta")
+        if normalized == "Sin plataforma":
+            has_missing = True
+        else:
+            labels.add(normalized)
+
+    for row in linkedin_rows:
+        normalized = _normalize_platform_label(row.get("platform"), "LinkedIn")
+        if normalized == "Sin plataforma":
+            has_missing = True
+        else:
+            labels.add(normalized)
+
+    choices = [(label, label) for label in sorted(labels, key=lambda item: item.lower())]
+    if has_missing:
+        choices.insert(0, ("__sin_plataforma__", "Sin plataforma"))
+    return choices
+
+
+def _build_leads_dashboard_data(meta_rows, linkedin_rows, selected_platform=""):
+    selected_platform = (selected_platform or "").strip()
+    rows = []
+    for row in meta_rows:
+        row_data = dict(row)
+        row_data["_platform_label"] = _normalize_platform_label(row_data.get("platform"), "Meta")
+        rows.append(row_data)
+    for row in linkedin_rows:
+        row_data = dict(row)
+        row_data["_platform_label"] = _normalize_platform_label(row_data.get("platform"), "LinkedIn")
+        rows.append(row_data)
+
+    if selected_platform:
+        rows = [row for row in rows if row.get("_platform_label") == selected_platform]
+
+    total_leads = len(rows)
+    leads_con_cita = sum(1 for row in rows if row.get("cita_agendada"))
+
+    estatus_label_map = {value: label for value, label in LEAD_ESTATUS_CHOICES}
+    servicio_label_map = {value: label for value, label in SERVICIO_CHOICES}
+
+    estatus_counts = defaultdict(int)
+    servicios_counts = defaultdict(int)
+    plataformas_counts = defaultdict(int)
+
+    for row in rows:
+        estatus_value = (row.get("estatus") or "").strip()
+        servicio_value = (row.get("servicio") or "").strip()
+        estatus_label = estatus_label_map.get(estatus_value) or estatus_value or "Pendiente"
+        servicio_label = servicio_label_map.get(servicio_value) or servicio_value or "Pendiente"
+        plataforma_label = row.get("_platform_label") or "Sin plataforma"
+
+        estatus_counts[estatus_label] += 1
+        servicios_counts[servicio_label] += 1
+        plataformas_counts[plataforma_label] += 1
+
+    estatus_order = ["Pendiente"] + [label for _, label in LEAD_ESTATUS_CHOICES]
+
+    def _estatus_sort_key(label):
+        if label in estatus_order:
+            return (0, estatus_order.index(label))
+        return (1, label.lower())
+
+    estatus_labels = sorted(estatus_counts.keys(), key=_estatus_sort_key)
+    estatus_values = [estatus_counts[label] for label in estatus_labels]
+
+    servicios_items = sorted(servicios_counts.items(), key=lambda item: (-item[1], item[0].lower()))
+    servicios_labels = [label for label, _ in servicios_items]
+    servicios_values = [value for _, value in servicios_items]
+
+    plataformas_items = sorted(plataformas_counts.items(), key=lambda item: (-item[1], item[0].lower()))
+    plataformas_labels = [label for label, _ in plataformas_items]
+    plataformas_values = [value for _, value in plataformas_items]
+
+    return {
+        "total_leads": total_leads,
+        "leads_con_cita": leads_con_cita,
+        "estatus_labels": estatus_labels,
+        "estatus_values": estatus_values,
+        "servicios_labels": servicios_labels,
+        "servicios_values": servicios_values,
+        "plataformas_labels": plataformas_labels,
+        "plataformas_values": plataformas_values,
+    }
+
+
 def fetch_and_save_meta_lead(leadgen_id: str):
     """
     Fetch full lead data from Meta Graph API and persist it.
@@ -1103,7 +1258,7 @@ def fetch_and_save_meta_lead(leadgen_id: str):
         "campaign_name": data.get("campaign_name") or "",
         "form_id": form_id,
         "is_organic": data.get("is_organic") or False,
-        "platform": data.get("platform") or "",
+        "platform": _normalize_platform_label(data.get("platform"), "Meta"),
         "full_name": raw_fields.get("full_name") or _pick_first(normalized_fields, ["full_name", "nombre_completo", "nombre", "name"]),
         "email": raw_fields.get("email") or _pick_first(normalized_fields, ["email", "correo", "correo_electronico", "email_address"]),
         "phone_number": raw_fields.get("phone_number") or _pick_first(normalized_fields, ["phone_number", "telefono", "tel", "celular", "mobile", "phone"]),
@@ -1155,6 +1310,15 @@ def _linkedin_defaults_from_full_response(full_payload, fallback_defaults):
     organic_value = _linkedin_is_organic_value(full_payload)
     if organic_value is not None:
         defaults["is_organic"] = bool(organic_value)
+
+    payload_platform = _find_first_value(
+        full_payload,
+        ["platform", "platformName", "platformType", "sourcePlatform", "network"],
+    )
+    defaults["platform"] = _normalize_platform_label(
+        payload_platform,
+        defaults.get("platform") or "LinkedIn",
+    )
 
     campaign_urn = sponsored_metadata.get("campaign")
     campaign_name = _find_first_value(sponsored_metadata_info.get("campaign"), ["name"])
@@ -1255,6 +1419,59 @@ def leads_lista(request):
     )
 
     return render(request, "leads/lista.html", {"leads": leads, "q": q})
+
+
+@login_required
+def leads_dashboard(request):
+    fecha_desde_raw = (request.GET.get("fecha_desde") or "").strip()
+    fecha_hasta_raw = (request.GET.get("fecha_hasta") or "").strip()
+    estatus = (request.GET.get("estatus") or "").strip()
+    servicio = (request.GET.get("servicio") or "").strip()
+    plataforma = (request.GET.get("plataforma") or "").strip()
+
+    fecha_desde = _parse_iso_date(fecha_desde_raw)
+    fecha_hasta = _parse_iso_date(fecha_hasta_raw)
+    fecha_desde, fecha_hasta = _normalize_date_range(fecha_desde, fecha_hasta)
+    selected_platform = "Sin plataforma" if plataforma == "__sin_plataforma__" else plataforma
+
+    meta_queryset = _filter_leads_by_created_time(MetaLead.objects.all(), fecha_desde, fecha_hasta)
+    linkedin_queryset = _filter_leads_by_created_time(LinkedInLead.objects.all(), fecha_desde, fecha_hasta)
+
+    meta_queryset = _apply_leads_dashboard_filters(meta_queryset, estatus, servicio)
+    linkedin_queryset = _apply_leads_dashboard_filters(linkedin_queryset, estatus, servicio)
+
+    meta_rows = list(meta_queryset.values(
+        "estatus",
+        "servicio",
+        "platform",
+        "cita_agendada",
+    ))
+    linkedin_rows = list(linkedin_queryset.values("estatus", "servicio", "platform", "cita_agendada"))
+
+    plataforma_choices = _collect_platform_choices(meta_rows, linkedin_rows)
+    dashboard_data = _build_leads_dashboard_data(meta_rows, linkedin_rows, selected_platform=selected_platform)
+
+    context = {
+        "fecha_desde": fecha_desde.isoformat() if fecha_desde else "",
+        "fecha_hasta": fecha_hasta.isoformat() if fecha_hasta else "",
+        "estatus": estatus,
+        "servicio": servicio,
+        "plataforma": plataforma,
+        "lead_estatus_choices": LEAD_ESTATUS_CHOICES,
+        "servicio_choices": SERVICIO_CHOICES,
+        "plataforma_choices": plataforma_choices,
+        "total_leads": dashboard_data["total_leads"],
+        "leads_con_cita": dashboard_data["leads_con_cita"],
+        "chart_data": {
+            "estatus_labels": dashboard_data["estatus_labels"],
+            "estatus_values": dashboard_data["estatus_values"],
+            "servicios_labels": dashboard_data["servicios_labels"],
+            "servicios_values": dashboard_data["servicios_values"],
+            "plataformas_labels": dashboard_data["plataformas_labels"],
+            "plataformas_values": dashboard_data["plataformas_values"],
+        },
+    }
+    return render(request, "leads/dashboard.html", context)
 
 
 @login_required
@@ -1820,6 +2037,10 @@ def linkedin_lead_webhook(request):
         adset_id = _find_first_value(event, ["adsetId", "adset_id"])
         adset_name = _find_first_value(event, ["adsetName", "adset_name"])
         event_is_organic = _linkedin_is_organic_value(event if isinstance(event, dict) else {})
+        event_platform = _find_first_value(
+            event if isinstance(event, dict) else {},
+            ["platform", "platformName", "platformType", "sourcePlatform", "network"],
+        )
 
         raw_fields = event.get("raw_fields") if isinstance(event, dict) else None
         if not isinstance(raw_fields, dict):
@@ -1840,6 +2061,10 @@ def linkedin_lead_webhook(request):
             "adset_id": adset_id or "",
             "adset_name": adset_name or "",
             "is_organic": bool(event_is_organic) if event_is_organic is not None else False,
+            "platform": _normalize_platform_label(
+                event_platform,
+                (existing_lead.platform if existing_lead else "LinkedIn"),
+            ),
             "full_name": full_name,
             "email": email,
             "phone_number": phone,

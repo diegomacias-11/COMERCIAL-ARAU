@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     lead_delete,
     lead_detail,
+    leads_dashboard,
     leads_lista,
     leads_whatsapp_form,
     linkedin_lead_delete,
@@ -12,6 +13,7 @@ from .views import (
 
 urlpatterns = [
     path("", leads_lista, name="leads_metalead_list"),
+    path("dashboard/", leads_dashboard, name="leads_metalead_dashboard"),
     path("whatsapp/form/", leads_whatsapp_form, name="leads_metalead_whatsapp_form"),
     path("<int:pk>/", lead_detail, name="leads_metalead_detail"),
     path("<int:pk>/eliminar/", lead_delete, name="leads_metalead_delete"),

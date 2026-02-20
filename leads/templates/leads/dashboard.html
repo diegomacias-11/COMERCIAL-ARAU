@@ -1,0 +1,246 @@
+{% extends "dashboard.html" %}
+
+{% block title %}Dashboard Leads{% endblock %}
+
+{% block extra_head %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .leads-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .leads-kpi-card {
+      background: #ffffff;
+      border: 1px solid #d6dee8;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      padding: 0.9rem 1rem;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .leads-kpi-title {
+      color: #2b313f;
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .leads-kpi-value {
+      color: #003b71;
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .leads-chart-empty {
+      color: #2b313f;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 0.75rem;
+    }
+  </style>
+{% endblock %}
+
+{% block filtros_left %}
+  <a href="{% url 'leads_metalead_list' %}" class="btn-filter btn-view">Vista</a>
+{% endblock %}
+
+{% block filtros %}
+  <form action="{% url 'leads_metalead_dashboard' %}" method="get" class="filter-form-simple">
+    <div class="filter-block">
+      <label for="fecha_desde">Fecha desde</label>
+      <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+    </div>
+    <div class="filter-block">
+      <label for="fecha_hasta">Fecha hasta</label>
+      <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+    </div>
+    <div class="filter-block">
+      <label for="estatus">Estatus</label>
+      <select id="estatus" name="estatus">
+        <option value="">Todos</option>
+        <option value="__pendiente__" {% if estatus == "__pendiente__" %}selected{% endif %}>Pendiente</option>
+        {% for val, label in lead_estatus_choices %}
+          <option value="{{ val }}" {% if estatus == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-block">
+      <label for="servicio">Servicio</label>
+      <select id="servicio" name="servicio">
+        <option value="">Todos</option>
+        {% for val, label in servicio_choices %}
+          <option value="{{ val }}" {% if servicio == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-block">
+      <label for="plataforma">Plataforma</label>
+      <select id="plataforma" name="plataforma">
+        <option value="">Todas</option>
+        {% for val, label in plataforma_choices %}
+          <option value="{{ val }}" {% if plataforma == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-filter">Filtrar</button>
+    <a href="{% url 'leads_metalead_dashboard' %}" class="btn-filter">Limpiar</a>
+  </form>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="leads-kpi-grid">
+    <article class="leads-kpi-card">
+      <div class="leads-kpi-title">Total de leads</div>
+      <div class="leads-kpi-value">{{ total_leads }}</div>
+    </article>
+    <article class="leads-kpi-card">
+      <div class="leads-kpi-title">Leads con cita agendada</div>
+      <div class="leads-kpi-value">{{ leads_con_cita }}</div>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="dashboard-card">
+      <h3 class="dashboard-title">Estatus de leads</h3>
+      <canvas id="leadsEstatusChart" class="dashboard-canvas" aria-label="Estatus de leads"></canvas>
+      <div id="leadsEstatusEmpty" class="leads-chart-empty" hidden>Sin datos de estatus para el periodo.</div>
+    </article>
+    <article class="dashboard-card">
+      <h3 class="dashboard-title">Servicios</h3>
+      <canvas id="leadsServiciosChart" class="dashboard-canvas" aria-label="Servicios de leads"></canvas>
+      <div id="leadsServiciosEmpty" class="leads-chart-empty" hidden>Sin datos de servicios para el periodo.</div>
+    </article>
+    <article class="dashboard-card">
+      <h3 class="dashboard-title">Plataformas</h3>
+      <canvas id="leadsPlataformasChart" class="dashboard-canvas" aria-label="Plataformas de leads"></canvas>
+      <div id="leadsPlataformasEmpty" class="leads-chart-empty" hidden>Sin datos de plataforma para el periodo.</div>
+    </article>
+  </div>
+
+  {{ chart_data|json_script:"leads-dashboard-data" }}
+
+  <script>
+    (function () {
+      const rawData = document.getElementById("leads-dashboard-data");
+      if (!rawData) return;
+
+      const data = JSON.parse(rawData.textContent || "{}");
+      const estatusLabels = data.estatus_labels || [];
+      const estatusValues = data.estatus_values || [];
+      const serviciosLabels = data.servicios_labels || [];
+      const serviciosValues = data.servicios_values || [];
+      const plataformasLabels = data.plataformas_labels || [];
+      const plataformasValues = data.plataformas_values || [];
+
+      const totalEstatus = estatusValues.reduce((acc, current) => acc + Number(current || 0), 0);
+      const totalServicios = serviciosValues.reduce((acc, current) => acc + Number(current || 0), 0);
+      const totalPlataformas = plataformasValues.reduce((acc, current) => acc + Number(current || 0), 0);
+
+      const estatusCanvas = document.getElementById("leadsEstatusChart");
+      const serviciosCanvas = document.getElementById("leadsServiciosChart");
+      const plataformasCanvas = document.getElementById("leadsPlataformasChart");
+      const estatusEmpty = document.getElementById("leadsEstatusEmpty");
+      const serviciosEmpty = document.getElementById("leadsServiciosEmpty");
+      const plataformasEmpty = document.getElementById("leadsPlataformasEmpty");
+
+      const drawDoughnut = (canvas, labels, values, colors) => {
+        if (!canvas) return;
+        new Chart(canvas, {
+          type: "doughnut",
+          data: {
+            labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors,
+              borderColor: "#ffffff",
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  color: "#2b313f",
+                  font: { weight: "600" }
+                }
+              }
+            }
+          }
+        });
+      };
+
+      if (estatusCanvas && totalEstatus > 0) {
+        drawDoughnut(
+          estatusCanvas,
+          estatusLabels,
+          estatusValues,
+          ["#2b313f", "#59b9c7", "#0a7a4d", "#f7c948", "#c7d5e5"]
+        );
+      } else if (estatusCanvas) {
+        estatusCanvas.hidden = true;
+        if (estatusEmpty) estatusEmpty.hidden = false;
+      }
+
+      if (serviciosCanvas && totalServicios > 0) {
+        new Chart(serviciosCanvas, {
+          type: "bar",
+          data: {
+            labels: serviciosLabels,
+            datasets: [{
+              data: serviciosValues,
+              backgroundColor: "#59b9c7",
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#2b313f",
+                  font: { weight: "600" }
+                }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                  color: "#2b313f",
+                  font: { weight: "600" }
+                }
+              }
+            }
+          }
+        });
+      } else if (serviciosCanvas) {
+        serviciosCanvas.hidden = true;
+        if (serviciosEmpty) serviciosEmpty.hidden = false;
+      }
+
+      if (plataformasCanvas && totalPlataformas > 0) {
+        drawDoughnut(
+          plataformasCanvas,
+          plataformasLabels,
+          plataformasValues,
+          ["#003b71", "#59b9c7", "#0a7a4d", "#f7c948", "#2b313f", "#c7d5e5"]
+        );
+      } else if (plataformasCanvas) {
+        plataformasCanvas.hidden = true;
+        if (plataformasEmpty) plataformasEmpty.hidden = false;
+      }
+    })();
+  </script>
+{% endblock %}

@@ -221,7 +221,7 @@ GASTOS_MERCA_PLATAFORMA_CHOICES = [
 GASTOS_MERCA_MARCA_CHOICES = [
     ("ENROK", "ENROK"),
     ("HunterLoop", "HunterLoop"),
-    ("Capheus", "Caphues"),
+    ("Capheus", "Capheus"),
     ("ARAU", "ARAU"),
 ]
 

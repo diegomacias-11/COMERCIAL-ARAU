@@ -4,9 +4,12 @@
 
 {% block extra_head %}
   <style>
-    .table-container { overflow-x: auto !important; }
     .table { min-width: 520px; }
   </style>
+{% endblock %}
+
+{% block filtros_left %}
+  <a href="{% url 'leads_metalead_dashboard' %}" class="btn-filter btn-view">Dashboard</a>
 {% endblock %}
 
 {% block filtros %}
